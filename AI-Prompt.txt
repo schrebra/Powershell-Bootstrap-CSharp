@@ -1,0 +1,343 @@
+================================================================================
+ AI PROJECT PROMPT -- "PS51 C# Bootstrap" build-script generator (v4: 64-bit,
+ self-contained, external launch, standalone double-click-safe exe). Paste
+ this ENTIRE prompt into the AI. It is fully self-contained: assume the AI has
+ NO prior context about this project. Follow-up requests may be appended after
+ it; the rules below always stay in force.
+================================================================================
+
+------------------------------------------------------------------------------
+ SECTION 1 -- WHAT I WANT (the exact deliverable)
+------------------------------------------------------------------------------
+ONE Windows PowerShell script, bootstrap.ps1 (single file), that works on a
+stock 64-bit Windows machine with nothing but Windows PowerShell 5.1 and
+.NET Framework 4.x, and that SCAFFOLDS a second script (run.ps1) as project
+content. On every run bootstrap.ps1:
+
+(A) BUILD + VERIFY (bootstrap.ps1 itself):
+  1. Creates the project folder C:\temp\<ProjectName>.
+     -ProjectName is a script parameter (default "HelloBuild");
+     -BasePath is a script parameter (default "C:\temp").
+  2. Is IDEMPOTENT: completely deletes the existing project folder and
+     recreates every file and folder from scratch, so repeated runs always
+     converge to an identical, clean result.
+  3. Scaffolds exactly this tree:
+        <ProjectName>\
+            run.ps1                       <-- standalone launcher (see B)
+            src\Program.cs
+            src\App.config
+            src\Properties\AssemblyInfo.cs
+            build\bin\          <-- compiled exe / pdb / exe.config land here
+            build\logs\         <-- bootstrap.log, run.log, run-transcript.txt
+            docs\README.md
+            tests\README.md     <-- placeholder only
+            .gitignore
+  4. 64-BIT TARGET:
+     - Aborts up front (fatal, paused window) on 32-bit Windows, because a
+       /platform:x64 exe could never run there. Log OS/process bitness in DEBUG.
+     - Compiles with the IN-BOX .NET Framework compiler:
+           %WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe
+       (fall back to the non-64 path if that is missing), passing
+       /platform:x64 so the output is a genuine 64-bit PE. The compiler
+       process's own bitness is IRRELEVANT to the output bitness; only
+       /platform:x64 matters -- say so in a debug log line.
+     - NO dotnet CLI, NO MSBuild, NO Visual Studio, NO NuGet, NO internet,
+       NO installed modules. Derive the C# namespace from ProjectName (strip
+       characters invalid in identifiers; prefix "_" if it starts with a digit).
+  5. 64-BIT VERIFICATION (fatal on failure):
+     After compiling, parse the exe's raw bytes and verify the PE header:
+       - 'MZ' at offset 0
+       - e_lfanew (PE offset) is the Int32 at 0x3C
+       - 'PE' signature at that offset
+       - machine type (UInt16 at peOffset+4) MUST equal 0x8664 (AMD64)
+       - optional-header magic (UInt16 at peOffset+24) MUST equal 0x20B (PE32+)
+     Read bytes with [System.IO.File]::ReadAllBytes -- NEVER
+     Get-Content -AsByteStream (that is PowerShell 6/7-only).
+  6. SELF-CONTAINED REQUIREMENT:
+     - The exe must reference ONLY framework assemblies (mscorlib et al.),
+       need ZERO files beside it (no DLLs, no config, no satellites), and use
+       no NuGet packages, no ILMerge, no Costura, no embedding tricks.
+     - DEFINITION (state it in the README too): under these constraints the
+       .NET Framework CLR cannot be statically linked, so "self-contained"
+       means: the single exe runs with nothing beside it, and its only runtime
+       requirement is the .NET Framework 4.x CLR, which is an inbox OS
+       component of Windows 10/11 -- not a file dependency. This is the maximum
+       achievable without the forbidden .NET SDK.
+     - PROVE IT with an isolation test: copy ONLY the exe into a bare temp
+       folder, run it there with --no-pause, require exit code 0, log its
+       output, then delete the temp folder. Failure = logged error (counted,
+       non-fatal).
+     - exe.config may be staged beside the exe but is OPTIONAL at runtime; the
+       isolation test must demonstrate the exe runs without it.
+  7. Smoke-tests the exe inline from build\bin WITH --no-pause (runs it,
+     captures stdout+stderr, logs every line, checks the exit code, and
+     soft-checks that the exe reported "64-bit proc : True"). This is build
+     VERIFICATION only -- it is not the auto-launch and must not be removed.
+  8. AUTO-LAUNCH HAPPENS OUTSIDE THE BUILD SCRIPT:
+     - bootstrap.ps1 itself NEVER executes the program at the end.
+     - run.ps1 is scaffolded as a normal project file, regenerated fresh on
+       every bootstrap run, with the exe filename (<ProjectName>.exe) baked
+       in at generation time.
+     - Unless -NoLaunch was supplied, bootstrap.ps1 spawns a NEW Windows
+       PowerShell 5.1 console window that executes run.ps1, via:
+           Start-Process on (Join-Path $PSHOME 'powershell.exe') with
+           -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass',
+                           '-File','"<quoted path to run.ps1>"')
+       and does NOT use -Wait (the app window is fully independent). A spawn
+       failure is logged as an error but is never fatal; suggest the manual
+       command in that case.
+     - End state: TWO open windows -- the build window (paused) and the app
+       window (program running, then paused).
+  9. Ends with an interactive pause (Read-Host) so the console window NEVER
+     closes itself -- on success, on failure, AND on every abort path.
+
+(B) run.ps1 -- the STANDALONE launcher, EMBEDDED as a template inside
+    bootstrap.ps1 and written out as project content on every run:
+  1. Same Windows PowerShell 5.1-only guard as bootstrap.ps1.
+  2. Locates the exe relative to its own $PSScriptRoot (embedded exe name,
+     no guessing, no scanning).
+  3. Accepts passthrough arguments for the exe via
+     [Parameter(ValueFromRemainingArguments = $true)] and splats them.
+  4. APPENDS --no-pause to the exe arguments (this is REQUIRED, not optional)
+     because run.ps1 supplies the window's pause itself: one keypress total,
+     and the exe's exit code is logged before the pause. Runs the exe INLINE
+     in its own window with live output (no redirection) and captures the
+     exit code ($LASTEXITCODE).
+  5. Logs to build\logs\run.log in the same timestamped DEBUG/INFO/WARN/ERROR
+     style as bootstrap.ps1, AND records a full console transcript via
+     Start-Transcript to build\logs\run-transcript.txt (Stop-Transcript on
+     the way out).
+  6. If the exe is missing, logs an error telling the user to run
+     bootstrap.ps1 first, then pauses and exits nonzero.
+  7. Pauses with Read-Host before closing (its window never auto-closes),
+     then exits with the app's exit code.
+  8. Must ALSO work when run manually at any time, independent of bootstrap.
+
+(C) The C# program itself is a simple demo console app (a "Greeter" that
+    prints a greeting plus machine/user/CLR/OS/64-bit-process info and takes
+    an optional name argument) unless a follow-up message describes a
+    different program. MANDATORY STANDALONE EXECUTION BEHAVIOR:
+    - Double-clicking the exe in Explorer must leave the console OPEN until
+      the user presses Enter. (Root cause to design against: Windows owns a
+      console app's window, so it is destroyed the instant Main returns --
+      Explorer does not hold it open. A bare console app "flashes and closes".)
+    - The exe must implement a pause-before-exit that prints something like
+      "Press Enter to exit... " and calls Console.ReadLine().
+    - The pause must run on BOTH the success path AND the unhandled-exception
+      path (e.g., wrap Main's body in try/catch/finally and call the pause in
+      the finally), so even a crash stays readable instead of vanishing.
+    - The pause is skipped ONLY when:
+        (a) the --no-pause control flag is present in the command line
+            (case-insensitive, may appear anywhere); OR
+        (b) Console.IsInputRedirected is true (piped/automated stdin that can
+            never supply a keypress). Console.IsInputRedirected is .NET 4.5+,
+            which Windows PowerShell 5.1 itself requires, so it is allowed.
+    - Argument parsing must strip --no-pause tokens and treat the first
+      remaining token as the optional display name.
+    - ReadLine must be wrapped so a broken/null stdin (EOF returns null)
+      can never throw on the way out.
+    - ALL automated invocations pass --no-pause: the bootstrap smoke test
+      (Section 1 A item 7), the isolation test (item 6), and run.ps1
+      (Section 1 B item 4). Without the flag these steps would block forever,
+      because their stdin is a console, not a redirect.
+
+------------------------------------------------------------------------------
+ SECTION 2 -- HARD RULES (non-negotiable constraints)
+------------------------------------------------------------------------------
+R1. WINDOWS POWERSHELL 5.1 EXCLUSIVELY (both scripts).
+    - Both scripts must REFUSE to run under PowerShell 6/7 (pwsh): check
+      $PSVersionTable.PSVersion.Major -ne 5, print a clear error, pause with
+      Read-Host, then exit 1.
+    - Use ONLY PowerShell 5.1-compatible syntax and cmdlets. FORBIDDEN
+      (PS 6/7 only): && and || pipeline chains, ?? and ??=, ternary
+      (a ? b : c), ForEach-Object -Parallel, Join-Path with 3+ arguments,
+      ConvertFrom-Json -AsHashtable, -Encoding utf8NoBOM, Get-Error,
+      Get-Content -AsByteStream. Read binary files with
+      [System.IO.File]::ReadAllBytes instead.
+    - All run examples must say powershell.exe, never pwsh.
+    - Two-argument Join-Path with a nested child path (e.g.
+      Join-Path $root 'build\bin') IS allowed and expected.
+
+R2. C# 5.0 / .NET FRAMEWORK 4.x EXCLUSIVELY.
+    - Reason: the in-box csc.exe supports at most C# 5; that is the newest
+      version buildable on ANY stock PS 5.1 machine with zero installs.
+    - FORBIDDEN in the .cs sources: string interpolation ($"..."),
+      null-conditional (?. ?[]), nameof, expression-bodied members (=>),
+      auto-property initializers, inline "out var" declarations at the call
+      site (classic out parameters, declared before the call, ARE allowed
+      and expected for argument parsing), tuples/ValueTuple, pattern
+      matching, switch expressions, using-declarations without braces.
+    - ALLOWED: var, generics, lambdas, async/await, String.Format, classic
+      { get { ... } } property blocks, classic out parameters.
+    - App.config must contain <supportedRuntime version="v4.0" ... />.
+
+R3. SINGLE FILE DELIVERABLE, ZERO EXTERNAL DEPENDENCIES. bootstrap.ps1 is one
+    file and embeds the run.ps1 template. Nothing is downloaded or installed.
+
+R4. TRUE IDEMPOTENCY (bootstrap.ps1). The wipe must be robust:
+    - If the console's current location is INSIDE the project folder, step
+      out (Set-Location to the parent) BEFORE deleting, or deletion fails.
+    - Recursively strip ReadOnly/Hidden/System attributes first.
+    - Retry the delete up to 3 times with a short sleep between attempts.
+    - Verify the folder is gone; if it is not, abort with a clear error and
+      a paused window.
+    - run.ps1 lives INSIDE the project folder BY DESIGN and is regenerated
+      on every run -- that is expected, not a bug.
+
+R5. VERBOSE DEBUG LOGGING ON EVERY PROCESS (both scripts).
+    - Timestamped log lines with levels DEBUG / INFO / WARN / ERROR,
+      color-coded in the console AND mirrored to a file:
+      bootstrap.ps1 -> build\logs\bootstrap.log; run.ps1 -> build\logs\run.log.
+    - Wrap each logical build step in an error-trapping runner that logs the
+      step name, the exception message, and the script stack trace; steps
+      may be fatal (abort) or non-fatal (counted, continue).
+    - Echo the compiler's stdout/stderr line-by-line with a prefix, and
+      check its exit code.
+    - Echo the smoke test's and isolation test's captured output and exit
+      codes.
+    - At the end of the bootstrap, dump the most recent $Error records if
+      any exist.
+    - Print the final project tree with per-file sizes and folder/file counts.
+    - CAUTION (PS 5.1 quirk): redirecting a native command's stderr with 2>&1
+      while ErrorActionPreference is 'Stop' raises NativeCommandError. Keep
+      ErrorActionPreference at 'Continue' (use per-cmdlet -ErrorAction Stop)
+      and judge native-command success by exit codes instead.
+
+R6. AUTO-LAUNCH IS EXTERNAL -- STRICT SEPARATION OF BUILD AND LAUNCH.
+    - bootstrap.ps1 must NOT run the program at the end (the inline smoke
+      test in Section 1 item 7 is the only exception and stays).
+    - ALL launching logic lives in run.ps1, which bootstrap.ps1 scaffolds
+      and (unless -NoLaunch) spawns in a separate new PS 5.1 window without
+      waiting on it.
+    - run.ps1 must pause (Read-Host) so its window never auto-closes, log
+      everything it does, and be independently runnable by hand.
+    - A failed spawn is logged as a non-fatal error plus the manual command.
+
+R7. NO WINDOW EVER CLOSES ITSELF -- INCLUDING THE EXE'S OWN. No exit path in
+    either script may skip its Read-Host pause, and the exe must not exit
+    while a human could still be reading its output (see R10).
+
+R8. PARAMETER INTERFACE: -ProjectName, -BasePath, -NoLaunch (bootstrap);
+    passthrough app args (run.ps1). Validate ProjectName against invalid
+    filename characters and abort cleanly if bad.
+
+R9. 64-BIT + SELF-CONTAINED, AS SPECIFIED IN SECTION 1 ITEMS 4-6:
+    - /platform:x64 compile; abort on 32-bit Windows; fatal PE-header
+      verification (machine 0x8664 AND optional-header magic 0x20B).
+    - The exe must run standalone (isolation test) with zero files beside it.
+    - Do NOT attempt true static linking; do NOT use ILMerge, Costura,
+      AppLocal, or any .NET Core single-file publish. State the "framework
+      is an inbox OS component" limitation honestly in the README.
+
+R10. STANDALONE EXECUTION OF THE EXE (see Section 1 C):
+    - Double-clicking the exe must leave its console open until Enter.
+    - The pause covers the success path AND the unhandled-exception path.
+    - The ONLY opt-outs are the --no-pause flag and redirected stdin.
+    - Every automated invocation (smoke test, isolation test, run.ps1) MUST
+      pass --no-pause, or the build hangs forever.
+    - Do NOT "fix" the window flash by removing the pause, by launching the
+      exe only through run.ps1, or by moving the pause into PowerShell --
+      the pause belongs INSIDE the exe so the double-clicked binary is
+      self-sufficient.
+
+------------------------------------------------------------------------------
+ SECTION 3 -- HOW THE AI MUST HANDLE THESE RULES (meta-rules)
+------------------------------------------------------------------------------
+M1. Treat R1-R10 as hard constraints, never suggestions. Do not trade them
+    away for brevity, elegance, or "modern best practice".
+M2. If a later request seems to conflict with a rule, resolve in this
+    priority order: (1) it must actually run correctly, (2) R1/R2 version
+    compatibility, (3) everything else. State the conflict and your choice.
+M3. NEVER silently drop, weaken, or reinterpret a requirement. If one is
+    impossible as written, name it, explain why, propose the closest
+    compliant alternative, and implement that alternative.
+M4. Assume NOTHING exists on the machine beyond 64-bit Windows + PowerShell
+    5.1 + .NET Framework 4.x. Never recommend installing PowerShell 7, the
+    .NET SDK, Visual Studio, or any PowerShell module.
+M5. Always deliver the COMPLETE, runnable bootstrap.ps1 in ONE code block
+    (with the run.ps1 template embedded inside it). No placeholders, no
+    TODOs, no "...rest unchanged..." elisions. A short explanation of
+    decisions may accompany the code.
+M6. Before delivering, self-audit against the Section 4 checklist and fix
+    every violation found. State anything you could not satisfy.
+M7. When I later request changes to the C# app itself (new files, features),
+    add sources under src\, add them to the csc.exe source list, keep the
+    output a 64-bit self-contained exe, PRESERVE the standalone pause
+    behavior and --no-pause contract exactly, and keep every rule above
+    intact. run.ps1 keeps working unchanged as long as the output exe stays
+    <ProjectName>.exe.
+M8. If I ever store bootstrap.ps1 INSIDE the project folder, warn me that
+    the idempotent wipe will delete it; it belongs outside (e.g. C:\temp).
+    run.ps1 inside the project is correct and expected.
+M9. Never merge the launcher back into bootstrap.ps1, and never make
+    bootstrap.ps1 execute the exe at the end, even if it seems simpler --
+    build and launch must remain two separate scripts/processes.
+M10. Never "solve" self-containment by recommending dotnet publish,
+     single-file bundles, NativeAOT, ILMerge, or trimming -- all violate the
+     no-SDK rule. The accepted model is: single exe + zero companion files +
+     framework as an inbox Windows component, and it must be stated honestly
+     rather than glossed over.
+M11. Never "solve" the window flash by removing or weakening the exe's
+     built-in pause (R10). If a future change seems to require the exe to
+     exit immediately in some context, implement it as an explicit --no-pause
+     (or equivalent) opt-out at the exe's command line, never as a removal
+     of the default pause.
+
+------------------------------------------------------------------------------
+ SECTION 4 -- ACCEPTANCE CHECKLIST (self-verify before delivering)
+------------------------------------------------------------------------------
+[ ] Both scripts refuse PowerShell 6/7 with a clear, paused error.
+[ ] Neither script contains PS 6/7-only syntax (including -AsByteStream).
+[ ] No C# 6+ syntax in any .cs file (classic out parameters used, no out var).
+[ ] Aborts on 32-bit Windows with a clear, paused error.
+[ ] Compiles via the in-box csc.exe with /platform:x64; exit code checked;
+    output logged.
+[ ] PE header verified: machine 0x8664 (AMD64) AND magic 0x20B (PE32+);
+    fatal if either is wrong. Bytes read via [System.IO.File]::ReadAllBytes.
+[ ] Isolation test passes: exe ALONE in a bare temp folder, invoked with
+    --no-pause, exits 0; temp folder cleaned up afterwards.
+[ ] exe / pdb / exe.config verified present, sizes logged; exe.config is
+    documented as optional at runtime.
+[ ] Smoke test runs the exe WITH --no-pause and checks its exit code.
+[ ] The exe pauses before exit by default, on success AND on the exception
+    path; only --no-pause or redirected stdin skip the pause.
+[ ] run.ps1 APPENDS --no-pause to the exe invocation and supplies its own
+    pause (one keypress total in the launcher window).
+[ ] bootstrap.ps1 does NOT execute the program at the end.
+[ ] run.ps1 is scaffolded with the exe name baked in and works standalone.
+[ ] Unless -NoLaunch, bootstrap spawns a NEW PS 5.1 window running run.ps1
+    and does not wait on it; spawn failure is non-fatal and logged.
+[ ] run.ps1 logs run.log + transcript, checks the exit code, and pauses.
+[ ] ALL windows (build, launcher, and a double-clicked exe) stay open on
+    success, failure, and every abort path.
+[ ] build\logs\bootstrap.log mirrors the build console output.
+[ ] README documents double-click behavior, --no-pause, and the honest
+    self-containment definition and limitation.
+[ ] Everything lives in one delivered file; nothing downloaded or installed.
+[ ] Running the bootstrap twice in a row succeeds and produces an identical
+    clean tree (run.ps1 regenerated each time), even when the console CWD
+    is inside the project folder.
+
+------------------------------------------------------------------------------
+ SECTION 5 -- HOW I WILL RUN IT (sanity tests)
+------------------------------------------------------------------------------
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\bootstrap.ps1
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\bootstrap.ps1 -ProjectName MyTool
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\bootstrap.ps1 -NoLaunch
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\run.ps1 Alice
+
+  Standalone exe tests (in Explorer and from a console):
+  - Double-click build\bin\<ProjectName>.exe in Explorer: console appears,
+    prints output, shows "Press Enter to exit...", and stays open until I
+    press Enter. It must NOT flash-and-close.
+  - Run it from a console:  .\build\bin\<ProjectName>.exe --no-pause
+    -> prints output and exits IMMEDIATELY (no pause).
+  - Piped:  "input" | .\build\bin\<ProjectName>.exe
+    -> stdin is redirected, so no pause; exits immediately.
+
+  Expected overall: the build run pauses at the end; unless -NoLaunch, a
+  second window opens running the 64-bit exe via run.ps1 (which passes
+  --no-pause and pauses once itself); reruns rebuild cleanly from scratch;
+  run.ps1 works by hand anytime; the build log shows the PE 64-bit
+  verification and the isolation test passing.
+================================================================================
