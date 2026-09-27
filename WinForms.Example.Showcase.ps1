@@ -1,6 +1,7 @@
 param([string]$ProjectName='WinFormsShowcase',[ValidateSet('Auto','WinForms')][string]$ProjectType='WinForms',[string]$BaseDir='',[switch]$NoLaunch,[int]$MaxRetries=3)
  $ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue'
  $Script:StageName='Initialization';$Script:InstallerPath='';$Script:DotnetDir=Join-Path $env:LOCALAPPDATA 'Microsoft\dotnet';$Script:AppKind='WinForms'
+
 function Write-Info([string]$m){Write-Host $m -ForegroundColor Cyan}
 function Write-Ok([string]$m){Write-Host $m -ForegroundColor Green}
 function Write-Warn2([string]$m){Write-Host $m -ForegroundColor Yellow}
@@ -71,11 +72,13 @@ namespace __APPNAME__
 '@
  $mainCs=@'
 using System;
-using System.Data;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
+using System.IO;
 using System.Media;
 using System.Threading;
 using System.Windows.Forms;
@@ -113,6 +116,112 @@ namespace __APPNAME__
             Controls.Add(t); Controls.Add(d); Controls.Add(ok); AcceptButton = ok; CancelButton = ok;
         }
     }
+    [System.Runtime.InteropServices.ComVisible(true)]
+    public class WebBridge
+    {
+        private readonly Action<string> _report;
+        public WebBridge(Action<string> report) { _report = report; }
+        public void Report(string message) { Action<string> r = _report; if (r != null) { try { r(message); } catch { } } }
+    }
+    public class DoubleBufferPanel : Panel
+    {
+        public DoubleBufferPanel() { DoubleBuffered = true; }
+    }
+    public class PaintCanvas : Panel
+    {
+        private Color c1, c2; private Random r = new Random();
+        private float ang; private int ballX = 40, ballY = 40, dx = 4, dy = 3;
+        private System.Windows.Forms.Timer anim = new System.Windows.Forms.Timer { Interval = 30 };
+        public bool AnimationOn { get { return anim.Enabled; } set { anim.Enabled = value; } }
+        public PaintCanvas()
+        {
+            DoubleBuffered = true; ResizeRedraw = true; c1 = Color.MidnightBlue; c2 = Color.LightSkyBlue;
+            anim.Tick += (s, e) =>
+            {
+                ballX += dx; ballY += dy;
+                if (ballX < 10 || ballX > Math.Max(11, Width - 10)) { dx = -dx; }
+                if (ballY < 10 || ballY > Math.Max(11, Height - 10)) { dy = -dy; }
+                Invalidate();
+            };
+            Disposed += (s, e) => { anim.Stop(); anim.Dispose(); };
+        }
+        public void Randomize() { c1 = Color.FromArgb(r.Next(256), r.Next(256), r.Next(256)); c2 = Color.FromArgb(r.Next(256), r.Next(256), r.Next(256)); }
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            Rectangle rc = ClientRectangle;
+            if (rc.Width < 4 || rc.Height < 4) { return; }
+            Graphics g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            using (LinearGradientBrush lg = new LinearGradientBrush(rc, c1, c2, LinearGradientMode.ForwardDiagonal)) { g.FillRectangle(lg, rc); }
+            using (HatchBrush hb = new HatchBrush(HatchStyle.WideUpwardDiagonal, Color.FromArgb(140, Color.White), Color.Transparent)) { g.FillEllipse(hb, rc.Width / 8, rc.Height / 8, rc.Width / 4, rc.Height / 4); }
+            using (Pen dash = new Pen(Color.White, 2F)) { dash.DashStyle = DashStyle.Dash; g.DrawBezier(dash, 10, rc.Height - 20, rc.Width / 3, 10, (2 * rc.Width) / 3, rc.Height - 40, rc.Width - 10, 20); }
+            using (Pen arc = new Pen(Color.Gold, 4F)) { g.DrawArc(arc, rc.Width / 2 - 60, rc.Height / 2 - 60, 120, 120, ang, 300F); }
+            ang = (ang + 5F) % 360F;
+            g.TranslateTransform(rc.Width - 110, rc.Height - 46); g.RotateTransform(-25F);
+            using (Font f = new Font("Segoe UI", 11F, FontStyle.Bold)) { g.DrawString("Rotated text", f, Brushes.White, 0, 0); }
+            g.ResetTransform();
+            using (SolidBrush bb = new SolidBrush(Color.OrangeRed)) { g.FillEllipse(bb, ballX - 8, ballY - 8, 16, 16); }
+            g.DrawEllipse(Pens.Black, ballX - 8, ballY - 8, 16, 16);
+        }
+    }
+    public class MdiPlayground : Form
+    {
+        private int childCount = 0;
+        private ToolStripStatusLabel info;
+        private Color[] palette = new Color[] { Color.FromArgb(222, 231, 247), Color.FromArgb(229, 245, 231), Color.FromArgb(252, 241, 212), Color.FromArgb(246, 222, 236) };
+        public MdiPlayground()
+        {
+            Text = "MDI Playground - Form.IsMdiContainer"; IsMdiContainer = true;
+            StartPosition = FormStartPosition.CenterParent; ClientSize = new Size(760, 480); MinimumSize = new Size(480, 320);
+            MenuStrip mm = new MenuStrip();
+            ToolStripMenuItem miNew = new ToolStripMenuItem("&New child", null, (s, e) => NewChild());
+            miNew.ShortcutKeys = Keys.Control | Keys.N;
+            ToolStripMenuItem miCloseAll = new ToolStripMenuItem("Close &all children", null, (s, e) => { Form[] kids = MdiChildren; foreach (Form f in kids) { f.Close(); } });
+            ToolStripMenuItem fileM = new ToolStripMenuItem("&File");
+            fileM.DropDownItems.AddRange(new ToolStripItem[] { miNew, new ToolStripSeparator(), miCloseAll, new ToolStripSeparator(), new ToolStripMenuItem("E&xit", null, (s, e) => Close()) });
+            ToolStripMenuItem winM = new ToolStripMenuItem("&Window");
+            winM.DropDownItems.Add(new ToolStripMenuItem("Cascade", null, (s, e) => LayoutMdi(MdiLayout.Cascade)));
+            winM.DropDownItems.Add(new ToolStripMenuItem("Tile Horizontal", null, (s, e) => LayoutMdi(MdiLayout.TileHorizontal)));
+            winM.DropDownItems.Add(new ToolStripMenuItem("Tile Vertical", null, (s, e) => LayoutMdi(MdiLayout.TileVertical)));
+            winM.DropDownItems.Add(new ToolStripMenuItem("Arrange Icons", null, (s, e) => LayoutMdi(MdiLayout.ArrangeIcons)));
+            winM.DropDownOpening += (s, e) =>
+            {
+                winM.DropDownItems.Clear();
+                winM.DropDownItems.Add(new ToolStripMenuItem("Cascade", null, (s2, e2) => LayoutMdi(MdiLayout.Cascade)));
+                winM.DropDownItems.Add(new ToolStripMenuItem("Tile Horizontal", null, (s2, e2) => LayoutMdi(MdiLayout.TileHorizontal)));
+                winM.DropDownItems.Add(new ToolStripMenuItem("Tile Vertical", null, (s2, e2) => LayoutMdi(MdiLayout.TileVertical)));
+                winM.DropDownItems.Add(new ToolStripMenuItem("Arrange Icons", null, (s2, e2) => LayoutMdi(MdiLayout.ArrangeIcons)));
+                if (MdiChildren.Length > 0)
+                {
+                    winM.DropDownItems.Add(new ToolStripSeparator());
+                    foreach (Form f in MdiChildren)
+                    {
+                        Form ff = f;
+                        winM.DropDownItems.Add(new ToolStripMenuItem(ff.Text, null, (s2, e2) => ff.Activate()) { Checked = (ff == ActiveMdiChild) });
+                    }
+                }
+            };
+            mm.Items.AddRange(new ToolStripItem[] { fileM, winM });
+            MainMenuStrip = mm;
+            StatusStrip st = new StatusStrip();
+            info = new ToolStripStatusLabel { Spring = true, Text = "Use File > New child (Ctrl+N) to spawn MDI children, then arrange them via the Window menu." };
+            st.Items.Add(info);
+            Controls.Add(st); Controls.Add(mm);
+            MdiChildActivate += (s, e) => UpdateInfo();
+            Shown += (s, e) => { if (MdiChildren.Length == 0) { NewChild(); NewChild(); } };
+        }
+        private void NewChild()
+        {
+            childCount++;
+            Form c = new Form { Text = "Child " + childCount, MdiParent = this, ClientSize = new Size(260, 170), BackColor = palette[childCount % palette.Length] };
+            c.Controls.Add(new Label { Text = "Child #" + childCount + "\r\nMdiParent = playground\r\n\r\nDrag, minimize, maximize me -\r\nthen try Window > Tile Vertical.", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter });
+            c.FormClosed += (s, e) => UpdateInfo();
+            c.Show();
+            UpdateInfo();
+        }
+        private void UpdateInfo() { if (info != null) { info.Text = "MDI children open: " + MdiChildren.Length + "   (open the Window menu - children are listed with the active one check-marked)"; } }
+    }
     public class MainForm : Form
     {
         private TabControl tabs; private MenuStrip menu; private ToolStrip toolbar; private StatusStrip status;
@@ -131,7 +240,7 @@ namespace __APPNAME__
             clock.Tick += (s, e) => { ticks++; stClock.Text = "Clock: " + DateTime.Now.ToLongTimeString(); };
             clock.Start();
             BuildTray(); BuildWorker();
-            SetStatus("Ready - 9 tabs, 50+ controls. Hover for ToolTips, press F1 for HelpProvider, right-click things.");
+            SetStatus("Ready - 13 tabs, 80+ controls. Hover for ToolTips, press F1 for HelpProvider, right-click things.");
         }
         private void SetStatus(string m){ if (stLeft != null) stLeft.Text = m; }
         private void BuildIcons()
@@ -153,6 +262,7 @@ namespace __APPNAME__
         {
             tabs = new TabControl { Dock = DockStyle.Fill };
             tabs.TabPages.Add(TabBasics()); tabs.TabPages.Add(TabSelection()); tabs.TabPages.Add(TabDateTime()); tabs.TabPages.Add(TabContainers()); tabs.TabPages.Add(TabData()); tabs.TabPages.Add(TabMenus()); tabs.TabPages.Add(TabDialogs()); tabs.TabPages.Add(TabBackground()); tabs.TabPages.Add(TabGraphics());
+            tabs.TabPages.Add(TabWebMedia()); tabs.TabPages.Add(TabLayoutScroll()); tabs.TabPages.Add(TabComponents()); tabs.TabPages.Add(TabGridMdi());
             tabs.SelectedIndexChanged += (s, e) => { if (tabs.SelectedTab != null) SetStatus("Tab: " + tabs.SelectedTab.Text); };
             Controls.Add(tabs);
         }
@@ -503,7 +613,7 @@ namespace __APPNAME__
         {
             TabPage p = new TabPage("8. Background & Components");
             TableLayoutPanel t = Grid2();
-            AddHeader(t, "Non-visual components: Timer, BackgroundWorker, NotifyIcon, ErrorProvider, HelpProvider, sounds");
+            AddHeader(t, "Non-visual components: Timer, BackgroundWorker, NotifyIcon, ErrorProvider, HelpProvider");
             Label clockLbl = new Label { Text = "Timer tick: 0", AutoSize = true, Anchor = AnchorStyles.Left, Font = new Font("Consolas", 10F, FontStyle.Bold), ForeColor = Color.SeaGreen };
             clock.Tick += (s, e) => clockLbl.Text = "Timer tick: " + ticks + "   " + DateTime.Now.ToLongTimeString();
             AddRow(t, "Timer (1s):", clockLbl, "System.Windows.Forms.Timer ticking every second");
@@ -523,236 +633,537 @@ namespace __APPNAME__
             AddRow(t, "NotifyIcon:", btnBalloon, "Also watch the tray icon near the clock");
             TextBox tbNumeric = new TextBox { Width = 120, Text = "42" };
             tbNumeric.TextChanged += (s, e) => { int n; if (int.TryParse(tbNumeric.Text, out n)) { err.SetError(tbNumeric, ""); SetStatus("Valid number: " + n); } else { err.SetError(tbNumeric, "Must be a whole number!"); } };
-            AddRow(t, "ErrorProvider:", Flow(tbNumeric, new Label { Text = "type a non-number to see the icon", AutoSize = true, ForeColor = Color.Gray, Anchor = AnchorStyles.Left }), "ErrorProvider flags invalid input with a blinking icon");
-            Button btnBeep = new Button { Text = "Play SystemSounds.Exclamation", AutoSize = true };
-            btnBeep.Click += (s, e) => { SystemSounds.Exclamation.Play(); SetStatus("Beep!"); };
-            AddRow(t, "Sound:", btnBeep, "System.Media.SystemSounds");
-            hp.SetHelpString(btnBeep, "Press F1 on focused controls to see HelpProvider popups."); hp.SetShowHelp(btnBeep, true);
+            AddRow(t, "ErrorProvider:", Flow(tbNumeric, new Label { Text = "type a non-number to see the icon", AutoSize = true, ForeColor = Color.DimGray }), "ErrorProvider flags invalid input with a blinking red icon and tooltip");
+            Button helpBtn = new Button { Text = "Click me, then press F1", AutoSize = true };
+            hp.SetHelpString(helpBtn, "HelpProvider: this popup appears because the button had focus when F1 was pressed - no CHM file or help namespace needed.");
+            hp.SetShowHelp(helpBtn, true);
+            helpBtn.Click += (s, e) => SetStatus("Button focused - now press F1");
+            AddRow(t, "HelpProvider:", helpBtn, "Pop-up help on F1, wired entirely in code");
             p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
         private TabPage TabGraphics()
         {
-            TabPage p = new TabPage("9. Graphics & Extras");
+            TabPage p = new TabPage("9. Graphics");
             TableLayoutPanel t = Grid2();
-            AddHeader(t, "Drawing, scrolling, an embedded browser, and a custom UserControl");
-            PictureBox pic = new PictureBox { Dock = DockStyle.Fill, BorderStyle = BorderStyle.FixedSingle, SizeMode = PictureBoxSizeMode.Zoom, MinimumSize = new Size(0, 150) };
-            pic.Image = MakeArt();
-            AddFillRow(t, "PictureBox (programmatic art):", pic, 140, "Bitmap drawn with System.Drawing at runtime");
-            Button btnArt = new Button { Text = "Regenerate artwork", AutoSize = true };
-            btnArt.Click += (s, e) => { Image old = pic.Image; pic.Image = MakeArt(); if (old != null) old.Dispose(); SetStatus("New artwork generated"); };
-            AddRow(t, "Redraw:", btnArt, null);
-            Panel sbHost = new Panel { Dock = DockStyle.Fill, Height = 120, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White };
-            Label mover = new Label { Text = "Move me", BackColor = Color.IndianRed, ForeColor = Color.White, TextAlign = ContentAlignment.MiddleCenter, Size = new Size(70, 30), Location = new Point(4, 4) };
-            HScrollBar hs = new HScrollBar { Dock = DockStyle.Bottom, Minimum = 0, Maximum = 300, LargeChange = 20, SmallChange = 5 };
-            VScrollBar vs = new VScrollBar { Dock = DockStyle.Right, Minimum = 0, Maximum = 150, LargeChange = 20, SmallChange = 5 };
-            hs.ValueChanged += (s, e) => { mover.Left = 4 + hs.Value; SetStatus("HScrollBar: " + hs.Value); };
-            vs.ValueChanged += (s, e) => { mover.Top = 4 + vs.Value; SetStatus("VScrollBar: " + vs.Value); };
-            sbHost.Controls.Add(mover); sbHost.Controls.Add(hs); sbHost.Controls.Add(vs);
-            AddRow(t, "HScrollBar + VScrollBar:", sbHost, "Classic scrollbars moving the red box");
-            WebBrowser wb = new WebBrowser { Dock = DockStyle.Fill, MinimumSize = new Size(0, 140) };
-            wb.DocumentText = "<html><body style='font-family:Segoe UI;background:#f7f9fc'><h2 style='color:#204e8f'>WebBrowser control</h2><p>Rendered from an inline HTML string via <b>DocumentText</b> - no network required.</p><ul><li>Works with the legacy MSHTML engine</li><li>Great for local HTML reports</li></ul><p style='color:gray'>WinForms still ships this veteran control.</p></body></html>";
-            AddFillRow(t, "WebBrowser:", wb, 130, "Embedded browser displaying inline HTML");
-            LabeledSlider s1 = new LabeledSlider("Width", 10, 100, 50);
-            LabeledSlider s2 = new LabeledSlider("Height", 10, 100, 75);
-            Label comboLbl = new Label { Text = "Box: 50 x 75", AutoSize = true, Anchor = AnchorStyles.Left };
-            EventHandler upd = (s, e) => comboLbl.Text = "Box: " + s1.Value + " x " + s2.Value;
-            s1.SliderMoved += upd; s2.SliderMoved += upd;
-            AddRow(t, "UserControl (custom):", Flow(s1, s2, comboLbl), "LabeledSlider : UserControl - a composite custom control");
+            AddHeader(t, "GDI+ painting: gradients, hatches, transforms, double buffering and mouse drawing");
+            PaintCanvas canvas = new PaintCanvas { Dock = DockStyle.Fill, BorderStyle = BorderStyle.FixedSingle };
+            Button shuffle = new Button { Text = "Randomize palette", AutoSize = true };
+            shuffle.Click += (s, e) => { canvas.Randomize(); canvas.Invalidate(); SetStatus("PaintCanvas repainted with a fresh random palette"); };
+            CheckBox anim = new CheckBox { Text = "Bounce the ball", AutoSize = true };
+            anim.CheckedChanged += (s, e) => { canvas.AnimationOn = anim.Checked; SetStatus("PaintCanvas animation: " + anim.Checked); };
+            AddFillRow(t, "PaintCanvas (OnPaint):", canvas, 200, "A Panel subclass drawing a gradient, hatch ellipse, dashed Bezier, rotating arc and animated ball in OnPaint with double buffering");
+            DoubleBufferPanel pad = new DoubleBufferPanel { Dock = DockStyle.Fill, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            List<List<Point>> strokes = new List<List<Point>>(); bool drawing = false;
+            pad.MouseDown += (s2, e2) => { drawing = true; strokes.Add(new List<Point>()); strokes[strokes.Count - 1].Add(e2.Location); };
+            pad.MouseMove += (s2, e2) => { if (drawing) { strokes[strokes.Count - 1].Add(e2.Location); pad.Invalidate(); } };
+            pad.MouseUp += (s2, e2) => { drawing = false; SetStatus("Scribble pad: " + strokes.Count + " stroke(s) drawn with the mouse"); };
+            pad.Paint += (s2, e2) => { e2.Graphics.SmoothingMode = SmoothingMode.AntiAlias; foreach (List<Point> st in strokes) { if (st.Count > 1) { using (Pen pen = new Pen(Color.FromArgb(160 + (st.Count % 90), 60, 120), 3F)) { e2.Graphics.DrawLines(pen, st.ToArray()); } } } };
+            Button clearPad = new Button { Text = "Clear pad", AutoSize = true };
+            clearPad.Click += (s, e) => { strokes.Clear(); pad.Invalidate(); SetStatus("Scribble pad cleared"); };
+            AddFillRow(t, "Scribble pad (mouse):", pad, 110, "Draw with the left mouse button - repainting happens in the Paint event, never with CreateGraphics");
+            AddRow(t, "Canvas actions:", Flow(shuffle, anim, clearPad, new Label { Text = "Resize the window - ResizeRedraw keeps the canvas correct", AutoSize = true, ForeColor = Color.DimGray }), null);
             p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
-        private string BuildRtf()
+        private TabPage TabWebMedia()
         {
-            return @"{\rtf1\ansi\deff0{\fonttbl{\f0 Segoe UI;}}{\colortbl;\red192\green0\blue0;\red0\green128\blue0;\red0\green0\blue255;}\f0\fs18 RichTextBox can mix \b bold\b0 , \i italic\i0 , \cf1 colors\cf0 , and \cf3 fonts\cf0 .\line \line Bullets too:\line \bullet First item\line \bullet Second item\line \bullet Third item\line \line All written by hand in RTF - no designer required.}";
+            TabPage p = new TabPage("10. Web/Media");
+            TableLayoutPanel t = Grid2();
+            AddHeader(t, "WebBrowser, PictureBox, SoundPlayer and SystemSounds - media with zero media files");
+            string html =
+                "<html><head><style>" +
+                "body{font-family:'Segoe UI';background:#f4f4ff;padding:10px}" +
+                "h2{color:indigo;margin:0 0 6px 0}p{font-size:13px}button{padding:4px 12px}" +
+                "</style></head><body>" +
+                "<h2>Hello from an embedded WebBrowser</h2>" +
+                "<p>This HTML was injected from C# through <b>DocumentText</b> - no internet involved.</p>" +
+                "<p id='output'>C# can write into this paragraph...</p>" +
+                "<button onclick=\"window.external.Report('JavaScript called C# at ' + new Date().toLocaleTimeString())\">Call C# from JavaScript</button>" +
+                "</body></html>";
+            WebBrowser web = new WebBrowser { Dock = DockStyle.Fill, MinimumSize = new Size(0, 150), ScriptErrorsSuppressed = true, AllowWebBrowserDrop = false };
+            web.ObjectForScripting = new WebBridge(m => BeginInvoke((Action)(() => SetStatus("WebBrowser ObjectForScripting: " + m))));
+            bool htmlSet = false;
+            web.HandleCreated += (s2, e2) => { if (!htmlSet) { htmlSet = true; web.DocumentText = html; } };
+            web.DocumentCompleted += (s2, e2) => SetStatus("WebBrowser document loaded: " + web.DocumentTitle);
+            AddFillRow(t, "WebBrowser:", web, 160, "IE-engine browser fed with in-memory HTML; the page's button calls back into C# via ObjectForScripting (page loads when you first open this tab)");
+            Button wbWrite = new Button { Text = "C# writes into the page", AutoSize = true };
+            wbWrite.Click += (s, e) =>
+            {
+                HtmlElement el = (web.Document == null) ? null : web.Document.GetElementById("output");
+                if (el == null) { SetStatus("Page not loaded yet - reopen this tab, then try again"); return; }
+                el.InnerText = "Hello page - written from C# at " + DateTime.Now.ToLongTimeString();
+                SetStatus("DOM element updated from C#");
+            };
+            Button wbReload = new Button { Text = "Reload HTML", AutoSize = true };
+            wbReload.Click += (s, e) => { web.DocumentText = html; SetStatus("DocumentText re-assigned"); };
+            AddRow(t, "WebBrowser actions:", Flow(wbWrite, wbReload), "Two-way DOM access: C# into the page, JavaScript back into C#");
+            PictureBox pb = new PictureBox { Dock = DockStyle.Fill, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, SizeMode = PictureBoxSizeMode.Zoom, Image = BuildDemoBitmap(360, 220), Margin = new Padding(2) };
+            AddFillRow(t, "PictureBox:", pb, 130, "The bitmap is drawn at runtime with GDI+ - no image file on disk");
+            FlowLayoutPanel pbModes = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
+            foreach (PictureBoxSizeMode m in new PictureBoxSizeMode[] { PictureBoxSizeMode.Normal, PictureBoxSizeMode.StretchImage, PictureBoxSizeMode.CenterImage, PictureBoxSizeMode.Zoom, PictureBoxSizeMode.AutoSize })
+            {
+                PictureBoxSizeMode mm = m; Button b = new Button { Text = m.ToString(), AutoSize = true };
+                b.Click += (s, e) => { pb.SizeMode = mm; SetStatus("PictureBox SizeMode: " + mm); };
+                pbModes.Controls.Add(b);
+            }
+            AddRow(t, "PictureBox SizeMode:", pbModes, "Normal, StretchImage, CenterImage, Zoom, AutoSize");
+            Button tone1 = new Button { Text = "Tone 440 Hz", AutoSize = true };
+            tone1.Click += (s, e) => PlayTone(440, 440, 400, 0.35);
+            Button tone2 = new Button { Text = "Tone 880 Hz", AutoSize = true };
+            tone2.Click += (s, e) => PlayTone(880, 880, 400, 0.35);
+            Button tone3 = new Button { Text = "Rising chirp", AutoSize = true };
+            tone3.Click += (s, e) => PlayTone(220, 1760, 900, 0.35);
+            AddRow(t, "SoundPlayer:", Flow(tone1, tone2, tone3), "A WAV file is synthesized into a MemoryStream and played - no audio files");
+            Button sb1 = new Button { Text = "Beep", AutoSize = true }; sb1.Click += (s, e) => { SystemSounds.Beep.Play(); SetStatus("SystemSounds.Beep"); };
+            Button sb2 = new Button { Text = "Asterisk", AutoSize = true }; sb2.Click += (s, e) => { SystemSounds.Asterisk.Play(); SetStatus("SystemSounds.Asterisk"); };
+            Button sb3 = new Button { Text = "Exclamation", AutoSize = true }; sb3.Click += (s, e) => { SystemSounds.Exclamation.Play(); SetStatus("SystemSounds.Exclamation"); };
+            Button sb4 = new Button { Text = "Hand", AutoSize = true }; sb4.Click += (s, e) => { SystemSounds.Hand.Play(); SetStatus("SystemSounds.Hand"); };
+            Button sb5 = new Button { Text = "Question", AutoSize = true }; sb5.Click += (s, e) => { SystemSounds.Question.Play(); SetStatus("SystemSounds.Question"); };
+            AddRow(t, "SystemSounds:", Flow(sb1, sb2, sb3, sb4, sb5), "The five Windows system sounds (silent if your sound scheme is 'No Sounds')");
+            p.AutoScroll = true; p.Controls.Add(t);
+            return p;
+        }
+        private TabPage TabLayoutScroll()
+        {
+            TabPage p = new TabPage("11. Layout & Scroll");
+            TableLayoutPanel t = Grid2();
+            AddHeader(t, "HScrollBar / VScrollBar, an Anchor + Dock playground, ToolStripContainer and the legacy Splitter");
+            Label swatchLbl = new Label { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Color.White, Text = "#B43C32  18 pt", Font = new Font("Segoe UI", 18F, FontStyle.Bold) };
+            Panel swatch = new Panel { Size = new Size(200, 64), BorderStyle = BorderStyle.FixedSingle, BackColor = Color.FromArgb(180, 60, 50) };
+            swatch.Controls.Add(swatchLbl);
+            HScrollBar hsR = new HScrollBar { Minimum = 0, Maximum = 270, LargeChange = 16, SmallChange = 4, Value = 180, Width = 150 };
+            HScrollBar hsG = new HScrollBar { Minimum = 0, Maximum = 270, LargeChange = 16, SmallChange = 4, Value = 60, Width = 150 };
+            HScrollBar hsB = new HScrollBar { Minimum = 0, Maximum = 270, LargeChange = 16, SmallChange = 4, Value = 50, Width = 150 };
+            VScrollBar vsFont = new VScrollBar { Minimum = 8, Maximum = 87, LargeChange = 16, SmallChange = 2, Value = 18, Height = 64 };
+            EventHandler mix = delegate
+            {
+                swatch.BackColor = Color.FromArgb(hsR.Value, hsG.Value, hsB.Value);
+                swatchLbl.ForeColor = (hsR.Value + hsG.Value + hsB.Value > 400) ? Color.Black : Color.White;
+                swatchLbl.Text = string.Format("#{0:X2}{1:X2}{2:X2}  {3} pt", hsR.Value, hsG.Value, hsB.Value, vsFont.Value);
+                swatchLbl.Font = new Font("Segoe UI", (float)vsFont.Value, FontStyle.Bold);
+                SetStatus(string.Format("HScrollBar RGB {0},{1},{2} - VScrollBar font size {3}", hsR.Value, hsG.Value, hsB.Value, vsFont.Value));
+            };
+            hsR.ValueChanged += mix; hsG.ValueChanged += mix; hsB.ValueChanged += mix; vsFont.ValueChanged += mix;
+            AddRow(t, "HScrollBar / VScrollBar:", Flow(new Label { Text = "R", AutoSize = true }, hsR, new Label { Text = "G", AutoSize = true }, hsG, new Label { Text = "B", AutoSize = true }, hsB, vsFont, swatch), "Three HScrollBars mix a color; the VScrollBar drives the preview font size");
+            Panel stage = new Panel { Size = new Size(340, 110), BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White, Margin = new Padding(2) };
+            Button probe = new Button { Text = "Probe", AutoSize = true, Location = new Point(12, 12) };
+            stage.Controls.Add(probe);
+            int r0 = t.RowCount; t.RowCount++; t.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            t.Controls.Add(new Label { Text = "Anchor / Dock playground:", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(2, 6, 6, 2) }, 0, r0);
+            t.Controls.Add(stage, 1, r0);
+            tips.SetToolTip(stage, "Pick an Anchor (or Dock = Fill), then resize the white stage with the + and - buttons");
+            RadioButton aTL = new RadioButton { Text = "Top,Left", Checked = true, AutoSize = true };
+            RadioButton aAll = new RadioButton { Text = "All", AutoSize = true };
+            RadioButton aBR = new RadioButton { Text = "Bottom,Right", AutoSize = true };
+            RadioButton aNone = new RadioButton { Text = "None", AutoSize = true };
+            CheckBox dockFill = new CheckBox { Text = "Dock = Fill", AutoSize = true };
+            Button grow = new Button { Text = "Stage +", AutoSize = true };
+            Button shrink = new Button { Text = "Stage -", AutoSize = true };
+            Action applyAnchor = delegate
+            {
+                if (dockFill.Checked) { probe.Dock = DockStyle.Fill; }
+                else
+                {
+                    probe.Dock = DockStyle.None;
+                    probe.Anchor = aTL.Checked ? (AnchorStyles.Top | AnchorStyles.Left) : aAll.Checked ? (AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right) : aBR.Checked ? (AnchorStyles.Bottom | AnchorStyles.Right) : AnchorStyles.None;
+                }
+                SetStatus("Probe Anchor = " + probe.Anchor + (dockFill.Checked ? " (docked)" : string.Empty));
+            };
+            EventHandler ap = (s2, e2) => applyAnchor();
+            aTL.CheckedChanged += ap; aAll.CheckedChanged += ap; aBR.CheckedChanged += ap; aNone.CheckedChanged += ap; dockFill.CheckedChanged += ap;
+            grow.Click += (s, e) => { stage.Width += 30; stage.Height += 24; applyAnchor(); };
+            shrink.Click += (s, e) => { if (stage.Width > 160) { stage.Width -= 30; } if (stage.Height > 70) { stage.Height -= 24; } applyAnchor(); };
+            AddRow(t, "Anchor presets:", Flow(aTL, aAll, aBR, aNone, dockFill, grow, shrink), "Anchor and Dock are the two WinForms layout mechanics - watch the Probe react");
+            ToolStripContainer tsc = new ToolStripContainer { Dock = DockStyle.Fill, Height = 150 };
+            ToolStrip stripTop = new ToolStrip();
+            stripTop.Items.Add(new ToolStripButton("Cut", null, (s, e) => SetStatus("ToolStripContainer strip: Cut")) { DisplayStyle = ToolStripItemDisplayStyle.Text });
+            stripTop.Items.Add(new ToolStripButton("Copy", null, (s, e) => SetStatus("ToolStripContainer strip: Copy")) { DisplayStyle = ToolStripItemDisplayStyle.Text });
+            stripTop.Items.Add(new ToolStripButton("Paste", null, (s, e) => SetStatus("ToolStripContainer strip: Paste")) { DisplayStyle = ToolStripItemDisplayStyle.Text });
+            stripTop.Items.Add(new ToolStripLabel("Grab my grip and drag me to another edge!"));
+            tsc.TopToolStripPanel.Join(stripTop);
+            ToolStrip stripSide = new ToolStrip();
+            stripSide.Items.Add(new ToolStripButton("Side", null, (s, e) => SetStatus("ToolStripContainer right panel")) { DisplayStyle = ToolStripItemDisplayStyle.Text });
+            tsc.RightToolStripPanel.Join(stripSide);
+            RichTextBox tscBody = new RichTextBox { Dock = DockStyle.Fill, Text = "This RichTextBox lives in the ToolStripContainer's ContentPanel.\r\n\r\nThe container exposes four ToolStripPanels (top, bottom, left, right). Drag the toolstrips between them at runtime - that is the whole point of ToolStripContainer." };
+            tsc.ContentPanel.Controls.Add(tscBody);
+            AddFillRow(t, "ToolStripContainer:", tsc, 140, "Four edge panels that toolbars can be dragged between at runtime");
+            Panel legacyHost = new Panel { Dock = DockStyle.Fill, Height = 90 };
+            Panel legacyLeft = new Panel { Dock = DockStyle.Left, Width = 110, BackColor = Color.AliceBlue };
+            legacyLeft.Controls.Add(new Label { Text = "Docked Left", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter });
+            Splitter legacy = new Splitter { Dock = DockStyle.Left, Width = 5, MinSize = 30, MinExtra = 30, BackColor = Color.SteelBlue };
+            Panel legacyFill = new Panel { Dock = DockStyle.Fill, BackColor = Color.MintCream };
+            legacyFill.Controls.Add(new Label { Text = "Fill area - drag the blue bar", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter });
+            legacyHost.Controls.Add(legacyFill); legacyHost.Controls.Add(legacy); legacyHost.Controls.Add(legacyLeft);
+            AddFillRow(t, "Splitter (legacy):", legacyHost, 85, "The .NET 1.x Splitter control - ancestor of SplitContainer - still resizes panels");
+            p.AutoScroll = true; p.Controls.Add(t);
+            return p;
+        }
+        private TabPage TabComponents()
+        {
+            TabPage p = new TabPage("12. Components & Print");
+            TableLayoutPanel t = Grid2();
+            AddHeader(t, "FileSystemWatcher, Process, System.Timers.Timer and printing with PrintDialog / PageSetupDialog / PrintPreviewControl");
+            ListBox fswLog = new ListBox { Dock = DockStyle.Fill, IntegralHeight = false };
+            string watchDir = Path.Combine(Path.GetTempPath(), "WinFormsShowcase_FSW");
+            try { Directory.CreateDirectory(watchDir); } catch { watchDir = Path.GetTempPath(); }
+            FileSystemWatcher fsw = new FileSystemWatcher(watchDir, "*.txt") { NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite };
+            Action<string> post = m => { try { BeginInvoke((Action)(() => { fswLog.Items.Insert(0, m); if (fswLog.Items.Count > 60) { fswLog.Items.RemoveAt(60); } SetStatus(m); })); } catch { } };
+            fsw.Created += (s2, e2) => post("FSW Created: " + e2.Name);
+            fsw.Changed += (s2, e2) => post("FSW Changed: " + e2.Name);
+            fsw.Deleted += (s2, e2) => post("FSW Deleted: " + e2.Name);
+            fsw.Renamed += (s2, e2) => post("FSW Renamed: " + e2.OldName + " -> " + e2.Name);
+            FormClosed += (s2, e2) => { try { fsw.EnableRaisingEvents = false; fsw.Dispose(); } catch { } };
+            Button fswCreate = new Button { Text = "Create file", AutoSize = true };
+            fswCreate.Click += (s, e) => { try { File.WriteAllText(Path.Combine(watchDir, "note_" + (DateTime.Now.Ticks % 100000) + ".txt"), "written " + DateTime.Now); } catch (Exception ex) { SetStatus("Create failed: " + ex.Message); } };
+            Button fswModify = new Button { Text = "Modify file", AutoSize = true };
+            fswModify.Click += (s, e) => { try { string[] files = Directory.GetFiles(watchDir, "*.txt"); if (files.Length == 0) { SetStatus("Create a file first"); return; } File.AppendAllText(files[0], "\r\nupdated " + DateTime.Now); } catch (Exception ex) { SetStatus("Modify failed: " + ex.Message); } };
+            Button fswDelete = new Button { Text = "Delete all", AutoSize = true };
+            fswDelete.Click += (s, e) => { try { foreach (string f in Directory.GetFiles(watchDir, "*.txt")) { File.Delete(f); } } catch (Exception ex) { SetStatus("Delete failed: " + ex.Message); } };
+            CheckBox fswOn = new CheckBox { Text = "EnableRaisingEvents", AutoSize = true };
+            fswOn.CheckedChanged += (s, e) => { fsw.EnableRaisingEvents = fswOn.Checked; SetStatus("FileSystemWatcher watching: " + watchDir); };
+            fswOn.Checked = true;
+            AddRow(t, "FileSystemWatcher:", Flow(fswOn, fswCreate, fswModify, fswDelete), "Watches a folder under %TEMP%; events arrive on threadpool threads and are marshalled to the UI thread with BeginInvoke");
+            AddFillRow(t, "FSW event log:", fswLog, 80, null);
+            Label procInfo = new Label { Dock = DockStyle.Fill, AutoSize = true, MaximumSize = new Size(560, 0), Text = "Process output appears here.", ForeColor = Color.DarkSlateGray };
+            Button procSelf = new Button { Text = "Inspect this process", AutoSize = true };
+            procSelf.Click += (s, e) =>
+            {
+                try
+                {
+                    System.Diagnostics.Process cur = System.Diagnostics.Process.GetCurrentProcess();
+                    procInfo.Text = string.Format("Id={0}  Name={1}  WorkingSet={2:0.0} MB  Threads={3}  Handles={4}", cur.Id, cur.ProcessName, cur.WorkingSet64 / 1048576.0, cur.Threads.Count, cur.HandleCount);
+                    SetStatus("Process.GetCurrentProcess(): " + cur.ProcessName);
+                }
+                catch (Exception ex) { SetStatus("Process info failed: " + ex.Message); }
+            };
+            Button procCmd = new Button { Text = "Run hidden cmd.exe", AutoSize = true };
+            procCmd.Click += (s, e) =>
+            {
+                try
+                {
+                    System.Diagnostics.ProcessStartInfo psi = new System.Diagnostics.ProcessStartInfo("cmd.exe", "/c echo Hello from a hidden child process & ver") { RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true };
+                    using (System.Diagnostics.Process cp = System.Diagnostics.Process.Start(psi))
+                    {
+                        string output = cp.StandardOutput.ReadToEnd();
+                        if (!cp.WaitForExit(5000)) { cp.Kill(); }
+                        procInfo.Text = "cmd.exe said:\r\n" + output.Trim();
+                        SetStatus("Process.Start captured " + output.Length + " characters");
+                    }
+                }
+                catch (Exception ex) { SetStatus("cmd.exe failed: " + ex.Message); }
+            };
+            Button procShell = new Button { Text = "Shell-open Notepad", AutoSize = true };
+            procShell.Click += (s, e) => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("notepad.exe") { UseShellExecute = true }); SetStatus("Process.Start launched notepad.exe"); } catch (Exception ex) { SetStatus("Launch failed: " + ex.Message); } };
+            AddRow(t, "Process component:", Flow(procSelf, procCmd, procShell), "Inspect yourself, spawn a hidden console and capture its output, or shell-open an app");
+            AddRow(t, "Process output:", procInfo, null);
+            Label serverTimerLbl = new Label { Text = "System.Timers.Timer idle", AutoSize = true, Anchor = AnchorStyles.Left, Font = new Font("Consolas", 9.75F), ForeColor = Color.SeaGreen };
+            System.Timers.Timer serverTimer = new System.Timers.Timer(500) { SynchronizingObject = this, Enabled = false };
+            serverTimer.Elapsed += (s2, e2) => serverTimerLbl.Text = "System.Timers.Timer: " + e2.SignalTime.ToString("HH:mm:ss.fff");
+            CheckBox serverOn = new CheckBox { Text = "Server timer (500 ms)", AutoSize = true };
+            serverOn.CheckedChanged += (s, e) => { serverTimer.Enabled = serverOn.Checked; SetStatus("System.Timers.Timer enabled = " + serverOn.Checked); };
+            FormClosed += (s2, e2) => { try { serverTimer.Dispose(); } catch { } };
+            AddRow(t, "System.Timers.Timer:", Flow(serverOn, serverTimerLbl), "A threadpool timer whose Elapsed is marshalled to the UI thread via SynchronizingObject");
+            PrintDocument pdoc = new PrintDocument { DocumentName = "WinFormsShowcase" };
+            int printPage = 0;
+            pdoc.BeginPrint += (s2, e2) => printPage = 0;
+            pdoc.PrintPage += (s2, e2) => { printPage++; DrawShowcasePage(e2.Graphics, e2.MarginBounds, printPage); e2.HasMorePages = printPage < 2; };
+            PrintPreviewControl ppc = new PrintPreviewControl { Dock = DockStyle.Fill, Document = pdoc, AutoZoom = true };
+            AddFillRow(t, "PrintPreviewControl:", ppc, 190, "The engine behind PrintPreviewDialog, embedded live, drawing from a PrintDocument (two pages)");
+            Button btnPrn = new Button { Text = "PrintDialog...", AutoSize = true };
+            btnPrn.Click += (s, e) =>
+            {
+                using (PrintDialog pd = new PrintDialog { Document = pdoc, UseEXDialog = true })
+                {
+                    if (pd.ShowDialog(this) == DialogResult.OK)
+                    {
+                        try { pdoc.Print(); SetStatus("Document sent to the printer"); }
+                        catch (Exception ex) { SetStatus("Print failed: " + ex.Message); }
+                    }
+                    else { SetStatus("PrintDialog cancelled"); }
+                }
+            };
+            Button btnPage = new Button { Text = "PageSetupDialog...", AutoSize = true };
+            btnPage.Click += (s, e) =>
+            {
+                using (PageSetupDialog psd = new PageSetupDialog { Document = pdoc })
+                {
+                    try { if (psd.ShowDialog(this) == DialogResult.OK) { ppc.InvalidatePreview(); SetStatus("Page setup applied - preview refreshed"); } }
+                    catch (Exception ex) { SetStatus("PageSetupDialog: " + ex.Message); }
+                }
+            };
+            Button btnPrev = new Button { Text = "Refresh preview", AutoSize = true };
+            btnPrev.Click += (s, e) => { ppc.InvalidatePreview(); SetStatus("PrintPreviewControl refreshed"); };
+            AddRow(t, "Printing dialogs:", Flow(btnPrn, btnPage, btnPrev), "PrintDialog and PageSetupDialog share the same PrintDocument as the preview");
+            p.AutoScroll = true; p.Controls.Add(t);
+            return p;
+        }
+        private TabPage TabGridMdi()
+        {
+            TabPage p = new TabPage("13. Grid, Binding & MDI");
+            TableLayoutPanel t = Grid2();
+            AddHeader(t, "Every DataGridView column type, simple DataBindings, Form effects and a full MDI playground");
+            DataGridView dg = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
+            DataGridViewTextBoxColumn cText = new DataGridViewTextBoxColumn { HeaderText = "Text column" };
+            DataGridViewComboBoxColumn cCombo = new DataGridViewComboBoxColumn { HeaderText = "ComboBox column" };
+            cCombo.Items.AddRange(new object[] { "Admin", "Developer", "Tester", "Guest" });
+            DataGridViewCheckBoxColumn cCheck = new DataGridViewCheckBoxColumn { HeaderText = "CheckBox column" };
+            DataGridViewButtonColumn cButton = new DataGridViewButtonColumn { HeaderText = "Button column", Text = "Ping", UseColumnTextForButtonValue = true };
+            DataGridViewLinkColumn cLink = new DataGridViewLinkColumn { HeaderText = "Link column", Text = "details", UseColumnTextForLinkValue = true };
+            DataGridViewImageColumn cImage = new DataGridViewImageColumn { HeaderText = "Image column", ImageLayout = DataGridViewImageCellLayout.Zoom };
+            dg.Columns.AddRange(cText, cCombo, cCheck, cButton, cLink, cImage);
+            dg.Rows.Add("Ada Lovelace", "Developer", true, null, null, icons.Images[0]);
+            dg.Rows.Add("Alan Turing", "Tester", false, null, null, icons.Images[1]);
+            dg.Rows.Add("Grace Hopper", "Admin", true, null, null, icons.Images[2]);
+            dg.CellClick += (s2, e2) => { if (e2.RowIndex >= 0 && e2.ColumnIndex == cButton.Index) SetStatus("Grid Button cell on row " + e2.RowIndex + ": " + dg.Rows[e2.RowIndex].Cells[cText.Index].Value); };
+            dg.CellContentClick += (s2, e2) => { if (e2.RowIndex >= 0 && e2.ColumnIndex == cLink.Index) SetStatus("Grid Link cell clicked: " + dg.Rows[e2.RowIndex].Cells[cText.Index].Value); };
+            dg.CellValueChanged += (s2, e2) => { if (e2.RowIndex >= 0 && e2.ColumnIndex == cCheck.Index) SetStatus("Grid CheckBox cell: " + dg.Rows[e2.RowIndex].Cells[cText.Index].Value + " active = " + dg.Rows[e2.RowIndex].Cells[cCheck.Index].Value); };
+            AddFillRow(t, "DataGridView column types:", dg, 130, "Text, ComboBox, CheckBox, Button, Link and Image columns in one unbound grid - toggle a checkbox, click a button or a link");
+            Person bound = new Person("Grace Hopper", 85, "Arlington");
+            TextBox bName = new TextBox { Width = 150 }; bName.DataBindings.Add("Text", bound, "Name");
+            NumericUpDown bAge = new NumericUpDown { Minimum = 0, Maximum = 130, Width = 80 }; bAge.DataBindings.Add("Value", bound, "Age");
+            TextBox bCity = new TextBox { Width = 150 }; bCity.DataBindings.Add("Text", bound, "City");
+            Button bRead = new Button { Text = "Read object back", AutoSize = true };
+            bRead.Click += (s, e) => SetStatus(string.Format("Bound Person now: {0}, {1}, {2}", bound.Name, bound.Age, bound.City));
+            AddRow(t, "DataBindings:", Flow(bName, bAge, bCity, bRead), "Two-way bindings to a plain object - edit the boxes, then read the object back");
+            Button fxOp = new Button { Text = "Opacity 60%", AutoSize = true };
+            fxOp.Click += (s, e) => { Form f = new Form { Text = "Form.Opacity demo", StartPosition = FormStartPosition.CenterParent, Opacity = 0.6D, ClientSize = new Size(320, 130) }; f.Controls.Add(new Label { Text = "This window is 60% opaque.", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter }); f.ShowDialog(this); };
+            Button fxTop = new Button { Text = "TopMost window", AutoSize = true };
+            fxTop.Click += (s, e) => { Form f = new Form { Text = "Form.TopMost demo", TopMost = true, StartPosition = FormStartPosition.Manual, Location = new Point(Left + 40, Bottom + 8), ClientSize = new Size(320, 110) }; f.Controls.Add(new Label { Text = "I float above every window.", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter }); f.Show(this); };
+            Button fxNone = new Button { Text = "Borderless form", AutoSize = true };
+            fxNone.Click += (s, e) => { Form f = new Form { Text = "Borderless", FormBorderStyle = FormBorderStyle.None, BackColor = Color.FromArgb(32, 32, 48), StartPosition = FormStartPosition.CenterParent, ClientSize = new Size(340, 150) }; Label l = new Label { Text = "FormBorderStyle.None\r\n(double-click to close)", Dock = DockStyle.Fill, ForeColor = Color.White, TextAlign = ContentAlignment.MiddleCenter }; l.DoubleClick += (s2, e2) => f.Close(); f.Controls.Add(l); f.ShowDialog(this); };
+            Button fxMdi = new Button { Text = "MDI playground...", AutoSize = true };
+            fxMdi.Click += (s, e) => { MdiPlayground pf = new MdiPlayground(); pf.Show(this); SetStatus("MDI playground opened - try File > New child and the Window menu"); };
+            AddRow(t, "Form extras & MDI:", Flow(fxOp, fxTop, fxNone, fxMdi), "Form Opacity, TopMost, borderless windows, and classic MDI with IsMdiContainer");
+            p.AutoScroll = true; p.Controls.Add(t);
+            return p;
+        }
+        private static Bitmap BuildDemoBitmap(int w, int h)
+        {
+            Bitmap bmp = new Bitmap(w, h);
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                using (LinearGradientBrush lg = new LinearGradientBrush(new Rectangle(0, 0, w, h), Color.MidnightBlue, Color.LightSkyBlue, LinearGradientMode.Vertical)) { g.FillRectangle(lg, 0, 0, w, h); }
+                Random r = new Random(7);
+                for (int i = 0; i < 28; i++)
+                {
+                    int d = 8 + r.Next(24); int x = r.Next(w - d); int y = r.Next(h - d);
+                    using (SolidBrush b = new SolidBrush(Color.FromArgb(150 + r.Next(105), r.Next(256), r.Next(256), r.Next(256)))) { g.FillEllipse(b, x, y, d, d); }
+                }
+                using (Font f = new Font("Segoe UI", 11F, FontStyle.Bold)) { g.DrawString("Runtime-generated bitmap", f, Brushes.White, 8, h - 30); }
+                g.DrawRectangle(Pens.White, 1, 1, w - 3, h - 3);
+            }
+            return bmp;
+        }
+        private void PlayTone(double startHz, double endHz, int milliseconds, double volume)
+        {
+            try
+            {
+                SoundPlayer sp = new SoundPlayer(BuildToneWav(startHz, endHz, milliseconds, volume));
+                sp.Play();
+                SetStatus("SoundPlayer: " + startHz.ToString("0") + " Hz tone, " + milliseconds + " ms");
+            }
+            catch (Exception ex) { SetStatus("Sound failed: " + ex.Message); }
+        }
+        private static MemoryStream BuildToneWav(double startHz, double endHz, int milliseconds, double volume)
+        {
+            const int rate = 8000;
+            int n = Math.Max(1, (int)(rate * milliseconds / 1000.0));
+            MemoryStream wav = new MemoryStream();
+            using (BinaryWriter w = new BinaryWriter(wav, System.Text.Encoding.ASCII, true))
+            {
+                w.Write(System.Text.Encoding.ASCII.GetBytes("RIFF")); w.Write(36 + n * 2);
+                w.Write(System.Text.Encoding.ASCII.GetBytes("WAVE"));
+                w.Write(System.Text.Encoding.ASCII.GetBytes("fmt ")); w.Write(16); w.Write((short)1); w.Write((short)1);
+                w.Write(rate); w.Write(rate * 2); w.Write((short)2); w.Write((short)16);
+                w.Write(System.Text.Encoding.ASCII.GetBytes("data")); w.Write(n * 2);
+                double phase = 0;
+                for (int i = 0; i < n; i++)
+                {
+                    double frac = (double)i / n;
+                    double f = startHz + (endHz - startHz) * frac;
+                    phase += 2.0 * Math.PI * f / rate;
+                    double smp = Math.Sin(phase) * volume;
+                    if (frac < 0.04) { smp *= frac / 0.04; }
+                    if (frac > 0.96) { smp *= (1.0 - frac) / 0.04; }
+                    w.Write((short)(smp * 32767.0));
+                }
+            }
+            wav.Position = 0;
+            return wav;
+        }
+        private void DrawShowcasePage(Graphics g, Rectangle area, int pageNo)
+        {
+            using (Font title = new Font("Segoe UI", 17F, FontStyle.Bold))
+            using (Font body = new Font("Segoe UI", 10F))
+            using (Font small = new Font("Segoe UI", 8F, FontStyle.Italic))
+            {
+                g.DrawString("WinForms Showcase - page " + pageNo + " of 2", title, Brushes.Indigo, area.Left, area.Top);
+                g.DrawString("Drawn by PrintDocument.PrintPage at " + DateTime.Now, small, Brushes.Gray, area.Left, area.Top + 34);
+                float y = area.Top + 72;
+                if (pageNo == 1)
+                {
+                    string[] names = new string[] { "Ada Lovelace", "Alan Turing", "Grace Hopper", "Linus Torvalds" };
+                    int[] ages = new int[] { 36, 41, 85, 54 };
+                    string[] cities = new string[] { "London", "Wilmslow", "Arlington", "Portland" };
+                    using (Pen lp = new Pen(Color.Gray)) { g.DrawLine(lp, area.Left, y - 6, area.Right, y - 6); }
+                    for (int i = 0; i < names.Length; i++)
+                    {
+                        g.DrawString(names[i], body, Brushes.Black, area.Left, y);
+                        g.DrawString(ages[i].ToString(), body, Brushes.Black, area.Left + 230, y);
+                        g.DrawString(cities[i], body, Brushes.Black, area.Left + 290, y);
+                        y += 24;
+                    }
+                }
+                else
+                {
+                    g.DrawString("This is page 2 - it exists because PrintPageEventArgs.HasMorePages was true.", body, Brushes.Black, area.Left, y);
+                    g.DrawEllipse(Pens.Indigo, area.Left + 40, y + 40, 180, 110);
+                    g.DrawString("GDI+ works on paper too", small, Brushes.Indigo, area.Left + 40, y + 160);
+                }
+                g.DrawString("Footer - WinForms Control Showcase", small, Brushes.Gray, area.Left, area.Bottom - 24);
+            }
         }
         private void BuildTray()
         {
+            tray = new NotifyIcon { Icon = SystemIcons.Information, Text = "WinForms Control Showcase", Visible = true };
             ContextMenuStrip trayMenu = new ContextMenuStrip();
-            trayMenu.Items.Add(new ToolStripMenuItem("Show balloon", null, (s, e) => tray.ShowBalloonTip(2000, "Tray menu", "Balloon from the tray context menu", ToolTipIcon.Info)));
+            trayMenu.Items.Add(new ToolStripMenuItem("Show balloon", null, (s, e) => tray.ShowBalloonTip(3000, "WinForms Showcase", "Straight from the NotifyIcon context menu.", ToolTipIcon.Info)));
+            trayMenu.Items.Add(new ToolStripMenuItem("Restore window", null, (s, e) => { if (WindowState == FormWindowState.Minimized) { WindowState = FormWindowState.Normal; } Activate(); }));
+            trayMenu.Items.Add(new ToolStripSeparator());
             trayMenu.Items.Add(new ToolStripMenuItem("Exit", null, (s, e) => Close()));
-            tray = new NotifyIcon { Icon = SystemIcons.Application, Text = "WinForms Control Showcase", Visible = true };
             tray.ContextMenuStrip = trayMenu;
-            tray.DoubleClick += (s, e) => { Show(); WindowState = FormWindowState.Normal; Activate(); };
+            tray.DoubleClick += (s, e) => { if (WindowState == FormWindowState.Minimized) { WindowState = FormWindowState.Normal; } Activate(); };
+            FormClosed += (s, e) => { try { tray.Visible = false; tray.Dispose(); } catch { } };
         }
         private void BuildWorker()
         {
             worker = new BackgroundWorker { WorkerReportsProgress = true, WorkerSupportsCancellation = true };
             worker.DoWork += (s, e) =>
             {
-                BackgroundWorker w = (BackgroundWorker)s;
-                for (int i = 1; i <= 50; i++)
+                string payload = (string)e.Argument;
+                for (int i = 1; i <= 100; i++)
                 {
-                    if (w.CancellationPending) { e.Cancel = true; return; }
-                    Thread.Sleep(80);
-                    w.ReportProgress(i * 2, "step " + i);
+                    if (worker.CancellationPending) { e.Cancel = true; return; }
+                    Thread.Sleep(40);
+                    int pct = i;
+                    string stage = payload;
+                    worker.ReportProgress(pct, stage);
                 }
-                e.Result = "all 50 steps completed";
+                e.Result = payload.ToUpperInvariant();
             };
-            worker.ProgressChanged += (s, e) => { if (workerBar != null) workerBar.Value = Math.Min(e.ProgressPercentage, 100); SetStatus("BackgroundWorker: " + e.UserState); };
-            worker.RunWorkerCompleted += (s, e) => { workerBtn.Enabled = true; cancelBtn.Enabled = false; if (e.Cancelled) { workerState.Text = "cancelled"; SetStatus("BackgroundWorker cancelled"); } else if (e.Error != null) { workerState.Text = "error"; SetStatus("BackgroundWorker failed: " + e.Error.Message); } else { workerBar.Value = 100; workerState.Text = "finished"; SetStatus("BackgroundWorker: " + e.Result); } };
+            worker.ProgressChanged += (s, e) => { workerBar.Value = e.ProgressPercentage; workerState.Text = e.UserState + " - " + e.ProgressPercentage + "%"; stProg.Value = e.ProgressPercentage; };
+            worker.RunWorkerCompleted += (s, e) =>
+            {
+                workerBtn.Enabled = true; cancelBtn.Enabled = false; stProg.Value = 0;
+                if (e.Error != null) { workerState.Text = "error: " + e.Error.Message; SetStatus("BackgroundWorker error: " + e.Error.Message); }
+                else if (e.Cancelled) { workerState.Text = "cancelled"; SetStatus("BackgroundWorker cancelled"); }
+                else { workerState.Text = "done: " + e.Result; SetStatus("BackgroundWorker finished: " + e.Result); }
+            };
         }
         private void ShowOpenDialog()
         {
-            using (OpenFileDialog ofd = new OpenFileDialog { Title = "OpenFileDialog demo", Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*", CheckFileExists = true })
-            { DialogResult dr = ofd.ShowDialog(this); SetStatus(dr == DialogResult.OK ? "OpenFileDialog chose: " + ofd.FileName : "OpenFileDialog cancelled"); }
+            using (OpenFileDialog ofd = new OpenFileDialog { Title = "Open a file (nothing is actually loaded)", Filter = "Text files (*.txt)|*.txt|Rich text (*.rtf)|*.rtf|All files (*.*)|*.*", RestoreDirectory = true })
+            {
+                if (ofd.ShowDialog(this) == DialogResult.OK) { SetStatus("OpenFileDialog picked: " + ofd.FileName); }
+                else { SetStatus("OpenFileDialog cancelled"); }
+            }
         }
         private void ShowSaveDialog()
         {
-            using (SaveFileDialog sfd = new SaveFileDialog { Title = "SaveFileDialog demo", Filter = "Text files (*.txt)|*.txt", FileName = "untitled.txt" })
-            { DialogResult dr = sfd.ShowDialog(this); SetStatus(dr == DialogResult.OK ? "SaveFileDialog chose: " + sfd.FileName : "SaveFileDialog cancelled"); }
+            using (SaveFileDialog sfd = new SaveFileDialog { Title = "Save a file (nothing is actually written)", Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*", OverwritePrompt = true, AddExtension = true })
+            {
+                if (sfd.ShowDialog(this) == DialogResult.OK) { SetStatus("SaveFileDialog target: " + sfd.FileName); }
+                else { SetStatus("SaveFileDialog cancelled"); }
+            }
         }
-        private void ShowAbout(){ using (AboutBox ab = new AboutBox()) ab.ShowDialog(this); }
-        private void ShowPrintPreview()
-        {
-            PrintDocument pd = new PrintDocument();
-            int page = 0;
-            pd.PrintPage += (s, e) => { page++; using (Font f = new Font("Segoe UI", 16)) { e.Graphics.DrawString("PrintDocument + PrintPreviewDialog demo", f, Brushes.Navy, 60, 80); } using (Font f2 = new Font("Consolas", 10)) { e.Graphics.DrawString("Page " + page + " - generated at " + DateTime.Now.ToLongTimeString(), f2, Brushes.Black, 60, 120); } e.HasMorePages = false; };
-            using (PrintPreviewDialog ppd = new PrintPreviewDialog { Document = pd, Width = 700, Height = 560 })
-            { SetStatus("PrintPreviewDialog opened (no printer required for preview)"); ppd.ShowDialog(this); }
-        }
+        private void ShowAbout(){ using (AboutBox ab = new AboutBox()) { ab.ShowDialog(this); } }
         private void ShowMsgGallery()
         {
-            MessageBox.Show(this, "Information icon, OK button.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            MessageBox.Show(this, "Warning icon - pretend the disk is nearly full.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            DialogResult r = MessageBox.Show(this, "Question with Yes/No - pick one:", "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            MessageBox.Show(this, "You answered: " + r, "Result", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            SetStatus("MessageBox gallery done (answer was " + r + ")");
+            MessageBox.Show(this, "A plain OK information box.", "MessageBox gallery", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            DialogResult r = MessageBox.Show(this, "Yes / No / Cancel with the Question icon.", "MessageBox gallery", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+            SetStatus("MessageBox returned: " + r);
+            MessageBox.Show(this, "Exclamation warning.", "MessageBox gallery", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            DialogResult r2 = MessageBox.Show(this, "Abort / Retry / Ignore with the Error icon and Button3 as default.", "MessageBox gallery", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Error, MessageBoxDefaultButton.Button3);
+            SetStatus("Final MessageBox returned: " + r2);
         }
-        private Bitmap MakeArt()
+        private void ShowPrintPreview()
         {
-            Bitmap bmp = new Bitmap(560, 260);
-            using (Graphics g = Graphics.FromImage(bmp))
+            PrintDocument pd = new PrintDocument { DocumentName = "WinFormsShowcase" };
+            int page = 0;
+            pd.BeginPrint += (s, e) => page = 0;
+            pd.PrintPage += (s, e) => { page++; DrawShowcasePage(e.Graphics, e.MarginBounds, page); e.HasMorePages = page < 2; };
+            using (PrintPreviewDialog ppd = new PrintPreviewDialog { Document = pd, Width = 760, Height = 520, StartPosition = FormStartPosition.CenterParent })
             {
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                using (LinearGradientBrush lg = new LinearGradientBrush(new Rectangle(0, 0, bmp.Width, bmp.Height), Color.FromArgb(rng.Next(256), rng.Next(256), rng.Next(256)), Color.FromArgb(rng.Next(256), rng.Next(256), rng.Next(256)), 45F)) { g.FillRectangle(lg, 0, 0, bmp.Width, bmp.Height); }
-                for (int i = 0; i < 14; i++)
-                {
-                    using (Pen pen = new Pen(Color.FromArgb(160, rng.Next(256), rng.Next(256), rng.Next(256)), 2F)) { g.DrawArc(pen, rng.Next(bmp.Width), rng.Next(bmp.Height), rng.Next(40, 160), rng.Next(40, 160), rng.Next(360), rng.Next(90, 300)); }
-                }
-                g.FillEllipse(Brushes.White, 190, 60, 180, 90);
-                using (Font f = new Font("Segoe UI", 14, FontStyle.Bold)) { g.DrawString("GDI+ is alive", f, Brushes.MidnightBlue, 205, 88); }
-                g.DrawRectangle(Pens.DimGray, 0, 0, bmp.Width - 1, bmp.Height - 1);
+                ppd.ShowDialog(this);
             }
-            return bmp;
+            SetStatus("PrintPreviewDialog closed");
         }
-        protected override void OnFormClosing(FormClosingEventArgs e)
+        private string BuildRtf()
         {
-            if (worker != null && worker.IsBusy) { worker.CancelAsync(); }
-            if (clock != null) { clock.Stop(); }
-            if (tray != null) { tray.Visible = false; tray.Dispose(); tray = null; }
-            base.OnFormClosing(e);
+            return @"{\rtf1\ansi\deff0{\fonttbl{\f0\fswiss Segoe UI;}}{\colortbl;\red180\green30\blue30;\red30\green110\blue50;\red40\green70\blue180;}\f0\fs20 This is a \b RichTextBox\b0  rendering \i hand-written RTF\i0  built entirely from a C# string.\par {\cf1 Warm red}, {\cf2 forest green} and {\cf3 deep blue} runs.\par\fs28 A bigger line\par\fs16 a smaller line\par\fs20\tab A tab stop, and\line a forced line break.\par}";
         }
     }
 }
 '@
-Set-Content -LiteralPath (Join-Path $Dir ($Name+'.csproj')) -Value $projWf.Replace('__APPNAME__',$Name) -Encoding UTF8
-Set-Content -LiteralPath (Join-Path $Dir 'Program.cs') -Value $progCs.Replace('__APPNAME__',$Name) -Encoding UTF8
-Set-Content -LiteralPath (Join-Path $Dir 'MainForm.cs') -Value $mainCs.Replace('__APPNAME__',$Name) -Encoding UTF8
-foreach($f in @('Form1.cs','Form1.Designer.cs')){$fp=Join-Path $Dir $f;if(Test-Path -LiteralPath $fp){Remove-Item -LiteralPath $fp -Force -ErrorAction SilentlyContinue}}
+ $projWf=$projWf.Replace('__APPNAME__',$Name)
+ $progCs=$progCs.Replace('__APPNAME__',$Name)
+ $mainCs=$mainCs.Replace('__APPNAME__',$Name)
+ $projDir=Join-Path $Dir $Name
+ New-Item -ItemType Directory -Force -Path $projDir | Out-Null
+ [IO.File]::WriteAllText((Join-Path $projDir ($Name+'.csproj')),$projWf)
+ [IO.File]::WriteAllText((Join-Path $projDir 'Program.cs'),$progCs)
+ [IO.File]::WriteAllText((Join-Path $projDir 'MainForm.cs'),$mainCs)
+ Write-Ok "Source written: $projDir"
+ return $projDir
 }
-function New-Project([string]$ExePath,[string]$Name,[string]$Dir){
-Invoke-DotNet -ExePath $ExePath -FailCode 4 -CliArgs @('new','winforms','-n',$Name,'-o',$Dir)
-if(-not (Test-Path -LiteralPath (Join-Path $Dir ($Name+'.csproj')))){Throw-Code 4 'The template reported success but the .csproj file is missing from the project directory.'}}
-function Publish-Project([string]$ExePath,[string]$Dir,[string]$Out){
-Invoke-DotNet -ExePath $ExePath -FailCode 4 -CliArgs @('restore',$Dir)
-Invoke-DotNet -ExePath $ExePath -FailCode 5 -CliArgs @('publish',$Dir,'-c','Release','-r','win-x64','--self-contained','true','-o',$Out)}
-function Start-PublishedApp([string]$Exe,[string]$WorkDir){
-try{Start-Process -FilePath $Exe -WorkingDirectory $WorkDir;return $true}catch{Write-Warn2 "Auto-launch failed: $($_.Exception.Message)";Write-Warn2 'The executable itself is valid and complete - start it manually by double-clicking:';Write-Warn2 "    $Exe";return $false}}
- $sw=[Diagnostics.Stopwatch]::StartNew()
+
+# ---------------- main ----------------
 try{
-if($ProjectType -eq 'Auto'){$Script:AppKind='WinForms'}else{$Script:AppKind=$ProjectType}
- $ProjectName=Get-SafeName $ProjectName
-if([string]::IsNullOrWhiteSpace($BaseDir)){if($PSScriptRoot){$BaseDir=$PSScriptRoot}else{$BaseDir=(Get-Location).Path}}
-if($BaseDir.EndsWith('\') -and $BaseDir.Length -gt 3){$BaseDir=$BaseDir.TrimEnd('\')}
-if($BaseDir.StartsWith($env:windir,[StringComparison]::OrdinalIgnoreCase)){$fb=[Environment]::GetFolderPath('Desktop');if([string]::IsNullOrWhiteSpace($fb)){$fb=Join-Path $env:USERPROFILE 'Documents'};Write-Warn2 "Refusing to build inside the Windows directory; redirecting BaseDir to: $fb";$BaseDir=$fb}
-if([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)){Throw-Code 1 'The LOCALAPPDATA environment variable is not set on this machine, so no user-local install location can be determined. Check the user profile environment and re-run.'}
- $ProjectDir=Join-Path $BaseDir $ProjectName
- $PublishDir=Join-Path $ProjectDir 'publish'
-Write-Host ''
-Write-Host '================================================================' -ForegroundColor Cyan
-Write-Host "  Bootstrap: building '$ProjectName' (WinForms control showcase, .NET 8, single-file exe)" -ForegroundColor Cyan
-Write-Host '================================================================' -ForegroundColor Cyan
-Initialize-Tls
- $Script:StageName='Environment checks'
-Write-Stage '1/8' 'Initializing TLS and checking free disk space'
-Write-Info "Running on Windows PowerShell $($PSVersionTable.PSVersion); TLS 1.2+ enforced; target framework net8.0-windows."
-Test-DiskSpace -Path $BaseDir
- $Script:StageName='Clean slate'
-Write-Stage '2/8' "Preparing a clean workspace: $ProjectDir"
-if(Test-Path -LiteralPath $ProjectDir){Write-Info 'Existing project folder found; destroying it completely for a clean slate...';if(-not (Remove-Folder -Path $ProjectDir)){Write-Err2 "Could not delete '$ProjectDir' after repeated attempts.";Write-Err2 'Usual culprits: the folder is open in an editor, terminal or Explorer window, an antivirus scan holds a lock, OneDrive is syncing, or an app from a previous run is still running.';Write-Err2 'Next step: close everything that uses this folder (or reboot) and run the script again.';exit 7}Write-Ok 'Old project folder removed and verified gone.'}
-try{[void][IO.Directory]::CreateDirectory($BaseDir)}catch{Throw-Code 7 "Could not create base directory '$BaseDir': $($_.Exception.Message)"}
-try{[void][IO.Directory]::CreateDirectory($ProjectDir)}catch{Throw-Code 7 "Could not create project directory '$ProjectDir': $($_.Exception.Message)"}
-if(-not (Test-Path -LiteralPath $ProjectDir)){Throw-Code 7 "Project directory '$ProjectDir' could not be created or verified."}
-Write-Ok 'Fresh, empty project directory is ready.'
- $Script:StageName='.NET SDK detection/install'
-Write-Stage '3/8' 'Detecting or installing the .NET 8 SDK (user-local, zero elevation)'
- $DotNetExe=Find-DotNetSdk
-if($DotNetExe){$sdkSource='pre-existing .NET 8 SDK already on this machine';Write-Ok "Using verified 8.x SDK: $DotNetExe"}
-else{
-Write-Info "No functional .NET 8 SDK detected; installing a user-local copy under: $($Script:DotnetDir)"
-Install-DotNetSdk
-Set-DotNetEnv -Dir $Script:DotnetDir
- $DotNetExe=Join-Path $Script:DotnetDir 'dotnet.exe'
-if(-not (Test-SdkWorks -DotNetPath $DotNetExe)){
-Write-Warn2 'SDK verification failed; the installation looks corrupt or incomplete. Wiping it and reinstalling once...'
-if(-not (Remove-Folder -Path $Script:DotnetDir)){Throw-Code 3 "Could not delete the corrupt SDK directory '$($Script:DotnetDir)'. Close any running dotnet processes (see Task Manager) and re-run."}
-Install-DotNetSdk
-Set-DotNetEnv -Dir $Script:DotnetDir
-if(-not (Test-SdkWorks -DotNetPath $DotNetExe)){Throw-Code 3 'The .NET 8 SDK was installed but still fails verification (dotnet --version / --list-sdks). Likely causes: antivirus interference or a proxy corrupting downloads. Check both, then re-run.'}
-}
- $sdkSource='freshly installed user-local SDK'
-}
- $v=(& $DotNetExe --version);if($LASTEXITCODE -ne 0){Throw-Code 3 "dotnet --version failed with exit code $LASTEXITCODE even after verification."}
-Write-Ok "Verified .NET SDK version: $v"
-Write-Ok "SDK source: $sdkSource"
- $Script:StageName='Project creation'
-Write-Stage '4/8' 'Creating the WinForms project from the official template'
-New-Project -ExePath $DotNetExe -Name $ProjectName -Dir $ProjectDir
-Write-Ok 'Template scaffolded.'
- $Script:StageName='Writing sources'
-Write-Stage '5/8' 'Writing WinForms showcase sources (one MainForm, 9 tabs, 50+ controls)'
-Write-SourceFiles -Dir $ProjectDir -Name $ProjectName
-Write-Ok 'All application source files written (csproj, Program.cs, MainForm.cs).'
- $Script:StageName='Restore/build/publish'
-Write-Stage '6/8' 'Publishing: Release / win-x64 / self-contained single-file (this can take several minutes)'
-Publish-Project -ExePath $DotNetExe -Dir $ProjectDir -Out $PublishDir
-Write-Ok 'Publish completed with exit code 0.'
- $Script:StageName='Artifact verification'
-Write-Stage '7/8' 'Verifying the published executable'
- $exe=Join-Path $PublishDir ($ProjectName+'.exe')
-if(-not (Test-Path -LiteralPath $exe)){Start-Sleep -Seconds 3}
-if(-not (Test-Path -LiteralPath $exe)){Throw-Code 5 "Publish reported success but '$exe' does not exist. If the exe appeared briefly and then vanished, your antivirus has almost certainly quarantined it - add an exclusion for this folder and re-run."}
- $size=(Get-Item -LiteralPath $exe).Length
-if($size -lt 1MB){Throw-Code 5 "The published exe is only $size bytes - far too small for a self-contained single-file build (expected tens of MB). Delete the project folder and re-run."}
- $sizeMb=[math]::Round($size/1MB,1)
-Write-Ok "Executable verified: $exe ($sizeMb MB)"
- $Script:StageName='Launch'
-if($NoLaunch){Write-Stage '8/8' 'Auto-launch skipped (-NoLaunch was provided)';Write-Info "Run the app anytime by double-clicking: $exe"}
-else{Write-Stage '8/8' 'Launching the freshly built application';if(-not (Start-PublishedApp -Exe $exe -WorkDir $PublishDir)){exit 6}}
-Write-Host ''
-Write-Host '================================================================' -ForegroundColor Green
-Write-Host '  SUCCESS - application built, verified and ready' -ForegroundColor Green
-Write-Host '================================================================' -ForegroundColor Green
-Write-Ok "Project folder : $ProjectDir"
-Write-Ok "Publish folder : $PublishDir"
-Write-Ok "Executable     : $exe ($sizeMb MB)"
-Write-Ok "SDK source     : $sdkSource"
-Write-Ok ("Elapsed time   : {0:hh\:mm\:ss}" -f $sw.Elapsed)
-Write-Ok 'The demo window has 9 tabs with 50+ live controls: menus, toolbars, status bars, ListView, TreeView, DataGridView,'
-Write-Ok 'PropertyGrid, MonthCalendar, dialogs, BackgroundWorker, NotifyIcon, WebBrowser, custom UserControl, GDI+ art and more.'
-Write-Ok 'The exe is fully self-contained: it runs on any Windows 10/11/Server 2016+ x64 machine with no .NET prerequisites.'
-exit 0
+    Initialize-Tls
+    if($ProjectType -eq 'Auto'){ $ProjectType='WinForms' }
+    $safeName=Get-SafeName -n $ProjectName
+    if([string]::IsNullOrWhiteSpace($BaseDir)){ $targetRoot=Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'WinFormsShowcase' } else { $targetRoot=$BaseDir }
+    Write-Stage 'Setup' "Project: $safeName | Type: $ProjectType | Folder: $targetRoot"
+    Test-DiskSpace -Path $targetRoot
+
+    $Script:StageName='Writing source'
+    $projDir=Write-SourceFiles -Dir $targetRoot -Name $safeName
+    $projFile=Join-Path $projDir ($safeName+'.csproj')
+    foreach($sub in @('bin','obj')){ $stale=Join-Path $projDir $sub; if(Test-Path -LiteralPath $stale){ [void](Remove-Folder -Path $stale) } }
+
+    $Script:StageName='Locating .NET 8 SDK'
+    Write-Stage $Script:StageName 'Looking for an installed .NET 8 SDK...'
+    $dotnet=Find-DotNetSdk
+    if($dotnet){ Write-Ok "Found .NET 8 SDK: $dotnet" }
+    else{
+        Write-Warn2 'No usable .NET 8 SDK found - installing it user-local (no admin rights needed).'
+        Install-DotNetSdk
+        $dotnet=Join-Path $Script:DotnetDir 'dotnet.exe'
+    }
+    Set-DotNetEnv -Dir (Split-Path -Parent $dotnet)
+    if(-not (Test-SdkWorks -DotNetPath $dotnet)){ Throw-Code 4 "The dotnet executable at '$dotnet' did not respond with a working .NET 8 SDK." }
+
+    $Script:StageName='Publishing'
+    Write-Stage $Script:StageName 'Publishing a self-contained single-file Release build (first run can take a minute)...'
+    $pubDir=Join-Path $projDir 'publish'
+    Invoke-DotNet -ExePath $dotnet -FailCode 6 -CliArgs @('publish',$projFile,'-c','Release','-o',$pubDir)
+    $exe=Join-Path $pubDir ($safeName+'.exe')
+    if(-not (Test-Path -LiteralPath $exe)){ Throw-Code 7 "Publish completed but the exe was not found at '$exe'." }
+    Write-Ok "Build OK: $exe"
+
+    if($NoLaunch){
+        Write-Info 'NoLaunch was specified - the app was NOT started.'
+        Write-Host "  Exe: $exe" -ForegroundColor White
+    }else{
+        Start-Process -FilePath $exe -WorkingDirectory $pubDir
+        Write-Ok "Launched: $safeName.exe"
+    }
+    Write-Host ''
+    Write-Ok 'Done - 13 tabs, 80+ WinForms controls, zero designers, zero NuGet packages.'
+    exit 0
 }
 catch{
- $code=1;if($_.Exception.Message -match '^\[(\d)\]'){$code=[int]$Matches[1]}
-Write-Host ''
-Write-Err2 "FAILED during stage: $($Script:StageName)"
-Write-Err2 "Error: $($_.Exception.Message)"
-Write-Err2 'Likely cause: the issue named above (no internet, proxy/TLS blocking, antivirus, locked folder, missing permissions or low disk space).'
-Write-Err2 'Next step: fix that issue and run this script again - it always starts from a clean slate.'
-exit $code
-}
-finally{
-if($Script:InstallerPath -and (Test-Path -LiteralPath $Script:InstallerPath)){Remove-Item -LiteralPath $Script:InstallerPath -Force -ErrorAction SilentlyContinue}
+    Write-Err2 ("FAILED: "+$_.Exception.Message)
+    exit 1
 }
