@@ -109,10 +109,10 @@ namespace __APPNAME__
     {
         public AboutBox()
         {
-            Text = "About WinForms Control Showcase"; FormBorderStyle = FormBorderStyle.FixedDialog; StartPosition = FormStartPosition.CenterParent; MinimizeBox = false; MaximizeBox = false; ShowInTaskbar = false; ClientSize = new Size(400, 190);
-            Label t = new Label { Text = "WinForms Control Showcase", Font = new Font("Segoe UI", 14F, FontStyle.Bold), AutoSize = true, Location = new Point(20, 18) };
-            Label d = new Label { Text = "One window. Every control. Zero designers.\r\nBuilt with .NET 8 and System.Windows.Forms.", AutoSize = true, Location = new Point(22, 60) };
-            Button ok = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(300, 150), Size = new Size(80, 28) };
+            Text = "About WinForms Control Showcase"; FormBorderStyle = FormBorderStyle.FixedDialog; StartPosition = FormStartPosition.CenterParent; MinimizeBox = false; MaximizeBox = false; ShowInTaskbar = false; ClientSize = new Size(450, 220);
+            Label t = new Label { Text = "WinForms Control Showcase", Font = new Font("Segoe UI", 14F, FontStyle.Bold), AutoSize = true, Location = new Point(24, 20) };
+            Label d = new Label { Text = "One window. Every control. Zero designers.\r\nBuilt with .NET 8 and System.Windows.Forms.", AutoSize = true, Location = new Point(26, 64) };
+            Button ok = new Button { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(340, 175), Size = new Size(86, 30) };
             Controls.Add(t); Controls.Add(d); Controls.Add(ok); AcceptButton = ok; CancelButton = ok;
         }
     }
@@ -173,7 +173,7 @@ namespace __APPNAME__
         public MdiPlayground()
         {
             Text = "MDI Playground - Form.IsMdiContainer"; IsMdiContainer = true;
-            StartPosition = FormStartPosition.CenterParent; ClientSize = new Size(760, 480); MinimumSize = new Size(480, 320);
+            StartPosition = FormStartPosition.CenterParent; ClientSize = new Size(900, 600); MinimumSize = new Size(600, 400);
             MenuStrip mm = new MenuStrip();
             ToolStripMenuItem miNew = new ToolStripMenuItem("&New child", null, (s, e) => NewChild());
             miNew.ShortcutKeys = Keys.Control | Keys.N;
@@ -214,7 +214,7 @@ namespace __APPNAME__
         private void NewChild()
         {
             childCount++;
-            Form c = new Form { Text = "Child " + childCount, MdiParent = this, ClientSize = new Size(260, 170), BackColor = palette[childCount % palette.Length] };
+            Form c = new Form { Text = "Child " + childCount, MdiParent = this, ClientSize = new Size(280, 190), BackColor = palette[childCount % palette.Length] };
             c.Controls.Add(new Label { Text = "Child #" + childCount + "\r\nMdiParent = playground\r\n\r\nDrag, minimize, maximize me -\r\nthen try Window > Tile Vertical.", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter });
             c.FormClosed += (s, e) => UpdateInfo();
             c.Show();
@@ -233,8 +233,11 @@ namespace __APPNAME__
         {
             rng = new Random(); clock = new System.Windows.Forms.Timer { Interval = 1000 }; ticks = 0;
             Text = "WinForms Control Showcase - Every Control, One Window";
-            Font = new Font("Segoe UI", 9F); StartPosition = FormStartPosition.CenterScreen; ClientSize = new Size(1180, 780); MinimumSize = new Size(960, 640);
+            Font = new Font("Segoe UI", 9F); StartPosition = FormStartPosition.CenterScreen;
+            WindowState = FormWindowState.Maximized;
+            ClientSize = new Size(1280, 800); MinimumSize = new Size(1024, 700);
             Icon = SystemIcons.Application; KeyPreview = true;
+            DoubleBuffered = true;
             tips = new ToolTip { AutoPopDelay = 8000, InitialDelay = 400, ReshowDelay = 150 }; err = new ErrorProvider(); hp = new HelpProvider();
             BuildIcons(); BuildTabs(); BuildStatus(); BuildToolbar(); BuildMenu();
             clock.Tick += (s, e) => { ticks++; stClock.Text = "Clock: " + DateTime.Now.ToLongTimeString(); };
@@ -324,29 +327,72 @@ namespace __APPNAME__
             MainMenuStrip = menu;
             Controls.Add(menu);
         }
-        private TableLayoutPanel Grid2(){ TableLayoutPanel t = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 2, Padding = new Padding(8) }; t.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); t.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100)); return t; }
-        private int AddHeader(TableLayoutPanel t, string text){ int r = t.RowCount; t.RowCount++; t.RowStyles.Add(new RowStyle(SizeType.AutoSize)); Label h = new Label { Text = text, AutoSize = true, Font = new Font("Segoe UI", 10F, FontStyle.Bold), ForeColor = Color.Navy, Margin = new Padding(2, 10, 2, 4) }; t.Controls.Add(h, 0, r); t.SetColumnSpan(h, 2); return r; }
+        private TabPage CreateTab(string name, string title, out TableLayoutPanel t)
+        {
+            TabPage p = new TabPage(name);
+            Panel header = new Panel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(14, 18, 14, 8) };
+            Label h = new Label { Text = title, Font = new Font("Segoe UI", 11F, FontStyle.Bold), ForeColor = Color.Navy, AutoSize = true, Dock = DockStyle.Top, AutoEllipsis = false };
+            header.Controls.Add(h);
+            
+            t = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                Padding = new Padding(14),
+                AutoScroll = true,
+                MinimumSize = new Size(650, 0)
+            };
+            t.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180));
+            t.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            
+            p.Controls.Add(t);
+            p.Controls.Add(header);
+            return p;
+        }
         private int AddRow(TableLayoutPanel t, string text, Control c, string tip)
         {
             int r = t.RowCount; t.RowCount++;
             t.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            Label l = new Label { Text = text, AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(2, 6, 6, 2) };
+            Label l = new Label { Text = text, AutoSize = true, Anchor = AnchorStyles.Left | AnchorStyles.Top, Margin = new Padding(4, 10, 8, 6), MaximumSize = new Size(170, 0) };
             t.Controls.Add(l, 0, r);
-            c.Dock = DockStyle.Fill; c.Margin = new Padding(2);
-            t.Controls.Add(c, 1, r);
+            if (c != null)
+            {
+                if (c is Label lbl) 
+                { 
+                    lbl.AutoSize = true; 
+                    lbl.Dock = DockStyle.Fill; 
+                    lbl.TextAlign = ContentAlignment.MiddleLeft;
+                    lbl.AutoEllipsis = false; 
+                }
+                else
+                {
+                    c.Dock = DockStyle.Fill;
+                }
+                c.Margin = new Padding(4, 4, 4, 4);
+                t.Controls.Add(c, 1, r);
+            }
             if (!string.IsNullOrEmpty(tip)) { tips.SetToolTip(c, tip); tips.SetToolTip(l, tip); }
             return r;
         }
-        private int AddFillRow(TableLayoutPanel t, string text, Control c, int minH, string tip){ int r = AddRow(t, text, c, tip); t.RowStyles[r] = new RowStyle(SizeType.Percent, 100); c.MinimumSize = new Size(0, minH); return r; }
-        private FlowLayoutPanel Flow(params Control[] cs){ FlowLayoutPanel f = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = true, Margin = new Padding(2) }; foreach (Control c in cs) { c.Margin = new Padding(2); f.Controls.Add(c); } return f; }
+        private int AddFillRow(TableLayoutPanel t, string text, Control c, int minH, string tip)
+        {
+            int r = AddRow(t, text, c, tip);
+            t.RowStyles[r] = new RowStyle(SizeType.Percent, 100);
+            c.MinimumSize = new Size(0, minH);
+            return r;
+        }
+        private FlowLayoutPanel Flow(params Control[] cs)
+        {
+            FlowLayoutPanel f = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, WrapContents = true, Margin = new Padding(4) };
+            foreach (Control c in cs) { c.Margin = new Padding(4); c.MinimumSize = new Size(0, 28); f.Controls.Add(c); }
+            return f;
+        }
         private TabPage TabBasics()
         {
-            TabPage p = new TabPage("1. Basics");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "Labels, text input and buttons - the bread and butter");
+            TabPage p = CreateTab("1. Basics", "Labels, text input and buttons - the bread and butter", out TableLayoutPanel t);
             Label l1 = new Label { Text = "Plain Label", AutoSize = true };
-            Label l2 = new Label { Text = "Fixed3D Label", AutoSize = true, BorderStyle = BorderStyle.Fixed3D, Padding = new Padding(3) };
-            Label l3 = new Label { Text = "FixedSingle Label", AutoSize = true, BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(3), BackColor = Color.LemonChiffon };
+            Label l2 = new Label { Text = "Fixed3D Label", AutoSize = true, BorderStyle = BorderStyle.Fixed3D, Padding = new Padding(4) };
+            Label l3 = new Label { Text = "FixedSingle Label", AutoSize = true, BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(4), BackColor = Color.LemonChiffon };
             LinkLabel link = new LinkLabel { Text = "LinkLabel - click me (nothing leaves this window)", AutoSize = true, LinkBehavior = LinkBehavior.HoverUnderline };
             link.LinkClicked += (s, e) => SetStatus("LinkLabel clicked at " + DateTime.Now.ToLongTimeString());
             AddRow(t, "Labels / LinkLabel:", Flow(l1, l2, l3, link), "Label variations and a LinkLabel");
@@ -357,11 +403,11 @@ namespace __APPNAME__
             MaskedTextBox mtb = new MaskedTextBox("(999) 000-0000") { Width = 150 };
             mtb.TextChanged += (s, e) => { bool ok = mtb.MaskCompleted; maskState.Text = ok ? "Mask complete - valid so far" : "Mask not complete"; maskState.ForeColor = ok ? Color.SeaGreen : Color.Firebrick; };
             AddRow(t, "MaskedTextBox:", Flow(mtb, maskState), "MaskedTextBox enforces input format");
-            TextBox tbMulti = new TextBox { Multiline = true, ScrollBars = ScrollBars.Both, WordWrap = true, AcceptsReturn = true, Height = 60 };
+            TextBox tbMulti = new TextBox { Multiline = true, ScrollBars = ScrollBars.Both, WordWrap = true, AcceptsReturn = true, Height = 80, MinimumSize = new Size(0, 60) };
             AddRow(t, "Multi-line TextBox:", tbMulti, "Multiline TextBox with scrollbars");
             RichTextBox rtb = new RichTextBox { ReadOnly = true, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
             rtb.Rtf = BuildRtf();
-            AddFillRow(t, "RichTextBox (RTF):", rtb, 90, "RichTextBox rendering hand-written RTF");
+            AddFillRow(t, "RichTextBox (RTF):", rtb, 130, "RichTextBox rendering hand-written RTF");
             Button btnMsg = new Button { Text = "MessageBox gallery", AutoSize = true };
             btnMsg.Click += (s, e) => ShowMsgGallery();
             Button btnFlat = new Button { Text = "FlatStyle.Flat", FlatStyle = FlatStyle.Flat, BackColor = Color.MistyRose, AutoSize = true };
@@ -373,21 +419,18 @@ namespace __APPNAME__
             tbDrop.DragDrop += (s, e) => { if (e.Data.GetDataPresent(DataFormats.FileDrop)) { string[] fs = (string[])e.Data.GetData(DataFormats.FileDrop); tbDrop.Text = string.Join(" | ", fs); } else { tbDrop.Text = (string)e.Data.GetData(DataFormats.Text); } SetStatus("Drop received!"); };
             AddRow(t, "Buttons / Drag-Drop:", Flow(btnMsg, btnFlat, btnPop, tbDrop), "Button styles; the TextBox accepts drag and drop of text or files");
             hp.SetHelpString(t, "Tab 1 shows Label, LinkLabel, TextBox, MaskedTextBox, RichTextBox, Button and drag & drop."); hp.SetShowHelp(t, true);
-            p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
         private TabPage TabSelection()
         {
-            TabPage p = new TabPage("2. Selection");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "Choices: check it, radio it, drop it down or slide it");
+            TabPage p = CreateTab("2. Selection", "Choices: check it, radio it, drop it down or slide it", out TableLayoutPanel t);
             CheckBox chk3 = new CheckBox { Text = "ThreeState", ThreeState = true, CheckState = CheckState.Indeterminate, AutoSize = true };
             chk3.CheckStateChanged += (s, e) => SetStatus("ThreeState checkbox: " + chk3.CheckState);
             CheckBox chkBtn = new CheckBox { Text = "Appearance.Button", Appearance = Appearance.Button, AutoSize = true, Width = 150, Height = 28 };
             chkBtn.CheckedChanged += (s, e) => SetStatus("Button checkbox: " + chkBtn.Checked);
             CheckBox chkAuto = new CheckBox { Text = "Checked by default", Checked = true, AutoSize = true };
             AddRow(t, "CheckBoxes:", Flow(chk3, chkBtn, chkAuto), "ThreeState, button-look and normal CheckBox");
-            GroupBox grp = new GroupBox { Text = "RadioButtons (mutually exclusive)", AutoSize = true, Padding = new Padding(6) };
+            GroupBox grp = new GroupBox { Text = "RadioButtons (mutually exclusive)", AutoSize = true, Padding = new Padding(8) };
             FlowLayoutPanel gf = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
             RadioButton r1 = new RadioButton { Text = "Alpha", AutoSize = true, Checked = true };
             RadioButton r2 = new RadioButton { Text = "Beta", AutoSize = true };
@@ -405,11 +448,11 @@ namespace __APPNAME__
             ComboBox cmbA = new ComboBox { Width = 220, AutoCompleteMode = AutoCompleteMode.SuggestAppend, AutoCompleteSource = AutoCompleteSource.ListItems };
             cmbA.Items.AddRange(new object[] { "Apple", "Apricot", "Banana", "Blueberry", "Cherry", "Cranberry", "Grape", "Kiwi", "Mango", "Peach", "Pear", "Pineapple", "Plum", "Raspberry", "Strawberry" });
             AddRow(t, "ComboBox (autocomplete):", cmbA, "Type 'ap' or 'st' to see SuggestAppend");
-            ListBox lb = new ListBox { SelectionMode = SelectionMode.MultiExtended, Height = 70 };
+            ListBox lb = new ListBox { SelectionMode = SelectionMode.MultiExtended, Height = 100, MinimumSize = new Size(0, 80) };
             lb.Items.AddRange(new object[] { "Multi", "Select", "With", "Ctrl", "And", "Shift" });
             lb.SelectedIndexChanged += (s, e) => SetStatus("ListBox selected: " + lb.SelectedItems.Count + " item(s)");
             AddRow(t, "ListBox:", lb, "MultiExtended selection: Ctrl and Shift work");
-            CheckedListBox clb = new CheckedListBox { Height = 70, CheckOnClick = true };
+            CheckedListBox clb = new CheckedListBox { Height = 100, MinimumSize = new Size(0, 80), CheckOnClick = true };
             clb.Items.AddRange(new object[] { "Eggs", "Milk", "Bread", "Coffee", "Noodles", "Sauce" });
             clb.ItemCheck += (s, e) => SetStatus("CheckedListBox will have " + (clb.CheckedItems.Count + (e.NewValue == CheckState.Checked ? 1 : -1)) + " checked");
             AddRow(t, "CheckedListBox:", clb, "ListBox with built-in checkboxes");
@@ -425,14 +468,11 @@ namespace __APPNAME__
             TrackBar trk = new TrackBar { Minimum = 0, Maximum = 100, TickFrequency = 10, TickStyle = TickStyle.Both, Width = 260 };
             trk.ValueChanged += (s, e) => trkLbl.Text = trk.Value.ToString();
             AddRow(t, "TrackBar:", Flow(trk, trkLbl), "Slider with ticks on both sides");
-            p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
         private TabPage TabDateTime()
         {
-            TabPage p = new TabPage("3. Date & Time");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "Picking moments in time");
+            TabPage p = CreateTab("3. Date & Time", "Picking moments in time", out TableLayoutPanel t);
             DateTimePicker dtpLong = new DateTimePicker { Format = DateTimePickerFormat.Long, Width = 240 };
             dtpLong.ValueChanged += (s, e) => SetStatus("DTP long: " + dtpLong.Value.ToLongDateString());
             AddRow(t, "DateTimePicker (long):", dtpLong, "Standard drop-down calendar");
@@ -446,15 +486,12 @@ namespace __APPNAME__
             cal.BoldedDates = new DateTime[] { today.AddDays(1), today.AddDays(3), today.AddDays(7) };
             AddRow(t, "MonthCalendar:", cal, "Multi-select calendar with bolded dates");
             AddRow(t, "Calendar result:", calLbl, null);
-            p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
         private TabPage TabContainers()
         {
-            TabPage p = new TabPage("4. Containers");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "Containers that hold other controls (and each other)");
-            SplitContainer sc = new SplitContainer { Dock = DockStyle.Fill, Height = 130, Panel1MinSize = 40, Panel2MinSize = 40 };
+            TabPage p = CreateTab("4. Containers", "Containers that hold other controls (and each other)", out TableLayoutPanel t);
+            SplitContainer sc = new SplitContainer { Dock = DockStyle.Fill, Height = 170, Panel1MinSize = 40, Panel2MinSize = 40, MinimumSize = new Size(0, 140) };
             bool scSet = false;
             sc.Resize += (s, e) => { if (!scSet && sc.Width > 240) { try { sc.SplitterDistance = sc.Width / 3; scSet = true; } catch { } } };
             sc.Panel1.BackColor = Color.AliceBlue;
@@ -464,36 +501,33 @@ namespace __APPNAME__
             TextBox tbIn = new TextBox { Dock = DockStyle.Fill, Multiline = true, Text = "Panel2 - drag the splitter between the panels!" };
             sc.Panel2.Controls.Add(tbIn);
             AddRow(t, "SplitContainer:", sc, "Two resizable panels with a draggable splitter");
-            FlowLayoutPanel flp = new FlowLayoutPanel { Dock = DockStyle.Fill, Height = 84, BorderStyle = BorderStyle.FixedSingle, BackColor = Color.WhiteSmoke };
+            FlowLayoutPanel flp = new FlowLayoutPanel { Dock = DockStyle.Fill, Height = 100, MinimumSize = new Size(0, 84), BorderStyle = BorderStyle.FixedSingle, BackColor = Color.WhiteSmoke };
             for (int i = 1; i <= 10; i++) { Button b = new Button { Text = "Btn " + i, AutoSize = true }; int n = i; b.Click += (s, e) => SetStatus("FlowLayoutPanel button " + n); flp.Controls.Add(b); }
             AddRow(t, "FlowLayoutPanel:", flp, "Controls flow and wrap automatically");
-            TableLayoutPanel tlp = new TableLayoutPanel { Dock = DockStyle.Fill, Height = 110, ColumnCount = 3, RowCount = 3 };
+            TableLayoutPanel tlp = new TableLayoutPanel { Dock = DockStyle.Fill, Height = 130, MinimumSize = new Size(0, 110), ColumnCount = 3, RowCount = 3 };
             for (int c = 0; c < 3; c++) tlp.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.3F));
             for (int r = 0; r < 3; r++) tlp.RowStyles.Add(new RowStyle(SizeType.Percent, 33.3F));
             string[] names = { "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine" };
-            for (int i = 0; i < 9; i++) { Label cell = new Label { Text = names[i], Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, BackColor = (i % 2 == 0) ? Color.Honeydew : Color.MintCream, BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(1) }; tlp.Controls.Add(cell, i % 3, i / 3); }
+            for (int i = 0; i < 9; i++) { Label cell = new Label { Text = names[i], Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, BackColor = (i % 2 == 0) ? Color.Honeydew : Color.MintCream, BorderStyle = BorderStyle.FixedSingle, Margin = new Padding(2) }; tlp.Controls.Add(cell, i % 3, i / 3); }
             AddRow(t, "TableLayoutPanel:", tlp, "3x3 percentage-based grid");
-            Panel scr = new Panel { Dock = DockStyle.Fill, Height = 90, AutoScroll = true, BorderStyle = BorderStyle.FixedSingle };
+            Panel scr = new Panel { Dock = DockStyle.Fill, Height = 110, MinimumSize = new Size(0, 90), AutoScroll = true, BorderStyle = BorderStyle.FixedSingle };
             for (int i = 1; i <= 20; i++) { Label li = new Label { Text = "Scrollable item " + i, Location = new Point(6, 4 + (i - 1) * 24), AutoSize = true }; scr.Controls.Add(li); }
             AddRow(t, "Panel (AutoScroll):", scr, "Panel shows scrollbars when content overflows");
-            TabControl inner = new TabControl { Dock = DockStyle.Fill, Height = 100 };
+            TabControl inner = new TabControl { Dock = DockStyle.Fill, Height = 120, MinimumSize = new Size(0, 100) };
             inner.TabPages.Add(new TabPage("Inner A")); inner.TabPages.Add(new TabPage("Inner B")); inner.TabPages.Add(new TabPage("Inner C"));
             inner.TabPages[0].Controls.Add(new Label { Text = "TabControl inside a TabControl - recursion is fun.", AutoSize = true, Padding = new Padding(8) });
             AddRow(t, "TabControl (nested):", inner, "Tabs can nest");
-            GroupBox gb = new GroupBox { Text = "GroupBox", AutoSize = true, Padding = new Padding(6) };
+            GroupBox gb = new GroupBox { Text = "GroupBox", AutoSize = true, Padding = new Padding(8) };
             FlowLayoutPanel gbf = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
             for (int i = 1; i <= 4; i++) { Button b = new Button { Text = "G" + i, AutoSize = true }; gbf.Controls.Add(b); }
             gb.Controls.Add(gbf);
             AddRow(t, "GroupBox:", gb, "Grouped controls with a caption");
-            p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
         private TabPage TabData()
         {
-            TabPage p = new TabPage("5. Data Views");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "Presenting collections: ListView, TreeView, DataGridView, PropertyGrid");
-            ListView lv = new ListView { Height = 140, View = View.Details, FullRowSelect = true, CheckBoxes = true, GridLines = true };
+            TabPage p = CreateTab("5. Data Views", "Presenting collections: ListView, TreeView, DataGridView, PropertyGrid", out TableLayoutPanel t);
+            ListView lv = new ListView { Height = 170, MinimumSize = new Size(0, 140), View = View.Details, FullRowSelect = true, CheckBoxes = true, GridLines = true };
             lv.Columns.Add("Name", 150); lv.Columns.Add("Type", 90); lv.Columns.Add("Size (KB)", 80);
             ListViewGroup g1 = new ListViewGroup("Documents"); ListViewGroup g2 = new ListViewGroup("Media");
             lv.Groups.Add(g1); lv.Groups.Add(g2);
@@ -503,12 +537,12 @@ namespace __APPNAME__
             ListViewItem d = new ListViewItem("clip.avi", 3) { Group = g2 }; d.SubItems.Add("Video"); d.SubItems.Add("98304");
             lv.Items.AddRange(new ListViewItem[] { a, b, c, d });
             lv.SelectedIndexChanged += (s, e) => { if (lv.SelectedItems.Count > 0) SetStatus("ListView: " + lv.SelectedItems[0].Text); };
-            AddFillRow(t, "ListView:", lv, 130, "Details view with groups, checkboxes and columns");
+            AddFillRow(t, "ListView:", lv, 150, "Details view with groups, checkboxes and columns");
             FlowLayoutPanel lvBtns = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
             foreach (View v in new View[] { View.LargeIcon, View.SmallIcon, View.List, View.Details })
             { Button vb = new Button { Text = v.ToString(), AutoSize = true }; View vv = v; vb.Click += (s, e) => { lv.View = vv; SetStatus("ListView view: " + vv); }; lvBtns.Controls.Add(vb); }
             AddRow(t, "ListView views:", lvBtns, "Switch ListView View modes");
-            TreeView tv = new TreeView { Height = 120, CheckBoxes = true, ImageList = icons, ItemHeight = 20 };
+            TreeView tv = new TreeView { Height = 140, MinimumSize = new Size(0, 120), CheckBoxes = true, ImageList = icons, ItemHeight = 20 };
             TreeNode root = new TreeNode("Devices", 0, 0);
             TreeNode pc = new TreeNode("This PC", 1, 1);
             pc.Nodes.Add(new TreeNode("Drive C:", 2, 2)); pc.Nodes.Add(new TreeNode("Drive D:", 2, 2));
@@ -525,22 +559,19 @@ namespace __APPNAME__
             BindingSource bs = new BindingSource { DataSource = dt };
             BindingNavigator nav = new BindingNavigator(true) { Dock = DockStyle.Top };
             nav.BindingSource = bs;
-            DataGridView grid = new DataGridView { Dock = DockStyle.Fill, DataSource = bs, AllowUserToAddRows = true, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Height = 120 };
+            DataGridView grid = new DataGridView { Dock = DockStyle.Fill, DataSource = bs, AllowUserToAddRows = true, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, Height = 130 };
             grid.DataError += (s, e) => SetStatus("Grid data error: " + e.Exception.Message);
-            Panel gridHost = new Panel { Dock = DockStyle.Fill, Height = 160 };
+            Panel gridHost = new Panel { Dock = DockStyle.Fill, Height = 190, MinimumSize = new Size(0, 160) };
             gridHost.Controls.Add(grid); gridHost.Controls.Add(nav);
-            AddFillRow(t, "DataGridView + BindingNavigator:", gridHost, 150, "Data-bound grid with a navigator strip (add/delete rows)");
-            PropertyGrid pg = new PropertyGrid { Dock = DockStyle.Fill, Height = 150, SelectedObject = new Person("Ada Lovelace", 36, "London") };
-            AddFillRow(t, "PropertyGrid:", pg, 150, "Reflects public properties of a Person object");
-            p.AutoScroll = true; p.Controls.Add(t);
+            AddFillRow(t, "DataGridView + BindingNavigator:", gridHost, 170, "Data-bound grid with a navigator strip (add/delete rows)");
+            PropertyGrid pg = new PropertyGrid { Dock = DockStyle.Fill, Height = 180, MinimumSize = new Size(0, 150), SelectedObject = new Person("Ada Lovelace", 36, "London") };
+            AddFillRow(t, "PropertyGrid:", pg, 170, "Reflects public properties of a Person object");
             return p;
         }
         private TabPage TabMenus()
         {
-            TabPage p = new TabPage("6. Menus & Toolbars");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "The MenuStrip, ToolStrip and StatusStrip are live at the top and bottom of this window");
-            AddRow(t, "MenuStrip:", new Label { Text = "MenuStrip: File / View / Help with shortcuts (try Ctrl+O, Ctrl+S, Alt+F4).", AutoSize = true, Anchor = AnchorStyles.Left, ForeColor = Color.DarkSlateGray }, null);
+            TabPage p = CreateTab("6. Menus & Toolbars", "The MenuStrip, ToolStrip and StatusStrip are live at the top and bottom of this window", out TableLayoutPanel t);
+            AddRow(t, "MenuStrip:", new Label { Text = "MenuStrip: File / View / Help with shortcuts (try Ctrl+O, Ctrl+S, Alt+F4).", ForeColor = Color.DarkSlateGray }, null);
             ContextMenuStrip ctx = new ContextMenuStrip();
             ctx.Items.Add(new ToolStripMenuItem("Cut", null, (s, e) => SetStatus("Context: Cut")));
             ctx.Items.Add(new ToolStripMenuItem("Copy", null, (s, e) => SetStatus("Context: Copy")));
@@ -550,9 +581,9 @@ namespace __APPNAME__
             ctxCheck.CheckOnClick = true; ctxCheck.Checked = true;
             ctxCheck.Click += (s, e) => SetStatus("Snap to grid = " + ctxCheck.Checked);
             ctx.Items.Add(ctxCheck);
-            Panel ctxHost = new Panel { Dock = DockStyle.Fill, Height = 110, BackColor = Color.Ivory, BorderStyle = BorderStyle.FixedSingle, ContextMenuStrip = ctx };
+            Panel ctxHost = new Panel { Dock = DockStyle.Fill, Height = 130, MinimumSize = new Size(0, 110), BackColor = Color.Ivory, BorderStyle = BorderStyle.FixedSingle, ContextMenuStrip = ctx };
             ctxHost.Controls.Add(new Label { Text = "Right-click anywhere in this bordered panel", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Color.Gray });
-            AddFillRow(t, "ContextMenuStrip:", ctxHost, 100, "ContextMenuStrip - right-click the panel");
+            AddFillRow(t, "ContextMenuStrip:", ctxHost, 130, "ContextMenuStrip - right-click the panel");
             ToolStrip inner = new ToolStrip { GripStyle = ToolStripGripStyle.Hidden, Dock = DockStyle.Top, BackColor = Color.WhiteSmoke };
             ToolStripDropDownButton ddb = new ToolStripDropDownButton("DropDownButton");
             ddb.DropDownItems.Add(new ToolStripMenuItem("Nested level 1", null, (s, e) => SetStatus("Nested 1")));
@@ -574,18 +605,15 @@ namespace __APPNAME__
             ToolStripStatusLabel m1 = new ToolStripStatusLabel { Spring = true, Text = "A StatusStrip inside a tab", TextAlign = ContentAlignment.MiddleLeft };
             ToolStripStatusLabel m2 = new ToolStripStatusLabel("v8.0") { BorderSides = ToolStripStatusLabelBorderSides.All };
             mini.Items.AddRange(new ToolStripItem[] { m1, m2 });
-            Panel miniHost = new Panel { Dock = DockStyle.Fill, Height = 40 };
+            Panel miniHost = new Panel { Dock = DockStyle.Fill, Height = 44, MinimumSize = new Size(0, 40) };
             miniHost.Controls.Add(mini);
             AddRow(t, "StatusStrip (mini):", miniHost, "Another StatusStrip instance");
-            p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
         private TabPage TabDialogs()
         {
-            TabPage p = new TabPage("7. Dialogs");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "Common dialogs: files, folders, colors, fonts, printing, message boxes and a custom dialog");
-            Label lblPainted = new Label { Text = "Target for Color / Font dialogs", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, BackColor = Color.PapayaWhip, BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 11F), MinimumSize = new Size(0, 46) };
+            TabPage p = CreateTab("7. Dialogs", "Common dialogs: files, folders, colors, fonts, printing, message boxes and a custom dialog", out TableLayoutPanel t);
+            Label lblPainted = new Label { Text = "Target for Color / Font dialogs", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, BackColor = Color.PapayaWhip, BorderStyle = BorderStyle.FixedSingle, Font = new Font("Segoe UI", 11F), MinimumSize = new Size(0, 50) };
             AddRow(t, "Sample label:", lblPainted, "ColorDialog and FontDialog apply here");
             Button btnOpen = new Button { Text = "OpenFileDialog...", AutoSize = true }; btnOpen.Click += (s, e) => ShowOpenDialog();
             Button btnSave = new Button { Text = "SaveFileDialog...", AutoSize = true }; btnSave.Click += (s, e) => ShowSaveDialog();
@@ -606,14 +634,11 @@ namespace __APPNAME__
             Button btnAbout = new Button { Text = "Custom dialog (AboutBox)...", AutoSize = true };
             btnAbout.Click += (s, e) => { using (AboutBox ab = new AboutBox()) { DialogResult dr = ab.ShowDialog(this); SetStatus("Custom dialog returned: " + dr); } };
             AddRow(t, "Custom Form dialog:", btnAbout, "A second Form shown with ShowDialog");
-            p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
         private TabPage TabBackground()
         {
-            TabPage p = new TabPage("8. Background & Components");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "Non-visual components: Timer, BackgroundWorker, NotifyIcon, ErrorProvider, HelpProvider");
+            TabPage p = CreateTab("8. Background & Components", "Non-visual components: Timer, BackgroundWorker, NotifyIcon, ErrorProvider, HelpProvider", out TableLayoutPanel t);
             Label clockLbl = new Label { Text = "Timer tick: 0", AutoSize = true, Anchor = AnchorStyles.Left, Font = new Font("Consolas", 10F, FontStyle.Bold), ForeColor = Color.SeaGreen };
             clock.Tick += (s, e) => clockLbl.Text = "Timer tick: " + ticks + "   " + DateTime.Now.ToLongTimeString();
             AddRow(t, "Timer (1s):", clockLbl, "System.Windows.Forms.Timer ticking every second");
@@ -639,21 +664,18 @@ namespace __APPNAME__
             hp.SetShowHelp(helpBtn, true);
             helpBtn.Click += (s, e) => SetStatus("Button focused - now press F1");
             AddRow(t, "HelpProvider:", helpBtn, "Pop-up help on F1, wired entirely in code");
-            p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
         private TabPage TabGraphics()
         {
-            TabPage p = new TabPage("9. Graphics");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "GDI+ painting: gradients, hatches, transforms, double buffering and mouse drawing");
+            TabPage p = CreateTab("9. Graphics", "GDI+ painting: gradients, hatches, transforms, double buffering and mouse drawing", out TableLayoutPanel t);
             PaintCanvas canvas = new PaintCanvas { Dock = DockStyle.Fill, BorderStyle = BorderStyle.FixedSingle };
             Button shuffle = new Button { Text = "Randomize palette", AutoSize = true };
             shuffle.Click += (s, e) => { canvas.Randomize(); canvas.Invalidate(); SetStatus("PaintCanvas repainted with a fresh random palette"); };
             CheckBox anim = new CheckBox { Text = "Bounce the ball", AutoSize = true };
             anim.CheckedChanged += (s, e) => { canvas.AnimationOn = anim.Checked; SetStatus("PaintCanvas animation: " + anim.Checked); };
-            AddFillRow(t, "PaintCanvas (OnPaint):", canvas, 200, "A Panel subclass drawing a gradient, hatch ellipse, dashed Bezier, rotating arc and animated ball in OnPaint with double buffering");
-            DoubleBufferPanel pad = new DoubleBufferPanel { Dock = DockStyle.Fill, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle };
+            AddFillRow(t, "PaintCanvas (OnPaint):", canvas, 240, "A Panel subclass drawing a gradient, hatch ellipse, dashed Bezier, rotating arc and animated ball in OnPaint with double buffering");
+            DoubleBufferPanel pad = new DoubleBufferPanel { Dock = DockStyle.Fill, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, MinimumSize = new Size(0, 120) };
             List<List<Point>> strokes = new List<List<Point>>(); bool drawing = false;
             pad.MouseDown += (s2, e2) => { drawing = true; strokes.Add(new List<Point>()); strokes[strokes.Count - 1].Add(e2.Location); };
             pad.MouseMove += (s2, e2) => { if (drawing) { strokes[strokes.Count - 1].Add(e2.Location); pad.Invalidate(); } };
@@ -661,16 +683,13 @@ namespace __APPNAME__
             pad.Paint += (s2, e2) => { e2.Graphics.SmoothingMode = SmoothingMode.AntiAlias; foreach (List<Point> st in strokes) { if (st.Count > 1) { using (Pen pen = new Pen(Color.FromArgb(160 + (st.Count % 90), 60, 120), 3F)) { e2.Graphics.DrawLines(pen, st.ToArray()); } } } };
             Button clearPad = new Button { Text = "Clear pad", AutoSize = true };
             clearPad.Click += (s, e) => { strokes.Clear(); pad.Invalidate(); SetStatus("Scribble pad cleared"); };
-            AddFillRow(t, "Scribble pad (mouse):", pad, 110, "Draw with the left mouse button - repainting happens in the Paint event, never with CreateGraphics");
+            AddFillRow(t, "Scribble pad (mouse):", pad, 140, "Draw with the left mouse button - repainting happens in the Paint event, never with CreateGraphics");
             AddRow(t, "Canvas actions:", Flow(shuffle, anim, clearPad, new Label { Text = "Resize the window - ResizeRedraw keeps the canvas correct", AutoSize = true, ForeColor = Color.DimGray }), null);
-            p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
         private TabPage TabWebMedia()
         {
-            TabPage p = new TabPage("10. Web/Media");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "WebBrowser, PictureBox, SoundPlayer and SystemSounds - media with zero media files");
+            TabPage p = CreateTab("10. Web/Media", "WebBrowser, PictureBox, SoundPlayer and SystemSounds - media with zero media files", out TableLayoutPanel t);
             string html =
                 "<html><head><style>" +
                 "body{font-family:'Segoe UI';background:#f4f4ff;padding:10px}" +
@@ -681,12 +700,12 @@ namespace __APPNAME__
                 "<p id='output'>C# can write into this paragraph...</p>" +
                 "<button onclick=\"window.external.Report('JavaScript called C# at ' + new Date().toLocaleTimeString())\">Call C# from JavaScript</button>" +
                 "</body></html>";
-            WebBrowser web = new WebBrowser { Dock = DockStyle.Fill, MinimumSize = new Size(0, 150), ScriptErrorsSuppressed = true, AllowWebBrowserDrop = false };
+            WebBrowser web = new WebBrowser { Dock = DockStyle.Fill, MinimumSize = new Size(0, 170), ScriptErrorsSuppressed = true, AllowWebBrowserDrop = false };
             web.ObjectForScripting = new WebBridge(m => BeginInvoke((Action)(() => SetStatus("WebBrowser ObjectForScripting: " + m))));
             bool htmlSet = false;
             web.HandleCreated += (s2, e2) => { if (!htmlSet) { htmlSet = true; web.DocumentText = html; } };
             web.DocumentCompleted += (s2, e2) => SetStatus("WebBrowser document loaded: " + web.DocumentTitle);
-            AddFillRow(t, "WebBrowser:", web, 160, "IE-engine browser fed with in-memory HTML; the page's button calls back into C# via ObjectForScripting (page loads when you first open this tab)");
+            AddFillRow(t, "WebBrowser:", web, 200, "IE-engine browser fed with in-memory HTML; the page's button calls back into C# via ObjectForScripting (page loads when you first open this tab)");
             Button wbWrite = new Button { Text = "C# writes into the page", AutoSize = true };
             wbWrite.Click += (s, e) =>
             {
@@ -698,8 +717,8 @@ namespace __APPNAME__
             Button wbReload = new Button { Text = "Reload HTML", AutoSize = true };
             wbReload.Click += (s, e) => { web.DocumentText = html; SetStatus("DocumentText re-assigned"); };
             AddRow(t, "WebBrowser actions:", Flow(wbWrite, wbReload), "Two-way DOM access: C# into the page, JavaScript back into C#");
-            PictureBox pb = new PictureBox { Dock = DockStyle.Fill, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, SizeMode = PictureBoxSizeMode.Zoom, Image = BuildDemoBitmap(360, 220), Margin = new Padding(2) };
-            AddFillRow(t, "PictureBox:", pb, 130, "The bitmap is drawn at runtime with GDI+ - no image file on disk");
+            PictureBox pb = new PictureBox { Dock = DockStyle.Fill, BackColor = Color.White, BorderStyle = BorderStyle.FixedSingle, SizeMode = PictureBoxSizeMode.Zoom, Image = BuildDemoBitmap(360, 220), Margin = new Padding(4), MinimumSize = new Size(0, 140) };
+            AddFillRow(t, "PictureBox:", pb, 170, "The bitmap is drawn at runtime with GDI+ - no image file on disk");
             FlowLayoutPanel pbModes = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true };
             foreach (PictureBoxSizeMode m in new PictureBoxSizeMode[] { PictureBoxSizeMode.Normal, PictureBoxSizeMode.StretchImage, PictureBoxSizeMode.CenterImage, PictureBoxSizeMode.Zoom, PictureBoxSizeMode.AutoSize })
             {
@@ -721,21 +740,18 @@ namespace __APPNAME__
             Button sb4 = new Button { Text = "Hand", AutoSize = true }; sb4.Click += (s, e) => { SystemSounds.Hand.Play(); SetStatus("SystemSounds.Hand"); };
             Button sb5 = new Button { Text = "Question", AutoSize = true }; sb5.Click += (s, e) => { SystemSounds.Question.Play(); SetStatus("SystemSounds.Question"); };
             AddRow(t, "SystemSounds:", Flow(sb1, sb2, sb3, sb4, sb5), "The five Windows system sounds (silent if your sound scheme is 'No Sounds')");
-            p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
         private TabPage TabLayoutScroll()
         {
-            TabPage p = new TabPage("11. Layout & Scroll");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "HScrollBar / VScrollBar, an Anchor + Dock playground, ToolStripContainer and the legacy Splitter");
+            TabPage p = CreateTab("11. Layout & Scroll", "HScrollBar / VScrollBar, an Anchor + Dock playground, ToolStripContainer and the legacy Splitter", out TableLayoutPanel t);
             Label swatchLbl = new Label { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Color.White, Text = "#B43C32  18 pt", Font = new Font("Segoe UI", 18F, FontStyle.Bold) };
             Panel swatch = new Panel { Size = new Size(200, 64), BorderStyle = BorderStyle.FixedSingle, BackColor = Color.FromArgb(180, 60, 50) };
             swatch.Controls.Add(swatchLbl);
             HScrollBar hsR = new HScrollBar { Minimum = 0, Maximum = 270, LargeChange = 16, SmallChange = 4, Value = 180, Width = 150 };
             HScrollBar hsG = new HScrollBar { Minimum = 0, Maximum = 270, LargeChange = 16, SmallChange = 4, Value = 60, Width = 150 };
             HScrollBar hsB = new HScrollBar { Minimum = 0, Maximum = 270, LargeChange = 16, SmallChange = 4, Value = 50, Width = 150 };
-            VScrollBar vsFont = new VScrollBar { Minimum = 8, Maximum = 87, LargeChange = 16, SmallChange = 2, Value = 18, Height = 64 };
+            VScrollBar vsFont = new VScrollBar { Minimum = 8, Maximum = 87, LargeChange = 16, SmallChange = 2, Value = 18, Height = 80 };
             EventHandler mix = delegate
             {
                 swatch.BackColor = Color.FromArgb(hsR.Value, hsG.Value, hsB.Value);
@@ -746,11 +762,11 @@ namespace __APPNAME__
             };
             hsR.ValueChanged += mix; hsG.ValueChanged += mix; hsB.ValueChanged += mix; vsFont.ValueChanged += mix;
             AddRow(t, "HScrollBar / VScrollBar:", Flow(new Label { Text = "R", AutoSize = true }, hsR, new Label { Text = "G", AutoSize = true }, hsG, new Label { Text = "B", AutoSize = true }, hsB, vsFont, swatch), "Three HScrollBars mix a color; the VScrollBar drives the preview font size");
-            Panel stage = new Panel { Size = new Size(340, 110), BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White, Margin = new Padding(2) };
+            Panel stage = new Panel { Size = new Size(400, 140), BorderStyle = BorderStyle.FixedSingle, BackColor = Color.White, Margin = new Padding(4) };
             Button probe = new Button { Text = "Probe", AutoSize = true, Location = new Point(12, 12) };
             stage.Controls.Add(probe);
             int r0 = t.RowCount; t.RowCount++; t.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            t.Controls.Add(new Label { Text = "Anchor / Dock playground:", AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(2, 6, 6, 2) }, 0, r0);
+            t.Controls.Add(new Label { Text = "Anchor / Dock playground:", AutoSize = true, Anchor = AnchorStyles.Left | AnchorStyles.Top, Margin = new Padding(4, 10, 8, 6), MaximumSize = new Size(170, 0) }, 0, r0);
             t.Controls.Add(stage, 1, r0);
             tips.SetToolTip(stage, "Pick an Anchor (or Dock = Fill), then resize the white stage with the + and - buttons");
             RadioButton aTL = new RadioButton { Text = "Top,Left", Checked = true, AutoSize = true };
@@ -775,7 +791,7 @@ namespace __APPNAME__
             grow.Click += (s, e) => { stage.Width += 30; stage.Height += 24; applyAnchor(); };
             shrink.Click += (s, e) => { if (stage.Width > 160) { stage.Width -= 30; } if (stage.Height > 70) { stage.Height -= 24; } applyAnchor(); };
             AddRow(t, "Anchor presets:", Flow(aTL, aAll, aBR, aNone, dockFill, grow, shrink), "Anchor and Dock are the two WinForms layout mechanics - watch the Probe react");
-            ToolStripContainer tsc = new ToolStripContainer { Dock = DockStyle.Fill, Height = 150 };
+            ToolStripContainer tsc = new ToolStripContainer { Dock = DockStyle.Fill, Height = 170, MinimumSize = new Size(0, 140) };
             ToolStrip stripTop = new ToolStrip();
             stripTop.Items.Add(new ToolStripButton("Cut", null, (s, e) => SetStatus("ToolStripContainer strip: Cut")) { DisplayStyle = ToolStripItemDisplayStyle.Text });
             stripTop.Items.Add(new ToolStripButton("Copy", null, (s, e) => SetStatus("ToolStripContainer strip: Copy")) { DisplayStyle = ToolStripItemDisplayStyle.Text });
@@ -787,24 +803,21 @@ namespace __APPNAME__
             tsc.RightToolStripPanel.Join(stripSide);
             RichTextBox tscBody = new RichTextBox { Dock = DockStyle.Fill, Text = "This RichTextBox lives in the ToolStripContainer's ContentPanel.\r\n\r\nThe container exposes four ToolStripPanels (top, bottom, left, right). Drag the toolstrips between them at runtime - that is the whole point of ToolStripContainer." };
             tsc.ContentPanel.Controls.Add(tscBody);
-            AddFillRow(t, "ToolStripContainer:", tsc, 140, "Four edge panels that toolbars can be dragged between at runtime");
-            Panel legacyHost = new Panel { Dock = DockStyle.Fill, Height = 90 };
+            AddFillRow(t, "ToolStripContainer:", tsc, 170, "Four edge panels that toolbars can be dragged between at runtime");
+            Panel legacyHost = new Panel { Dock = DockStyle.Fill, Height = 100, MinimumSize = new Size(0, 85) };
             Panel legacyLeft = new Panel { Dock = DockStyle.Left, Width = 110, BackColor = Color.AliceBlue };
             legacyLeft.Controls.Add(new Label { Text = "Docked Left", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter });
             Splitter legacy = new Splitter { Dock = DockStyle.Left, Width = 5, MinSize = 30, MinExtra = 30, BackColor = Color.SteelBlue };
             Panel legacyFill = new Panel { Dock = DockStyle.Fill, BackColor = Color.MintCream };
             legacyFill.Controls.Add(new Label { Text = "Fill area - drag the blue bar", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter });
             legacyHost.Controls.Add(legacyFill); legacyHost.Controls.Add(legacy); legacyHost.Controls.Add(legacyLeft);
-            AddFillRow(t, "Splitter (legacy):", legacyHost, 85, "The .NET 1.x Splitter control - ancestor of SplitContainer - still resizes panels");
-            p.AutoScroll = true; p.Controls.Add(t);
+            AddFillRow(t, "Splitter (legacy):", legacyHost, 100, "The .NET 1.x Splitter control - ancestor of SplitContainer - still resizes panels");
             return p;
         }
         private TabPage TabComponents()
         {
-            TabPage p = new TabPage("12. Components & Print");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "FileSystemWatcher, Process, System.Timers.Timer and printing with PrintDialog / PageSetupDialog / PrintPreviewControl");
-            ListBox fswLog = new ListBox { Dock = DockStyle.Fill, IntegralHeight = false };
+            TabPage p = CreateTab("12. Components & Print", "FileSystemWatcher, Process, System.Timers.Timer and printing with PrintDialog / PageSetupDialog / PrintPreviewControl", out TableLayoutPanel t);
+            ListBox fswLog = new ListBox { Dock = DockStyle.Fill, IntegralHeight = false, MinimumSize = new Size(0, 90) };
             string watchDir = Path.Combine(Path.GetTempPath(), "WinFormsShowcase_FSW");
             try { Directory.CreateDirectory(watchDir); } catch { watchDir = Path.GetTempPath(); }
             FileSystemWatcher fsw = new FileSystemWatcher(watchDir, "*.txt") { NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite };
@@ -824,7 +837,7 @@ namespace __APPNAME__
             fswOn.CheckedChanged += (s, e) => { fsw.EnableRaisingEvents = fswOn.Checked; SetStatus("FileSystemWatcher watching: " + watchDir); };
             fswOn.Checked = true;
             AddRow(t, "FileSystemWatcher:", Flow(fswOn, fswCreate, fswModify, fswDelete), "Watches a folder under %TEMP%; events arrive on threadpool threads and are marshalled to the UI thread with BeginInvoke");
-            AddFillRow(t, "FSW event log:", fswLog, 80, null);
+            AddFillRow(t, "FSW event log:", fswLog, 110, null);
             Label procInfo = new Label { Dock = DockStyle.Fill, AutoSize = true, MaximumSize = new Size(560, 0), Text = "Process output appears here.", ForeColor = Color.DarkSlateGray };
             Button procSelf = new Button { Text = "Inspect this process", AutoSize = true };
             procSelf.Click += (s, e) =>
@@ -868,8 +881,8 @@ namespace __APPNAME__
             int printPage = 0;
             pdoc.BeginPrint += (s2, e2) => printPage = 0;
             pdoc.PrintPage += (s2, e2) => { printPage++; DrawShowcasePage(e2.Graphics, e2.MarginBounds, printPage); e2.HasMorePages = printPage < 2; };
-            PrintPreviewControl ppc = new PrintPreviewControl { Dock = DockStyle.Fill, Document = pdoc, AutoZoom = true };
-            AddFillRow(t, "PrintPreviewControl:", ppc, 190, "The engine behind PrintPreviewDialog, embedded live, drawing from a PrintDocument (two pages)");
+            PrintPreviewControl ppc = new PrintPreviewControl { Dock = DockStyle.Fill, Document = pdoc, AutoZoom = true, MinimumSize = new Size(0, 180) };
+            AddFillRow(t, "PrintPreviewControl:", ppc, 210, "The engine behind PrintPreviewDialog, embedded live, drawing from a PrintDocument (two pages)");
             Button btnPrn = new Button { Text = "PrintDialog...", AutoSize = true };
             btnPrn.Click += (s, e) =>
             {
@@ -895,15 +908,12 @@ namespace __APPNAME__
             Button btnPrev = new Button { Text = "Refresh preview", AutoSize = true };
             btnPrev.Click += (s, e) => { ppc.InvalidatePreview(); SetStatus("PrintPreviewControl refreshed"); };
             AddRow(t, "Printing dialogs:", Flow(btnPrn, btnPage, btnPrev), "PrintDialog and PageSetupDialog share the same PrintDocument as the preview");
-            p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
         private TabPage TabGridMdi()
         {
-            TabPage p = new TabPage("13. Grid, Binding & MDI");
-            TableLayoutPanel t = Grid2();
-            AddHeader(t, "Every DataGridView column type, simple DataBindings, Form effects and a full MDI playground");
-            DataGridView dg = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
+            TabPage p = CreateTab("13. Grid, Binding & MDI", "Every DataGridView column type, simple DataBindings, Form effects and a full MDI playground", out TableLayoutPanel t);
+            DataGridView dg = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, MinimumSize = new Size(0, 140) };
             DataGridViewTextBoxColumn cText = new DataGridViewTextBoxColumn { HeaderText = "Text column" };
             DataGridViewComboBoxColumn cCombo = new DataGridViewComboBoxColumn { HeaderText = "ComboBox column" };
             cCombo.Items.AddRange(new object[] { "Admin", "Developer", "Tester", "Guest" });
@@ -918,7 +928,7 @@ namespace __APPNAME__
             dg.CellClick += (s2, e2) => { if (e2.RowIndex >= 0 && e2.ColumnIndex == cButton.Index) SetStatus("Grid Button cell on row " + e2.RowIndex + ": " + dg.Rows[e2.RowIndex].Cells[cText.Index].Value); };
             dg.CellContentClick += (s2, e2) => { if (e2.RowIndex >= 0 && e2.ColumnIndex == cLink.Index) SetStatus("Grid Link cell clicked: " + dg.Rows[e2.RowIndex].Cells[cText.Index].Value); };
             dg.CellValueChanged += (s2, e2) => { if (e2.RowIndex >= 0 && e2.ColumnIndex == cCheck.Index) SetStatus("Grid CheckBox cell: " + dg.Rows[e2.RowIndex].Cells[cText.Index].Value + " active = " + dg.Rows[e2.RowIndex].Cells[cCheck.Index].Value); };
-            AddFillRow(t, "DataGridView column types:", dg, 130, "Text, ComboBox, CheckBox, Button, Link and Image columns in one unbound grid - toggle a checkbox, click a button or a link");
+            AddFillRow(t, "DataGridView column types:", dg, 170, "Text, ComboBox, CheckBox, Button, Link and Image columns in one unbound grid - toggle a checkbox, click a button or a link");
             Person bound = new Person("Grace Hopper", 85, "Arlington");
             TextBox bName = new TextBox { Width = 150 }; bName.DataBindings.Add("Text", bound, "Name");
             NumericUpDown bAge = new NumericUpDown { Minimum = 0, Maximum = 130, Width = 80 }; bAge.DataBindings.Add("Value", bound, "Age");
@@ -935,7 +945,6 @@ namespace __APPNAME__
             Button fxMdi = new Button { Text = "MDI playground...", AutoSize = true };
             fxMdi.Click += (s, e) => { MdiPlayground pf = new MdiPlayground(); pf.Show(this); SetStatus("MDI playground opened - try File > New child and the Window menu"); };
             AddRow(t, "Form extras & MDI:", Flow(fxOp, fxTop, fxNone, fxMdi), "Form Opacity, TopMost, borderless windows, and classic MDI with IsMdiContainer");
-            p.AutoScroll = true; p.Controls.Add(t);
             return p;
         }
         private static Bitmap BuildDemoBitmap(int w, int h)
@@ -1127,10 +1136,19 @@ try{
     Write-Stage 'Setup' "Project: $safeName | Type: $ProjectType | Folder: $targetRoot"
     Test-DiskSpace -Path $targetRoot
 
+    # Kill any running instances of the app to prevent file locks during publish
+    Write-Info "Checking for running instances of $safeName..."
+    $procs = Get-Process -Name $safeName -ErrorAction SilentlyContinue
+    if ($procs) {
+        Write-Warn2 "Found running instance(s) of $safeName. Stopping them to avoid file locks..."
+        $procs | Stop-Process -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 1
+    }
+
     $Script:StageName='Writing source'
     $projDir=Write-SourceFiles -Dir $targetRoot -Name $safeName
     $projFile=Join-Path $projDir ($safeName+'.csproj')
-    foreach($sub in @('bin','obj')){ $stale=Join-Path $projDir $sub; if(Test-Path -LiteralPath $stale){ [void](Remove-Folder -Path $stale) } }
+    foreach($sub in @('bin','obj','publish')){ $stale=Join-Path $projDir $sub; if(Test-Path -LiteralPath $stale){ [void](Remove-Folder -Path $stale) } }
 
     $Script:StageName='Locating .NET 8 SDK'
     Write-Stage $Script:StageName 'Looking for an installed .NET 8 SDK...'
@@ -1156,7 +1174,7 @@ try{
         Write-Info 'NoLaunch was specified - the app was NOT started.'
         Write-Host "  Exe: $exe" -ForegroundColor White
     }else{
-        Start-Process -FilePath $exe -WorkingDirectory $pubDir
+        Start-Process -FilePath $exe -WorkingDirectory $pubDir -WindowStyle Maximized
         Write-Ok "Launched: $safeName.exe"
     }
     Write-Host ''
