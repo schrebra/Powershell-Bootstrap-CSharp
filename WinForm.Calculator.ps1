@@ -1,6 +1,6 @@
 param([string]$ProjectName='CalculatorApp',[ValidateSet('Auto','Console','WinForms')][string]$ProjectType='WinForms',[string]$BaseDir='',[switch]$NoLaunch,[int]$MaxRetries=3)
- $ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue'
- $Script:StageName='Initialization';$Script:InstallerPath='';$Script:DotnetDir=Join-Path $env:LOCALAPPDATA 'Microsoft\dotnet';$Script:AppKind='WinForms'
+$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue'
+$Script:StageName='Initialization';$Script:InstallerPath='';$Script:DotnetDir=Join-Path $env:LOCALAPPDATA 'Microsoft\dotnet';$Script:AppKind='WinForms'
 function Write-Info([string]$m){Write-Host $m -ForegroundColor Cyan}
 function Write-Ok([string]$m){Write-Host $m -ForegroundColor Green}
 function Write-Warn2([string]$m){Write-Host $m -ForegroundColor Yellow}
@@ -80,6 +80,7 @@ namespace __APPNAME__
     {
         private TextBox display; private Label expressionLabel;
         private string currentEntry = "0"; private string previousEntry = ""; private string operation = ""; private bool justEvaluated = false;
+        private ToolTip copyTip;
         public MainForm()
         {
             Text = "Modern Calculator"; Font = new Font("Segoe UI", 9F); StartPosition = FormStartPosition.CenterScreen; ClientSize = new Size(340, 520); MinimumSize = new Size(320, 480); BackColor = Color.White; KeyPreview = true;
@@ -89,7 +90,12 @@ namespace __APPNAME__
             for (int i = 0; i < 5; i++) grid.RowStyles.Add(new RowStyle(SizeType.Percent, 20F));
             Panel displayPanel = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(248, 248, 248), Margin = new Padding(4, 4, 4, 12), Padding = new Padding(6) };
             expressionLabel = new Label { Dock = DockStyle.Top, Text = "", Font = new Font("Segoe UI", 10F), ForeColor = Color.Gray, TextAlign = ContentAlignment.MiddleRight, Height = 26, Margin = new Padding(0, 0, 0, 4) };
-            display = new TextBox { Dock = DockStyle.Fill, ReadOnly = true, BorderStyle = BorderStyle.None, BackColor = Color.FromArgb(248, 248, 248), Font = new Font("Segoe UI Semibold", 26F), ForeColor = Color.FromArgb(30, 30, 30), TextAlign = HorizontalAlignment.Right, Text = "0" };
+            display = new TextBox { Dock = DockStyle.Fill, ReadOnly = true, BorderStyle = BorderStyle.None, BackColor = Color.FromArgb(248, 248, 248), Font = new Font("Segoe UI Semibold", 26F), ForeColor = Color.FromArgb(30, 30, 30), TextAlign = HorizontalAlignment.Right, Text = "0", TabStop = false };
+            // Prevent text selection/highlight on focus or startup
+            display.GotFocus += (s, e) => { display.SelectionStart = display.Text.Length; display.SelectionLength = 0; };
+            display.ContextMenuStrip = new ContextMenuStrip(); // suppress default right-click edit menu
+            display.MouseDown += Display_MouseDown;
+            copyTip = new ToolTip { IsBalloon = false, AutoPopDelay = 1500, InitialDelay = 0, ReshowDelay = 0, ShowAlways = true };
             displayPanel.Controls.Add(display); displayPanel.Controls.Add(expressionLabel);
             grid.Controls.Add(displayPanel, 0, 0); grid.SetColumnSpan(displayPanel, 4);
             Color digitColor = Color.FromArgb(250, 250, 250); Color funcColor = Color.FromArgb(235, 235, 235); Color opColor = Color.FromArgb(0, 120, 215); Color eqColor = Color.FromArgb(0, 153, 76);
@@ -100,6 +106,25 @@ namespace __APPNAME__
             AddButton(grid, "1", 4, 0, "Digit", digitColor, digitText); AddButton(grid, "2", 4, 1, "Digit", digitColor, digitText); AddButton(grid, "3", 4, 2, "Digit", digitColor, digitText); AddButton(grid, "+", 4, 3, "Op", opColor, opText);
             AddButton(grid, "+/-", 5, 0, "Negate", funcColor, digitText); AddButton(grid, "0", 5, 1, "Digit", digitColor, digitText); AddButton(grid, ".", 5, 2, "Decimal", digitColor, digitText); AddButton(grid, "=", 5, 3, "Equals", eqColor, opText);
             Controls.Add(grid); KeyDown += OnKeyDown;
+            // Ensure no highlight on startup
+            Shown += (s, e) => { display.SelectionStart = display.Text.Length; display.SelectionLength = 0; ActiveControl = null; };
+        }
+        private void Display_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                try
+                {
+                    string textToCopy = display.Text ?? "";
+                    if (!string.IsNullOrEmpty(textToCopy))
+                    {
+                        Clipboard.SetText(textToCopy);
+                        // Temporary popup near the click point
+                        copyTip.Show("Copied to clipboard!", display, e.X, e.Y - 28, 1400);
+                    }
+                }
+                catch { }
+            }
         }
         private void AddButton(TableLayoutPanel p, string t, int r, int c, string act, Color bg, Color fg)
         {
@@ -137,6 +162,7 @@ namespace __APPNAME__
                     case "Equals": Evaluate(); break;
                 }
                 display.Text = currentEntry;
+                display.SelectionStart = display.Text.Length; display.SelectionLength = 0;
             }
             catch (Exception ex)
             {
@@ -207,7 +233,7 @@ Invoke-DotNet -ExePath $ExePath -FailCode 4 -CliArgs @('restore',$Dir)
 Invoke-DotNet -ExePath $ExePath -FailCode 5 -CliArgs @('publish',$Dir,'-c','Release','-r','win-x64','--self-contained','true','-o',$Out)}
 function Start-PublishedApp([string]$Exe,[string]$WorkDir){
 try{Start-Process -FilePath $Exe -WorkingDirectory $WorkDir;return $true}catch{Write-Warn2 "Auto-launch failed: $($_.Exception.Message)";Write-Warn2 'The executable itself is valid and complete - start it manually by double-clicking:';Write-Warn2 "    $Exe";return $false}}
- $sw=[Diagnostics.Stopwatch]::StartNew()
+$sw=[Diagnostics.Stopwatch]::StartNew()
 try{
 if($ProjectType -eq 'Auto'){$Script:AppKind='WinForms'}else{$Script:AppKind=$ProjectType}
  $ProjectName=Get-SafeName $ProjectName
