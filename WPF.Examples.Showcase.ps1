@@ -142,7 +142,7 @@ namespace __APPNAME__
 }
 '@
  $mwXaml=@'
-<Window x:Class="__APPNAME__.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib" Title="WPF Control Gallery - Kitchen Sink Edition (15 sections + popouts)" Width="1220" Height="800" MinWidth="1020" MinHeight="680" WindowStartupLocation="CenterScreen" WindowState="Maximized" FontSize="13" UseLayoutRounding="True" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType">
+<Window x:Class="__APPNAME__.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib" Title="WPF Control Gallery - Kitchen Sink Edition (15 sections + popouts)" Width="1280" Height="820" MinWidth="1100" MinHeight="720" WindowStartupLocation="CenterScreen" WindowState="Maximized" FontSize="13" UseLayoutRounding="True" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType">
     <Window.ContextMenu>
         <ContextMenu>
             <MenuItem Header="Jump to section (right-click menu)" IsEnabled="False"/>
@@ -173,21 +173,21 @@ namespace __APPNAME__
         <Style x:Key="ValidatedBox" TargetType="TextBox"><Style.Triggers><Trigger Property="Validation.HasError" Value="True"><Setter Property="BorderBrush" Value="Red"/><Setter Property="BorderThickness" Value="2"/></Trigger></Style.Triggers></Style>
         <Style x:Key="BasePill" TargetType="Button"><Setter Property="Padding" Value="14,7"/><Setter Property="Background" Value="#FFE0E7FF"/><Setter Property="BorderThickness" Value="0"/></Style>
         <Style x:Key="AccentPill" TargetType="Button" BasedOn="{StaticResource BasePill}"><Setter Property="Background" Value="#FF4F46E5"/><Setter Property="Foreground" Value="White"/></Style>
-        <Style TargetType="GroupBox"><Setter Property="Margin" Value="0,0,14,14"/><Setter Property="MinWidth" Value="320"/><Setter Property="Background" Value="White"/></Style>
-        <Style TargetType="ListBoxItem"><Setter Property="Padding" Value="12,9"/></Style>
-        <Style TargetType="Button"><Setter Property="Padding" Value="10,6"/><Setter Property="Margin" Value="0,0,8,8"/><Setter Property="MinWidth" Value="90"/></Style>
-        <Style x:Key="FancyButton" TargetType="Button"><Setter Property="Padding" Value="12,7"/><Setter Property="Background" Value="#FFEEF2FF"/><Setter Property="BorderBrush" Value="#FF6366F1"/><Setter Property="BorderThickness" Value="1"/><Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#FF6366F1"/><Setter Property="Foreground" Value="White"/></Trigger></Style.Triggers></Style>
-        <Style x:Key="DangerButton" TargetType="Button"><Setter Property="Padding" Value="12,7"/><Setter Property="Background" Value="#FFFEF2F2"/><Setter Property="BorderBrush" Value="#FFDC2626"/><Setter Property="BorderThickness" Value="1"/><Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#FFDC2626"/><Setter Property="Foreground" Value="White"/></Trigger></Style.Triggers></Style>
-        <Style x:Key="GradientButton" TargetType="Button"><Setter Property="Foreground" Value="White"/><Setter Property="Padding" Value="12,7"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Background"><Setter.Value><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#FF4F46E5" Offset="0"/><GradientStop Color="#FF9333EA" Offset="1"/></LinearGradientBrush></Setter.Value></Setter></Style>
+        <Style TargetType="GroupBox"><Setter Property="Margin" Value="0,0,18,18"/><Setter Property="MinWidth" Value="340"/><Setter Property="Padding" Value="12"/><Setter Property="Background" Value="White"/></Style>
+        <Style TargetType="ListBoxItem"><Setter Property="Padding" Value="14,10"/></Style>
+        <Style TargetType="Button"><Setter Property="Padding" Value="12,8"/><Setter Property="Margin" Value="0,0,10,10"/><Setter Property="MinWidth" Value="100"/></Style>
+        <Style x:Key="FancyButton" TargetType="Button"><Setter Property="Padding" Value="14,8"/><Setter Property="Background" Value="#FFEEF2FF"/><Setter Property="BorderBrush" Value="#FF6366F1"/><Setter Property="BorderThickness" Value="1"/><Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#FF6366F1"/><Setter Property="Foreground" Value="White"/></Trigger></Style.Triggers></Style>
+        <Style x:Key="DangerButton" TargetType="Button"><Setter Property="Padding" Value="14,8"/><Setter Property="Background" Value="#FFFEF2F2"/><Setter Property="BorderBrush" Value="#FFDC2626"/><Setter Property="BorderThickness" Value="1"/><Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#FFDC2626"/><Setter Property="Foreground" Value="White"/></Trigger></Style.Triggers></Style>
+        <Style x:Key="GradientButton" TargetType="Button"><Setter Property="Foreground" Value="White"/><Setter Property="Padding" Value="14,8"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Background"><Setter.Value><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#FF4F46E5" Offset="0"/><GradientStop Color="#FF9333EA" Offset="1"/></LinearGradientBrush></Setter.Value></Setter></Style>
     </Window.Resources>
     <DockPanel>
         <Border DockPanel.Dock="Top" x:Name="HeaderBar">
             <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#FF4338CA" Offset="0"/><GradientStop Color="#FF7C3AED" Offset="0.55"/><GradientStop Color="#FFDB2777" Offset="1"/></LinearGradientBrush></Border.Background>
-            <Grid Margin="22,14">
+            <Grid Margin="28,16">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <StackPanel>
                     <TextBlock Text="WPF CONTROL GALLERY - KITCHEN SINK EDITION" FontSize="24" FontWeight="Bold" Foreground="White"/>
-                    <TextBlock Text="130+ controls, 3D textures, video, adorners, path animations - plus popout windows for the big-screen demos. Right-click anywhere to jump." Foreground="#FFE9E5FF" FontSize="13" Margin="0,4,0,0"/>
+                    <TextBlock Text="130+ controls, 3D textures, video, adorners, path animations - plus popout windows for the big-screen demos. Right-click anywhere to jump." Foreground="#FFE9E5FF" FontSize="13" Margin="0,6,0,0"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock x:Name="ClockText" Foreground="White" FontSize="17" FontWeight="SemiBold" HorizontalAlignment="Right"/>
@@ -201,19 +201,19 @@ namespace __APPNAME__
             <StatusBarItem><TextBlock Text="Hover any control for its ToolTip"/></StatusBarItem>
         </StatusBar>
         <Grid>
-            <Grid.ColumnDefinitions><ColumnDefinition Width="245"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="270"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
             <Border Grid.Column="0" Background="White" BorderBrush="#FFE2E6F0" BorderThickness="0,0,1,0">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Top" Text="SECTIONS" FontSize="12" FontWeight="Bold" Foreground="#FF6B7280" Margin="16,14,0,10"/>
-                    <ListBox x:Name="NavList" Background="Transparent" BorderThickness="0" SelectionChanged="NavList_SelectionChanged">
+                    <TextBlock DockPanel.Dock="Top" Text="SECTIONS" FontSize="12" FontWeight="Bold" Foreground="#FF6B7280" Margin="18,16,0,12"/>
+                    <ListBox x:Name="NavList" Background="Transparent" BorderThickness="0" SelectionChanged="NavList_SelectionChanged" Margin="4,0,4,8">
                         <ListBoxItem Content="1. Welcome"/><ListBoxItem Content="2. Buttons and Toggles"/><ListBoxItem Content="3. Text Input"/><ListBoxItem Content="4. Lists, Menus and Trees"/><ListBoxItem Content="5. Sliders, Dates and Commands"/><ListBoxItem Content="6. Layout Panels"/><ListBoxItem Content="7. Shapes, Brushes and 3D"/><ListBoxItem Content="8. Ink, Images, Sound and Video"/><ListBoxItem Content="9. Data and Validation"/><ListBoxItem Content="10. Styles and Animation"/><ListBoxItem Content="11. Custom, Adorners and Runtime XAML"/><ListBoxItem Content="12. Dialogs and Printing"/><ListBoxItem Content="13. Documents and Web"/><ListBoxItem Content="14. Drag, Drop and Virtualization"/><ListBoxItem Content="15. System and Kitchen Sink"/>
                     </ListBox>
                 </DockPanel>
             </Border>
-            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="18,16">
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="24,20">
                 <Grid>
                     <StackPanel x:Name="SecWelcome">
-                        <Border Background="White" CornerRadius="12" Padding="28" Margin="0,0,0,16">
+                        <Border Background="White" CornerRadius="12" Padding="32" Margin="0,0,0,20">
                             <Border.Effect><DropShadowEffect BlurRadius="22" ShadowDepth="2" Opacity="0.16"/></Border.Effect>
                             <StackPanel>
                                 <TextBlock Text="Welcome to the Kitchen Sink Edition" FontSize="30" FontWeight="Bold" Foreground="#FF312E81">
@@ -264,8 +264,8 @@ namespace __APPNAME__
                         </WrapPanel>
                     </StackPanel>
                     <StackPanel x:Name="SecButtons" Visibility="Collapsed">
-                        <TextBlock Text="Buttons, Toggles and Selection" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Click everything - results appear here and in the status bar." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Buttons, Toggles and Selection" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Click everything - results appear here and in the status bar." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <WrapPanel>
                             <GroupBox Header="Button">
                                 <StackPanel>
@@ -317,7 +317,7 @@ namespace __APPNAME__
                                     <TextBlock Text="AccentPill inherits padding and borderless chrome from BasePill and overrides the colors." Foreground="#FF6B7280" TextWrapping="Wrap" Margin="0,10,0,0"/>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="AccessText and disabled tooltips" Width="340">
+                            <GroupBox Header="AccessText and disabled tooltips" Width="360">
                                 <StackPanel>
                                     <Button HorizontalAlignment="Left" MinWidth="130"><AccessText>_Access key (Alt+A)</AccessText></Button>
                                     <Button Content="Disabled but explained" IsEnabled="False" Margin="0,8,0,0" ToolTip="ToolTipService.ShowOnDisabled lets even disabled controls explain themselves." ToolTipService.ShowOnDisabled="True"/>
@@ -327,8 +327,8 @@ namespace __APPNAME__
                         </WrapPanel>
                     </StackPanel>
                     <StackPanel x:Name="SecText" Visibility="Collapsed">
-                        <TextBlock Text="Text Input and Formatting" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Type, hide, format - all the text controls." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Text Input and Formatting" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Type, hide, format - all the text controls." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <WrapPanel>
                             <GroupBox Header="TextBox">
                                 <StackPanel>
@@ -367,7 +367,7 @@ namespace __APPNAME__
                                     <ToggleButton x:Name="RichRo" Content="Read-only" Click="RichRo_Click" ToolTip="Lock the document"/>
                                     <Button Content="Clear" Click="RichClear_Click" ToolTip="Wipe the document"/>
                                 </ToolBar>
-                                <RichTextBox x:Name="DemoRich" Height="110" Margin="0,8,0,0">
+                                <RichTextBox x:Name="DemoRich" Height="130" Margin="0,10,0,0">
                                     <FlowDocument><Paragraph><Run Text="Rich text editing with live formatting. Select some text and hit B, I or U in the toolbar above."/></Paragraph></FlowDocument>
                                 </RichTextBox>
                             </StackPanel>
@@ -390,8 +390,8 @@ namespace __APPNAME__
                         </GroupBox>
                     </StackPanel>
                     <StackPanel x:Name="SecLists" Visibility="Collapsed">
-                        <TextBlock Text="Lists, Menus and Trees" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Selection controls, bound trees, XML data, styled combos and toolbars." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Lists, Menus and Trees" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Selection controls, bound trees, XML data, styled combos and toolbars." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <GroupBox Header="Menu with accelerators, icons and gestures" MinWidth="700">
                             <StackPanel>
                                 <Menu>
@@ -422,7 +422,7 @@ namespace __APPNAME__
                         <WrapPanel>
                             <GroupBox Header="ListBox with ContextMenu">
                                 <StackPanel>
-                                    <ListBox x:Name="FruitsList" Height="110" SelectionChanged="FruitsList_SelectionChanged">
+                                    <ListBox x:Name="FruitsList" Height="130" SelectionChanged="FruitsList_SelectionChanged">
                                         <ListBox.ContextMenu>
                                             <ContextMenu>
                                                 <MenuItem Header="Say hello to the selection" Click="CtxHello_Click"/>
@@ -441,9 +441,9 @@ namespace __APPNAME__
                                     <TextBlock Text="The data is inline XML in the resources, queried with XPath." Margin="0,8,0,0" Foreground="#FF6B7280" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="TreeView bound with HierarchicalDataTemplate" Width="340">
+                            <GroupBox Header="TreeView bound with HierarchicalDataTemplate" Width="360">
                                 <StackPanel>
-                                    <TreeView x:Name="TreeBound" Height="160" SelectedItemChanged="TreeBound_Selected">
+                                    <TreeView x:Name="TreeBound" Height="180" SelectedItemChanged="TreeBound_Selected">
                                         <TreeView.ItemTemplate>
                                             <HierarchicalDataTemplate ItemsSource="{Binding Kids}">
                                                 <StackPanel Orientation="Horizontal">
@@ -458,7 +458,7 @@ namespace __APPNAME__
                             </GroupBox>
                             <GroupBox Header="Static TreeView">
                                 <StackPanel>
-                                    <TreeView x:Name="TreeDemo" Height="160" SelectedItemChanged="TreeDemo_SelectedItemChanged">
+                                    <TreeView x:Name="TreeDemo" Height="180" SelectedItemChanged="TreeDemo_SelectedItemChanged">
                                         <TreeViewItem Header="Animals" IsExpanded="True">
                                             <TreeViewItem Header="Mammals" IsExpanded="True">
                                                 <TreeViewItem Header="Dog"/><TreeViewItem Header="Cat"/>
@@ -551,8 +551,8 @@ namespace __APPNAME__
                         </GroupBox>
                     </StackPanel>
                     <StackPanel x:Name="SecInput" Visibility="Collapsed">
-                        <TextBlock Text="Sliders, Dates, Events and Commands" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Analog input, calendars, routed events and routed commands." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Sliders, Dates, Events and Commands" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Analog input, calendars, routed events and routed commands." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <WrapPanel>
                             <GroupBox Header="Slider drives ProgressBar">
                                 <StackPanel>
@@ -568,7 +568,7 @@ namespace __APPNAME__
                                     <Calendar x:Name="DemoCal" SelectedDatesChanged="DemoCal_SelectedDatesChanged"/>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="DatePicker + BlackoutDates" Width="340">
+                            <GroupBox Header="DatePicker + BlackoutDates" Width="360">
                                 <StackPanel>
                                     <DatePicker x:Name="DemoDate" SelectedDateChanged="DemoDate_SelectedDateChanged"/>
                                     <Button Content="Set to today" Margin="0,10,0,0" Click="TodayBtn_Click"/>
@@ -623,10 +623,10 @@ namespace __APPNAME__
                         </WrapPanel>
                     </StackPanel>
                     <StackPanel x:Name="SecLayout" Visibility="Collapsed">
-                        <TextBlock Text="Layout and Panels" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="The building blocks of every WPF screen - resize the window and watch them reflow." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Layout and Panels" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="The building blocks of every WPF screen - resize the window and watch them reflow." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <WrapPanel>
-                            <GroupBox Header="Grid + GridSplitter (drag the divider)" Width="330" Height="185">
+                            <GroupBox Header="Grid + GridSplitter (drag the divider)" Width="360" Height="210">
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="8"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                     <Border Grid.Column="0" Background="#FFDBEAFE" CornerRadius="6"><TextBlock Text="Left pane" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
@@ -634,14 +634,14 @@ namespace __APPNAME__
                                     <Border Grid.Column="2" Background="#FFDCFCE7" CornerRadius="6"><TextBlock Text="Right pane" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                                 </Grid>
                             </GroupBox>
-                            <GroupBox Header="SharedSizeGroup across grids" Width="330" Height="185">
+                            <GroupBox Header="SharedSizeGroup across grids" Width="360" Height="210">
                                 <StackPanel Grid.IsSharedSizeScope="True" VerticalAlignment="Center">
                                     <Grid><Grid.ColumnDefinitions><ColumnDefinition SharedSizeGroup="Lbl"/><ColumnDefinition/></Grid.ColumnDefinitions><TextBlock Text="Name:"/><TextBlock Grid.Column="1" Text="Ada"/></Grid>
                                     <Grid Margin="0,4,0,0"><Grid.ColumnDefinitions><ColumnDefinition SharedSizeGroup="Lbl"/><ColumnDefinition/></Grid.ColumnDefinitions><TextBlock Text="Occupation:"/><TextBlock Grid.Column="1" Text="Analytical engines"/></Grid>
                                     <Grid Margin="0,4,0,0"><Grid.ColumnDefinitions><ColumnDefinition SharedSizeGroup="Lbl"/><ColumnDefinition/></Grid.ColumnDefinitions><TextBlock Text="Note:"/><TextBlock Grid.Column="1" Text="Both label columns share one width"/></Grid>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="DockPanel (docked edges + fill)" Width="330" Height="185">
+                            <GroupBox Header="DockPanel (docked edges + fill)" Width="360" Height="210">
                                 <DockPanel>
                                     <Border DockPanel.Dock="Top" Background="#FFE0E7FF" Padding="8"><TextBlock Text="Top docked"/></Border>
                                     <Border DockPanel.Dock="Bottom" Background="#FFE0E7FF" Padding="8"><TextBlock Text="Bottom docked"/></Border>
@@ -680,7 +680,7 @@ namespace __APPNAME__
                                         <Button Content="Pink to front" Click="ZFront_Click" Margin="0,0,8,8"/>
                                         <Button Content="Pink to back" Click="ZBack_Click" Margin="0,0,0,8"/>
                                     </WrapPanel>
-                                    <Canvas x:Name="DemoCanvas" Height="110" Background="#FFF8FAFC">
+                                    <Canvas x:Name="DemoCanvas" Height="130" Background="#FFF8FAFC">
                                         <Ellipse Canvas.Left="20" Canvas.Top="18" Width="46" Height="46" Fill="#FF6366F1"/>
                                         <Rectangle Canvas.Left="90" Canvas.Top="34" Width="70" Height="40" Fill="#FF22C55E" RadiusX="6" RadiusY="6"/>
                                         <Polygon Points="200,10 250,56 150,56" Fill="#FFF59E0B"/>
@@ -712,10 +712,10 @@ namespace __APPNAME__
                         </WrapPanel>
                     </StackPanel>
                     <StackPanel x:Name="SecGraphics" Visibility="Collapsed">
-                        <TextBlock Text="Shapes, Brushes and 3D" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Vector shapes, every brush type, effects and a textured 3D cube." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Shapes, Brushes and 3D" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Vector shapes, every brush type, effects and a textured 3D cube." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <WrapPanel>
-                            <GroupBox Header="Shapes and brushes" Width="340">
+                            <GroupBox Header="Shapes and brushes" Width="360">
                                 <StackPanel>
                                     <Rectangle Width="150" Height="42" RadiusX="21" RadiusY="21" HorizontalAlignment="Left">
                                         <Rectangle.Fill><LinearGradientBrush StartPoint="0,0" EndPoint="1,0"><GradientStop Color="#FF4F46E5" Offset="0"/><GradientStop Color="#FFEC4899" Offset="1"/></LinearGradientBrush></Rectangle.Fill>
@@ -730,7 +730,7 @@ namespace __APPNAME__
                                     <Path Data="M 0,40 C 40,-10 90,-10 130,40" Stroke="#FF9333EA" StrokeThickness="3" Margin="0,10,0,0" HorizontalAlignment="Left"/>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="PathGeometry gallery" Width="340">
+                            <GroupBox Header="PathGeometry gallery" Width="360">
                                 <StackPanel>
                                     <Path Stroke="#FF4F46E5" StrokeThickness="3" HorizontalAlignment="Left" Data="M 10,60 C 40,10 90,10 120,60 C 150,110 200,110 230,60"/>
                                     <Path Fill="#FFEF4444" Stroke="#FF7F1D1D" StrokeThickness="2" HorizontalAlignment="Left" Margin="0,10,0,0" Data="M 60,20 A 30,30 0 1,1 59.9,20 Z M 90,50 A 20,20 0 1,0 90.1,50 Z"/>
@@ -756,7 +756,7 @@ namespace __APPNAME__
                         <GroupBox Header="Viewport3D - a rotating cube textured with generated pixels" MinWidth="700">
                             <StackPanel>
                                 <Border Background="#FF0F172A" CornerRadius="8" Padding="4">
-                                    <Viewport3D Height="190">
+                                    <Viewport3D Height="220">
                                         <Viewport3D.Camera><PerspectiveCamera Position="2.4,2.2,4.6" LookDirection="-2.4,-2.2,-4.6" UpDirection="0,1,0"/></Viewport3D.Camera>
                                         <ModelVisual3D>
                                             <ModelVisual3D.Content>
@@ -784,10 +784,10 @@ namespace __APPNAME__
                         </GroupBox>
                     </StackPanel>
                     <StackPanel x:Name="SecMedia" Visibility="Collapsed">
-                        <TextBlock Text="Ink, Images, Sound and Video" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Ink drawing, pixel-generated bitmaps, synthesized audio and video playback." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Ink, Images, Sound and Video" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Ink drawing, pixel-generated bitmaps, synthesized audio and video playback." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <WrapPanel>
-                            <GroupBox Header="Image - load it, or drop a file here" Width="340">
+                            <GroupBox Header="Image - load it, or drop a file here" Width="360">
                                 <StackPanel>
                                     <Grid x:Name="ImageZone" Height="150" Background="#FFF1F5F9" AllowDrop="True" Drop="ImageZone_Drop">
                                         <Rectangle Stroke="#FF94A3B8" StrokeDashArray="3 2" StrokeThickness="1.5" RadiusX="8" RadiusY="8" Fill="#FFFAFBFF"/>
@@ -800,7 +800,7 @@ namespace __APPNAME__
                                     </WrapPanel>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="WriteableBitmap - pixels from code" Width="340">
+                            <GroupBox Header="WriteableBitmap - pixels from code" Width="360">
                                 <StackPanel>
                                     <Image x:Name="PlasmaImage" Height="120" Stretch="Fill"/>
                                     <WrapPanel Margin="0,8,0,0">
@@ -810,7 +810,7 @@ namespace __APPNAME__
                                     <TextBlock Text="A WriteableBitmap written pixel-by-pixel from code; the popout animates it live with an FPS counter." Foreground="#FF6B7280" TextWrapping="Wrap" Margin="0,8,0,0"/>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="Sound synthesis and system sounds" Width="340">
+                            <GroupBox Header="Sound synthesis and system sounds" Width="360">
                                 <StackPanel>
                                     <WrapPanel>
                                         <Button Content="Play 440 Hz tone" Click="ToneA_Click"/>
@@ -848,13 +848,13 @@ namespace __APPNAME__
                                     <Button Content="Pop out Ink studio (full window)" Click="PopInk_Click"/>
                                     <TextBlock x:Name="StrokeCount" VerticalAlignment="Center" Text="Strokes: 0" Margin="6,0,0,0"/>
                                 </WrapPanel>
-                                <InkCanvas x:Name="DemoInk" Height="180" Margin="0,10,0,0" Background="#FFFEFCE8" StrokeCollected="DemoInk_StrokeCollected" StrokeErased="DemoInk_StrokeErased"/>
+                                <InkCanvas x:Name="DemoInk" Height="200" Margin="0,12,0,0" Background="#FFFEFCE8" StrokeCollected="DemoInk_StrokeCollected" StrokeErased="DemoInk_StrokeErased"/>
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>
                     <StackPanel x:Name="SecData" Visibility="Collapsed">
-                        <TextBlock Text="Data, Binding and Validation" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Typed DataGrid columns, row details, grouping, converters and two kinds of validation." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Data, Binding and Validation" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Typed DataGrid columns, row details, grouping, converters and two kinds of validation." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <GroupBox Header="DataGrid: typed columns + row details" MinWidth="700">
                             <StackPanel>
                                 <WrapPanel>
@@ -863,7 +863,7 @@ namespace __APPNAME__
                                     <Button Content="Pop out DataGrid theater" Click="PopData_Click"/>
                                     <TextBlock x:Name="PeopleCount" VerticalAlignment="Center" Text="Rows: 0"/>
                                 </WrapPanel>
-                                <DataGrid x:Name="PeopleGrid" Height="190" Margin="0,10,0,0" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" SelectionMode="Single" RowDetailsVisibilityMode="VisibleWhenSelected">
+                                <DataGrid x:Name="PeopleGrid" Height="210" Margin="0,12,0,0" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" SelectionMode="Single" RowDetailsVisibilityMode="VisibleWhenSelected">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="140"/>
                                         <DataGridTextColumn Header="Age" Binding="{Binding Age}" Width="60"/>
@@ -897,7 +897,7 @@ namespace __APPNAME__
                                     <Button Content="Sort by price" Click="SortPrice_Click"/>
                                     <TextBlock x:Name="ProductInfo" VerticalAlignment="Center" TextWrapping="Wrap"/>
                                 </WrapPanel>
-                                <ListView x:Name="ProductsList" Height="160" Margin="0,8,0,0">
+                                <ListView x:Name="ProductsList" Height="180" Margin="0,10,0,0">
                                     <ListView.View>
                                         <GridView>
                                             <GridViewColumn Header="Product" Width="210" DisplayMemberBinding="{Binding Name}"/>
@@ -1024,8 +1024,8 @@ namespace __APPNAME__
                         </WrapPanel>
                     </StackPanel>
                     <StackPanel x:Name="SecStyles" Visibility="Collapsed">
-                        <TextBlock Text="Styles, Themes and Animation" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Live theming, keyframes, path animations, gradient breathing, triggers and transforms." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Styles, Themes and Animation" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Live theming, keyframes, path animations, gradient breathing, triggers and transforms." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <WrapPanel>
                             <GroupBox Header="DynamicResource live theming" Width="360">
                                 <StackPanel>
@@ -1146,7 +1146,7 @@ namespace __APPNAME__
                                     <Button Content="Fade the stage" Click="AnimFade_Click"/>
                                     <Button Content="Stop all motion" Click="AnimStop_Click"/>
                                 </WrapPanel>
-                                <Grid x:Name="AnimStage" Height="170" Margin="0,10,0,0" Background="#FFF8FAFC">
+                                <Grid x:Name="AnimStage" Height="190" Margin="0,12,0,0" Background="#FFF8FAFC">
                                     <Ellipse x:Name="AnimEllipse" Width="60" Height="60" Fill="#FF6366F1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20"/>
                                     <Rectangle x:Name="AnimRect" Width="100" Height="64" RadiusX="12" RadiusY="12" Fill="#FF22C55E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     <Ellipse x:Name="AnimSpinner" Width="52" Height="52" Fill="#FFEC4899" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20" RenderTransformOrigin="0.5,0.5"/>
@@ -1219,24 +1219,24 @@ namespace __APPNAME__
                         </WrapPanel>
                     </StackPanel>
                     <StackPanel x:Name="SecCustom" Visibility="Collapsed">
-                        <TextBlock Text="Custom Controls, Adorners and Runtime XAML" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Hand-written controls, a UserControl, adorners, live XAML parsing and PNG snapshots." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Custom Controls, Adorners and Runtime XAML" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Hand-written controls, a UserControl, adorners, live XAML parsing and PNG snapshots." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <WrapPanel>
-                            <GroupBox Header="Custom control: Gauge (DependencyProperty + OnRender)" Width="340">
+                            <GroupBox Header="Custom control: Gauge (DependencyProperty + OnRender)" Width="360">
                                 <StackPanel>
                                     <Grid x:Name="GaugeHost" Height="140"/>
                                     <Slider x:Name="GaugeSlider" Minimum="0" Maximum="100" Value="65" Margin="0,8,0,0"/>
                                     <TextBlock Text="The gauge is a hand-written FrameworkElement: Value is a DependencyProperty with AffectsRender, painted entirely in OnRender." TextWrapping="Wrap" Margin="0,8,0,0" Foreground="#FF6B7280"/>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="UserControl: RatingStars" Width="340">
+                            <GroupBox Header="UserControl: RatingStars" Width="360">
                                 <StackPanel>
                                     <ContentControl x:Name="RatingHost"/>
                                     <TextBlock x:Name="RatingLabel" Text="Rate this gallery:" Margin="0,8,0,0"/>
                                     <TextBlock Text="A code-only UserControl hosting five ToggleButtons and raising a Rated event." Foreground="#FF6B7280" TextWrapping="Wrap" Margin="0,8,0,0"/>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="Adorner layer (drawn OVER the control)" Width="340">
+                            <GroupBox Header="Adorner layer (drawn OVER the control)" Width="360">
                                 <StackPanel>
                                     <Border x:Name="AdornTarget" Background="#FFEEF2FF" BorderBrush="#FF6366F1" BorderThickness="1" CornerRadius="8" Padding="16" HorizontalAlignment="Left">
                                         <TextBlock Text="I can wear an adorner ring" FontWeight="SemiBold"/>
@@ -1245,7 +1245,7 @@ namespace __APPNAME__
                                     <TextBlock x:Name="AdornInfo" Text="Adorners draw in a layer above the control without touching its layout." Foreground="#FF6B7280" TextWrapping="Wrap" Margin="0,8,0,0"/>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="RenderTargetBitmap snapshot" Width="340">
+                            <GroupBox Header="RenderTargetBitmap snapshot" Width="360">
                                 <StackPanel>
                                     <TextBlock Text="Renders this entire window into a PNG via RenderTargetBitmap and copies it to the clipboard." TextWrapping="Wrap"/>
                                     <Button Content="Take snapshot" Margin="0,10,0,0" Click="SnapshotBtn_Click"/>
@@ -1272,8 +1272,8 @@ namespace __APPNAME__
                         </GroupBox>
                     </StackPanel>
                     <StackPanel x:Name="SecDialogs" Visibility="Collapsed">
-                        <TextBlock Text="Dialogs, Files and Printing" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Real modal dialogs - message boxes, file pickers and the print dialog." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Dialogs, Files and Printing" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Real modal dialogs - message boxes, file pickers and the print dialog." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <WrapPanel>
                             <GroupBox Header="MessageBox variants" Width="360">
                                 <StackPanel>
@@ -1307,8 +1307,8 @@ namespace __APPNAME__
                         </WrapPanel>
                     </StackPanel>
                     <StackPanel x:Name="SecDocs" Visibility="Collapsed">
-                        <TextBlock Text="Documents, Frames and Web" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Frame navigation, the three flow viewers, a fixed document and the browser host." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Documents, Frames and Web" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Frame navigation, the three flow viewers, a fixed document and the browser host." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <GroupBox Header="Frame with navigation journal" MinWidth="700">
                             <StackPanel>
                                 <Frame x:Name="DemoFrame" Height="140" NavigationUIVisibility="Visible" Source="GalleryPage1.xaml" Background="White"/>
@@ -1378,10 +1378,10 @@ namespace __APPNAME__
                         </GroupBox>
                     </StackPanel>
                     <StackPanel x:Name="SecDrag" Visibility="Collapsed">
-                        <TextBlock Text="Drag, Drop, Popups and Virtualization" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Floating surfaces, draggable thumbs, drag-and-drop and a 10,000-row virtualized list." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="Drag, Drop, Popups and Virtualization" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Floating surfaces, draggable thumbs, drag-and-drop and a 10,000-row virtualized list." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <WrapPanel>
-                            <GroupBox Header="Popup" Width="340">
+                            <GroupBox Header="Popup" Width="360">
                                 <StackPanel>
                                     <ToggleButton x:Name="PopupToggle" Content="Open the popup" Click="PopupToggle_Click"/>
                                     <Popup x:Name="DemoPopup" AllowsTransparency="True" PopupAnimation="Fade" Placement="Bottom" PlacementTarget="{Binding ElementName=PopupToggle}" StaysOpen="False" Closed="DemoPopup_Closed">
@@ -1396,7 +1396,7 @@ namespace __APPNAME__
                                     <TextBlock Text="Popup is a floating surface anchored to any element." Margin="0,10,0,0" Foreground="#FF6B7280" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="Thumb - drag me" Width="340">
+                            <GroupBox Header="Thumb - drag me" Width="360">
                                 <StackPanel>
                                     <Canvas x:Name="DragCanvas" Height="140" Background="#FFF8FAFC">
                                         <TextBlock Text="Drag the shapes with the mouse" Foreground="#FF94A3B8" Canvas.Left="8" Canvas.Top="120"/>
@@ -1410,7 +1410,7 @@ namespace __APPNAME__
                                     <TextBlock x:Name="DragState" Margin="0,8,0,0" Foreground="#FF047857"/>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="Drag and drop between lists" Width="340">
+                            <GroupBox Header="Drag and drop between lists" Width="360">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <ListBox x:Name="DragListA" Width="130" Height="120" MouseMove="DragSrc_MouseMove" AllowDrop="True" Drop="DragTgt_Drop" DragOver="DragTgt_Over"/>
@@ -1419,7 +1419,7 @@ namespace __APPNAME__
                                     <TextBlock Text="Drag an item from one list to the other with the left mouse button." Margin="0,8,0,0" Foreground="#FF6B7280" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="GridSplitter rows" Width="340">
+                            <GroupBox Header="GridSplitter rows" Width="360">
                                 <Grid Height="140">
                                     <Grid.RowDefinitions><RowDefinition/><RowDefinition Height="8"/><RowDefinition/></Grid.RowDefinitions>
                                     <Border Grid.Row="0" Background="#FFDBEAFE" CornerRadius="6"><TextBlock Text="Top row" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
@@ -1427,7 +1427,7 @@ namespace __APPNAME__
                                     <Border Grid.Row="2" Background="#FFDCFCE7" CornerRadius="6"><TextBlock Text="Bottom row" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
                                 </Grid>
                             </GroupBox>
-                            <GroupBox Header="Extended ListBox selection" Width="340">
+                            <GroupBox Header="Extended ListBox selection" Width="360">
                                 <StackPanel>
                                     <ListBox x:Name="MultiList" Height="110" SelectionMode="Extended" SelectionChanged="MultiList_SelectionChanged">
                                         <ListBoxItem Content="Red"/><ListBoxItem Content="Green"/><ListBoxItem Content="Blue"/><ListBoxItem Content="Yellow"/><ListBoxItem Content="Magenta"/>
@@ -1436,7 +1436,7 @@ namespace __APPNAME__
                                     <TextBlock x:Name="MultiResult" Margin="0,6,0,0" Foreground="#FF047857"/>
                                 </StackPanel>
                             </GroupBox>
-                            <GroupBox Header="Checkable menu" Width="340">
+                            <GroupBox Header="Checkable menu" Width="360">
                                 <StackPanel>
                                     <Menu>
                                         <MenuItem Header="_View">
@@ -1456,14 +1456,14 @@ namespace __APPNAME__
                                     <Button Content="Generate 10,000 rows" Click="BigListGen_Click"/>
                                     <TextBlock x:Name="BigListInfo" VerticalAlignment="Center" TextWrapping="Wrap"/>
                                 </WrapPanel>
-                                <ListBox x:Name="BigList" Height="150" Margin="0,8,0,0" VirtualizingPanel.VirtualizationMode="Recycling" ScrollViewer.CanContentScroll="True"/>
+                                <ListBox x:Name="BigList" Height="170" Margin="0,10,0,0" VirtualizingPanel.VirtualizationMode="Recycling" ScrollViewer.CanContentScroll="True"/>
                                 <TextBlock Text="Only the visible rows are realized; recycling reuses the containers while you scroll." Foreground="#FF6B7280" Margin="0,6,0,0"/>
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>
                     <StackPanel x:Name="SecSystem" Visibility="Collapsed">
-                        <TextBlock Text="System, OS Integration and the Kitchen Sink" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,2"/>
-                        <TextBlock Text="Live OS theme brushes, machine facts, running processes and one button that triggers everything." Foreground="#FF6B7280" Margin="0,0,0,14"/>
+                        <TextBlock Text="System, OS Integration and the Kitchen Sink" FontSize="22" FontWeight="Bold" Foreground="#FF312E81" Margin="0,0,0,6"/>
+                        <TextBlock Text="Live OS theme brushes, machine facts, running processes and one button that triggers everything." Foreground="#FF6B7280" Margin="0,0,0,18"/>
                         <WrapPanel>
                             <GroupBox Header="SystemColors - live Windows palette" Width="360">
                                 <StackPanel>
@@ -1563,6 +1563,8 @@ namespace __APPNAME__
         public MainWindow()
         {
             InitializeComponent();
+            // Ensure the window always opens maximized regardless of host environment
+            WindowState = WindowState.Maximized;
             DataContext = this;
             people.Add(new Person { Name = "Ada Lovelace", Age = 36, City = "London", Email = "ada@example.com", Active = true, Score = 91 });
             people.Add(new Person { Name = "Alan Turing", Age = 41, City = "Wilmslow", Email = "alan@example.com", Active = true, Score = 88 });
