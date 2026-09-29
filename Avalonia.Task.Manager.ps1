@@ -279,7 +279,7 @@ $mwAxaml = @'
             <MenuItem Header="Paused" Click="OnSpeedPausedClick"/>
           </MenuItem>
           <Separator/>
-          <MenuItem Header="Change graph to">
+          <MenuItem Header="Change graph to" x:Name="MenuChangeGraphRoot">
             <MenuItem Header="Overall utilization" Click="OnOverallGraphClick"/>
             <MenuItem Header="Logical processors" Click="OnLogicalGraphClick"/>
           </MenuItem>
@@ -320,8 +320,8 @@ $mwAxaml = @'
       <Border Grid.Column="0" x:Name="SidebarBorder" BorderThickness="0,0,1,0">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
           <StackPanel Margin="0,4,0,4">
-            <!-- CPU Tile (Selected) -->
-            <Border x:Name="CpuTileBorder" BorderThickness="1" Padding="8,6" Margin="4,2">
+            <!-- CPU Tile -->
+            <Border x:Name="CpuTileBorder" BorderThickness="1" Padding="8,6" Margin="4,2" Cursor="Hand" PointerPressed="OnCpuTileClick">
               <Grid ColumnDefinitions="58,*" RowDefinitions="Auto,Auto">
                 <Border Grid.RowSpan="2" Grid.Column="0" x:Name="MiniCpuBox" Height="40" Width="54" HorizontalAlignment="Left" BorderThickness="1">
                   <Canvas x:Name="MiniCpuCanvas" Height="38" Width="52" ClipToBounds="True"/>
@@ -332,7 +332,7 @@ $mwAxaml = @'
             </Border>
 
             <!-- Memory Tile -->
-            <Border x:Name="MemTileBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2">
+            <Border x:Name="MemTileBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2" Cursor="Hand" PointerPressed="OnMemTileClick">
               <Grid ColumnDefinitions="58,*" RowDefinitions="Auto,Auto">
                 <Border Grid.RowSpan="2" Grid.Column="0" x:Name="MiniMemBox" Height="40" Width="54" HorizontalAlignment="Left" BorderThickness="1">
                   <Canvas x:Name="MiniMemCanvas" Height="38" Width="52" ClipToBounds="True"/>
@@ -343,7 +343,7 @@ $mwAxaml = @'
             </Border>
 
             <!-- Disk 0 Tile -->
-            <Border x:Name="DiskTileBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2">
+            <Border x:Name="DiskTileBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2" Cursor="Hand" PointerPressed="OnDiskTileClick">
               <Grid ColumnDefinitions="58,*" RowDefinitions="Auto,Auto">
                 <Border Grid.RowSpan="2" Grid.Column="0" x:Name="MiniDiskBox" Height="40" Width="54" HorizontalAlignment="Left" BorderThickness="1">
                   <Canvas x:Name="MiniDiskCanvas" Height="38" Width="52" ClipToBounds="True"/>
@@ -400,97 +400,290 @@ $mwAxaml = @'
         </ScrollViewer>
       </Border>
 
-      <!-- Right Main Pane: CPU Performance -->
-      <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="24,12,24,12">
-        <!-- Row 0: Big Header & Brand String -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,10">
-          <TextBlock Grid.Column="0" x:Name="CpuBigHeader" Text="CPU" FontSize="32" FontWeight="Light" VerticalAlignment="Center"/>
-          <TextBlock Grid.Column="1" x:Name="CpuBrandText" Text="AMD Ryzen 7 PRO 8840HS w/ Radeon 780M Graphics" FontSize="13" VerticalAlignment="Bottom" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+      <!-- Right Main Pane: Hosts CPU, Memory, or Disk View -->
+      <Grid Grid.Column="1">
+        <!-- CPU Performance View -->
+        <Grid x:Name="CpuView" RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="24,12,24,12" IsVisible="True">
+          <!-- Row 0: Big Header & Brand String -->
+          <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,10">
+            <TextBlock Grid.Column="0" x:Name="CpuBigHeader" Text="CPU" FontSize="32" FontWeight="Light" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" x:Name="CpuBrandText" Text="AMD Ryzen 7 PRO 8840HS w/ Radeon 780M Graphics" FontSize="13" VerticalAlignment="Bottom" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+          </Grid>
+
+          <!-- Row 1: Graph Top Scale Labels -->
+          <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,0,0,2">
+            <TextBlock x:Name="GraphHeaderLabel" Text="% Utilization over 60 seconds" FontSize="11"/>
+            <TextBlock Grid.Column="1" x:Name="GraphScaleMax" Text="100%" FontSize="11"/>
+          </Grid>
+
+          <!-- Row 2: The Graph Box (Overall or Logical) -->
+          <Grid Grid.Row="2">
+            <Border x:Name="OverallGraphBorder" BorderThickness="1" IsVisible="False">
+              <Canvas x:Name="OverallCpuCanvas" ClipToBounds="True"/>
+            </Border>
+            <Grid x:Name="LogicalCoresGrid" IsVisible="True"/>
+          </Grid>
+
+          <!-- Row 3: Graph Bottom Scale Labels -->
+          <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,2,0,14" IsVisible="False">
+            <TextBlock x:Name="GraphScaleTime" Text="60 seconds" FontSize="11"/>
+            <TextBlock Grid.Column="1" x:Name="GraphScaleZero" Text="0" FontSize="11"/>
+          </Grid>
+
+          <!-- Row 4: Authentic Statistics & Specs Section -->
+          <Grid Grid.Row="4" HorizontalAlignment="Left" ColumnDefinitions="95,95,95,Auto,Auto" Margin="0,8,0,0">
+            <!-- Col 0: Utilization, Processes, Up time -->
+            <StackPanel Grid.Column="0" Spacing="10">
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelUtil" Text="Utilization" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatUtilization" Text="4%" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelProcs" Text="Processes" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatProcesses" Text="217" FontSize="16" FontWeight="Normal"/>
+              </StackPanel>
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelUptime" Text="Up time" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatUptime" Text="0:06:32:42" FontSize="16" FontWeight="Normal"/>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Col 1: Speed, Threads -->
+            <StackPanel Grid.Column="1" Spacing="10" Margin="4,0,0,0">
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelSpeed" Text="Speed" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatSpeed" Text="3.92 GHz" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelThreads" Text="Threads" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatThreads" Text="2799" FontSize="16" FontWeight="Normal"/>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Col 2: Handles -->
+            <StackPanel Grid.Column="2" Spacing="10" Margin="4,0,0,0">
+              <Border Height="38"/>
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelHandles" Text="Handles" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatHandles" Text="101988" FontSize="16" FontWeight="Normal"/>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Col 3: Hardware Spec Labels -->
+            <StackPanel Grid.Column="3" Spacing="2" Margin="32,2,12,0" VerticalAlignment="Top">
+              <TextBlock x:Name="LabelBaseSpeed" Text="Base speed:" FontSize="11"/>
+              <TextBlock x:Name="LabelSockets" Text="Sockets:" FontSize="11"/>
+              <TextBlock x:Name="LabelCores" Text="Cores:" FontSize="11"/>
+              <TextBlock x:Name="LabelLogical" Text="Logical processors:" FontSize="11"/>
+              <TextBlock x:Name="LabelVirt" Text="Virtualization:" FontSize="11"/>
+              <TextBlock x:Name="LabelL1" Text="L1 cache:" FontSize="11"/>
+              <TextBlock x:Name="LabelL2" Text="L2 cache:" FontSize="11"/>
+              <TextBlock x:Name="LabelL3" Text="L3 cache:" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Col 4: Hardware Spec Values -->
+            <StackPanel Grid.Column="4" Spacing="2" Margin="0,2,0,0" VerticalAlignment="Top">
+              <TextBlock x:Name="MetaBaseSpeed" Text="3.30 GHz" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaSockets" Text="1" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaPhysicalCores" Text="8" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaLogicalCores" Text="16" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaVirtualization" Text="Enabled" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaL1" Text="512 KB" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaL2" Text="8.0 MB" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaL3" Text="16.0 MB" FontSize="11" FontWeight="Normal"/>
+            </StackPanel>
+          </Grid>
         </Grid>
 
-        <!-- Row 1: Graph Top Scale Labels -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,0,0,2">
-          <TextBlock x:Name="GraphHeaderLabel" Text="% Utilization over 4 minutes" FontSize="11"/>
-          <TextBlock Grid.Column="1" x:Name="GraphScaleMax" Text="100%" FontSize="11"/>
+        <!-- Memory Performance View (1-to-1 Windows 10 Task Manager) -->
+        <Grid x:Name="MemoryView" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto" Margin="24,12,24,12" IsVisible="False">
+          <!-- Row 0: Big Header & Memory Capacity/Type String -->
+          <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,10">
+            <TextBlock Grid.Column="0" x:Name="MemBigHeader" Text="Memory" FontSize="32" FontWeight="Light" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" x:Name="MemTotalHeader" Text="32.0 GB" FontSize="13" VerticalAlignment="Bottom" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+          </Grid>
+
+          <!-- Row 1: Graph Top Scale Labels -->
+          <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,0,0,2">
+            <TextBlock x:Name="MemGraphHeaderLabel" Text="Memory usage" FontSize="11"/>
+            <TextBlock Grid.Column="1" x:Name="MemGraphScaleMax" Text="27.7 GB" FontSize="11"/>
+          </Grid>
+
+          <!-- Row 2: Memory Line/Area Usage Chart Box -->
+          <Grid Grid.Row="2">
+            <Border x:Name="OverallMemBorder" BorderThickness="1">
+              <Canvas x:Name="OverallMemCanvas" ClipToBounds="True"/>
+            </Border>
+          </Grid>
+
+          <!-- Row 3: Graph Bottom Scale Labels -->
+          <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,2,0,10">
+            <TextBlock x:Name="MemGraphScaleTime" Text="60 seconds" FontSize="11"/>
+            <TextBlock Grid.Column="1" x:Name="MemGraphScaleZero" Text="0" FontSize="11"/>
+          </Grid>
+
+          <!-- Row 4: Authentic Memory Composition Segmented Bar Section -->
+          <StackPanel Grid.Row="4" Margin="0,0,0,14">
+            <TextBlock x:Name="LabelMemComposition" Text="Memory composition" FontSize="11" Margin="0,0,0,4"/>
+            <Border x:Name="MemCompositionBorder" BorderThickness="1" Height="18">
+              <Canvas x:Name="MemCompositionCanvas" ClipToBounds="True" Height="16"/>
+            </Border>
+          </StackPanel>
+
+          <!-- Row 5: Authentic Memory Statistics & Hardware Specs Section -->
+          <Grid Grid.Row="5" HorizontalAlignment="Left" ColumnDefinitions="115,115,115,Auto,Auto" Margin="0,0,0,0">
+            <!-- Col 0: In use (Compressed), Available -->
+            <StackPanel Grid.Column="0" Spacing="10">
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelMemInUse" Text="In use (Compressed)" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatMemInUse" Text="10.8 GB" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelMemAvailable" Text="Available" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatMemAvailable" Text="16.9 GB" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Col 1: Committed, Cached -->
+            <StackPanel Grid.Column="1" Spacing="10" Margin="4,0,0,0">
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelMemCommitted" Text="Committed" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatMemCommitted" Text="14.2/35.0 GB" FontSize="16" FontWeight="Normal"/>
+              </StackPanel>
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelMemCached" Text="Cached" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatMemCached" Text="15.8 GB" FontSize="16" FontWeight="Normal"/>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Col 2: Paged pool, Non-paged pool -->
+            <StackPanel Grid.Column="2" Spacing="10" Margin="4,0,0,0">
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelMemPagedPool" Text="Paged pool" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatMemPagedPool" Text="640 MB" FontSize="16" FontWeight="Normal"/>
+              </StackPanel>
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelMemNonPagedPool" Text="Non-paged pool" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatMemNonPagedPool" Text="480 MB" FontSize="16" FontWeight="Normal"/>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Col 3: Hardware Spec Labels -->
+            <StackPanel Grid.Column="3" Spacing="2" Margin="36,2,12,0" VerticalAlignment="Top">
+              <TextBlock x:Name="LabelMemSpeed" Text="Speed:" FontSize="11"/>
+              <TextBlock x:Name="LabelMemSlots" Text="Slots used:" FontSize="11"/>
+              <TextBlock x:Name="LabelMemFormFactor" Text="Form factor:" FontSize="11"/>
+              <TextBlock x:Name="LabelMemReserved" Text="Hardware reserved:" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Col 4: Hardware Spec Values -->
+            <StackPanel Grid.Column="4" Spacing="2" Margin="0,2,0,0" VerticalAlignment="Top">
+              <TextBlock x:Name="MetaMemSpeed" Text="5600 MHz" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaMemSlots" Text="2 of 2" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaMemFormFactor" Text="SODIMM" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaMemReserved" Text="4.3 GB" FontSize="11" FontWeight="Normal"/>
+            </StackPanel>
+          </Grid>
         </Grid>
 
-        <!-- Row 2: The Graph Box (Overall or Logical) -->
-        <Grid Grid.Row="2">
-          <Border x:Name="OverallGraphBorder" BorderThickness="1" IsVisible="False">
-            <Canvas x:Name="OverallCpuCanvas" ClipToBounds="True"/>
-          </Border>
-          <Grid x:Name="LogicalCoresGrid" IsVisible="True"/>
-        </Grid>
+        <!-- Disk Performance View (1-to-1 Windows 10 Task Manager) -->
+        <Grid x:Name="DiskView" RowDefinitions="Auto,Auto,*,Auto,Auto,*,Auto,Auto" Margin="24,12,24,12" IsVisible="False">
+          <!-- Row 0: Big Header & Disk Model String -->
+          <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,10">
+            <TextBlock Grid.Column="0" x:Name="DiskBigHeader" Text="Disk 0 (C:)" FontSize="32" FontWeight="Light" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" x:Name="DiskModelText" Text="NVMe Samsung SSD 980 PRO 1TB" FontSize="13" VerticalAlignment="Bottom" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+          </Grid>
 
-        <!-- Row 3: Graph Bottom Scale Labels (hidden in logical processors view) -->
-        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,2,0,14" IsVisible="False">
-          <TextBlock x:Name="GraphScaleTime" Text="4 minutes" FontSize="11"/>
-          <TextBlock Grid.Column="1" x:Name="GraphScaleZero" Text="0" FontSize="11"/>
-        </Grid>
+          <!-- Row 1: Active Time Graph Top Scale Labels -->
+          <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,0,0,2">
+            <TextBlock x:Name="DiskActiveTimeHeaderLabel" Text="Active time" FontSize="11"/>
+            <TextBlock Grid.Column="1" x:Name="DiskActiveTimeScaleMax" Text="100%" FontSize="11"/>
+          </Grid>
 
-        <!-- Row 4: Authentic Statistics & Specs Section (Left-aligned, exact match to Win10 Task Manager) -->
-        <Grid Grid.Row="4" HorizontalAlignment="Left" ColumnDefinitions="95,95,95,Auto,Auto" Margin="0,8,0,0">
-          <!-- Col 0: Utilization, Processes, Up time -->
-          <StackPanel Grid.Column="0" Spacing="10">
-            <StackPanel Spacing="1">
-              <TextBlock x:Name="LabelUtil" Text="Utilization" FontSize="11" Margin="0,0,0,1"/>
-              <TextBlock x:Name="StatUtilization" Text="4%" FontSize="22" FontWeight="Normal"/>
-            </StackPanel>
-            <StackPanel Spacing="1">
-              <TextBlock x:Name="LabelProcs" Text="Processes" FontSize="11" Margin="0,0,0,1"/>
-              <TextBlock x:Name="StatProcesses" Text="217" FontSize="16" FontWeight="Normal"/>
-            </StackPanel>
-            <StackPanel Spacing="1">
-              <TextBlock x:Name="LabelUptime" Text="Up time" FontSize="11" Margin="0,0,0,1"/>
-              <TextBlock x:Name="StatUptime" Text="0:06:32:42" FontSize="16" FontWeight="Normal"/>
-            </StackPanel>
-          </StackPanel>
+          <!-- Row 2: Active Time Graph Box -->
+          <Grid Grid.Row="2" MinHeight="75">
+            <Border x:Name="DiskActiveBorder" BorderThickness="1">
+              <Canvas x:Name="DiskActiveCanvas" ClipToBounds="True"/>
+            </Border>
+          </Grid>
 
-          <!-- Col 1: Speed, Threads -->
-          <StackPanel Grid.Column="1" Spacing="10" Margin="4,0,0,0">
-            <StackPanel Spacing="1">
-              <TextBlock x:Name="LabelSpeed" Text="Speed" FontSize="11" Margin="0,0,0,1"/>
-              <TextBlock x:Name="StatSpeed" Text="3.92 GHz" FontSize="22" FontWeight="Normal"/>
-            </StackPanel>
-            <StackPanel Spacing="1">
-              <TextBlock x:Name="LabelThreads" Text="Threads" FontSize="11" Margin="0,0,0,1"/>
-              <TextBlock x:Name="StatThreads" Text="2799" FontSize="16" FontWeight="Normal"/>
-            </StackPanel>
-          </StackPanel>
+          <!-- Row 3: Active Time Graph Bottom Scale Labels -->
+          <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,2,0,8">
+            <TextBlock x:Name="DiskActiveScaleTime" Text="60 seconds" FontSize="11"/>
+            <TextBlock Grid.Column="1" x:Name="DiskActiveScaleZero" Text="0" FontSize="11"/>
+          </Grid>
 
-          <!-- Col 2: Handles -->
-          <StackPanel Grid.Column="2" Spacing="10" Margin="4,0,0,0">
-            <!-- Top spacer aligning Handles with Processes and Threads row -->
-            <Border Height="38"/>
-            <StackPanel Spacing="1">
-              <TextBlock x:Name="LabelHandles" Text="Handles" FontSize="11" Margin="0,0,0,1"/>
-              <TextBlock x:Name="StatHandles" Text="101988" FontSize="16" FontWeight="Normal"/>
+          <!-- Row 4: Transfer Rate Graph Top Scale Labels -->
+          <Grid Grid.Row="4" ColumnDefinitions="*,Auto" Margin="0,0,0,2">
+            <TextBlock x:Name="DiskTransferHeaderLabel" Text="Disk transfer rate" FontSize="11"/>
+            <TextBlock Grid.Column="1" x:Name="DiskTransferScaleMax" Text="100 KB/s" FontSize="11"/>
+          </Grid>
+
+          <!-- Row 5: Transfer Rate Graph Box -->
+          <Grid Grid.Row="5" MinHeight="75">
+            <Border x:Name="DiskTransferBorder" BorderThickness="1">
+              <Canvas x:Name="DiskTransferCanvas" ClipToBounds="True"/>
+            </Border>
+          </Grid>
+
+          <!-- Row 6: Transfer Rate Graph Bottom Scale Labels -->
+          <Grid Grid.Row="6" ColumnDefinitions="*,Auto" Margin="0,2,0,10">
+            <TextBlock x:Name="DiskTransferScaleTime" Text="60 seconds" FontSize="11"/>
+            <TextBlock Grid.Column="1" x:Name="DiskTransferScaleZero" Text="0" FontSize="11"/>
+          </Grid>
+
+          <!-- Row 7: Authentic Statistics & Specs Section -->
+          <Grid Grid.Row="7" HorizontalAlignment="Left" ColumnDefinitions="110,150,110,110,Auto,Auto" Margin="0,0,0,0">
+            <!-- Col 0: Active time -->
+            <StackPanel Grid.Column="0" Spacing="10">
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelDiskActiveTime" Text="Active time" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatDiskActiveTime" Text="0%" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
             </StackPanel>
-          </StackPanel>
 
-          <!-- Col 3: Hardware Spec Labels -->
-          <StackPanel Grid.Column="3" Spacing="2" Margin="32,2,12,0" VerticalAlignment="Top">
-            <TextBlock x:Name="LabelBaseSpeed" Text="Base speed:" FontSize="11"/>
-            <TextBlock x:Name="LabelSockets" Text="Sockets:" FontSize="11"/>
-            <TextBlock x:Name="LabelCores" Text="Cores:" FontSize="11"/>
-            <TextBlock x:Name="LabelLogical" Text="Logical processors:" FontSize="11"/>
-            <TextBlock x:Name="LabelVirt" Text="Virtualization:" FontSize="11"/>
-            <TextBlock x:Name="LabelL1" Text="L1 cache:" FontSize="11"/>
-            <TextBlock x:Name="LabelL2" Text="L2 cache:" FontSize="11"/>
-            <TextBlock x:Name="LabelL3" Text="L3 cache:" FontSize="11"/>
-          </StackPanel>
+            <!-- Col 1: Average response time -->
+            <StackPanel Grid.Column="1" Spacing="10" Margin="4,0,0,0">
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelDiskResponseTime" Text="Average response time" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatDiskResponseTime" Text="0.0 ms" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
+            </StackPanel>
 
-          <!-- Col 4: Hardware Spec Values -->
-          <StackPanel Grid.Column="4" Spacing="2" Margin="0,2,0,0" VerticalAlignment="Top">
-            <TextBlock x:Name="MetaBaseSpeed" Text="3.30 GHz" FontSize="11" FontWeight="Normal"/>
-            <TextBlock x:Name="MetaSockets" Text="1" FontSize="11" FontWeight="Normal"/>
-            <TextBlock x:Name="MetaPhysicalCores" Text="8" FontSize="11" FontWeight="Normal"/>
-            <TextBlock x:Name="MetaLogicalCores" Text="16" FontSize="11" FontWeight="Normal"/>
-            <TextBlock x:Name="MetaVirtualization" Text="Enabled" FontSize="11" FontWeight="Normal"/>
-            <TextBlock x:Name="MetaL1" Text="512 KB" FontSize="11" FontWeight="Normal"/>
-            <TextBlock x:Name="MetaL2" Text="8.0 MB" FontSize="11" FontWeight="Normal"/>
-            <TextBlock x:Name="MetaL3" Text="16.0 MB" FontSize="11" FontWeight="Normal"/>
-          </StackPanel>
+            <!-- Col 2: Read speed -->
+            <StackPanel Grid.Column="2" Spacing="10" Margin="4,0,0,0">
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelDiskReadSpeed" Text="Read speed" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatDiskReadSpeed" Text="0 KB/s" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Col 3: Write speed -->
+            <StackPanel Grid.Column="3" Spacing="10" Margin="4,0,0,0">
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelDiskWriteSpeed" Text="Write speed" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatDiskWriteSpeed" Text="0 KB/s" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Col 4: Hardware Spec Labels -->
+            <StackPanel Grid.Column="4" Spacing="2" Margin="36,2,12,0" VerticalAlignment="Top">
+              <TextBlock x:Name="LabelDiskCapacity" Text="Capacity:" FontSize="11"/>
+              <TextBlock x:Name="LabelDiskFormatted" Text="Formatted:" FontSize="11"/>
+              <TextBlock x:Name="LabelDiskSystemDisk" Text="System disk:" FontSize="11"/>
+              <TextBlock x:Name="LabelDiskPageFile" Text="Page file:" FontSize="11"/>
+              <TextBlock x:Name="LabelDiskType" Text="Type:" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Col 5: Hardware Spec Values -->
+            <StackPanel Grid.Column="5" Spacing="2" Margin="0,2,0,0" VerticalAlignment="Top">
+              <TextBlock x:Name="MetaDiskCapacity" Text="477 GB" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaDiskFormatted" Text="476 GB" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaDiskSystemDisk" Text="Yes" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaDiskPageFile" Text="Yes" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaDiskType" Text="SSD" FontSize="11" FontWeight="Normal"/>
+            </StackPanel>
+          </Grid>
         </Grid>
       </Grid>
     </Grid>
@@ -505,7 +698,6 @@ $mwAxaml = @'
           <TextBlock x:Name="BottomFewerDetails" Text="Fewer details" FontSize="11" VerticalAlignment="Center"/>
         </StackPanel>
         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Cursor="Hand" PointerPressed="OnOpenResmonClick">
-          <!-- Resource Monitor speedometer gauge icon -->
           <Canvas Width="16" Height="16" VerticalAlignment="Center">
             <Path Data="M 2,12 A 6,6 0 1 1 14,12 Z" Fill="Transparent" Stroke="#1070B8" StrokeThickness="1.2"/>
             <Line StartPoint="8,10" EndPoint="11,6" Stroke="#C84B31" StrokeThickness="1.5" StrokeLineCap="Round"/>
@@ -523,6 +715,7 @@ $mwCs = @'
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
@@ -538,6 +731,13 @@ using Microsoft.Win32;
 
 namespace __APPNAME__
 {
+    internal enum PerformancePanel
+    {
+        Cpu,
+        Memory,
+        Disk
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     internal struct SystemProcessorPerformanceInfo
     {
@@ -575,6 +775,25 @@ namespace __APPNAME__
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    internal struct PERFORMANCE_INFORMATION
+    {
+        public uint cb;
+        public UIntPtr CommitTotal;
+        public UIntPtr CommitLimit;
+        public UIntPtr CommitPeak;
+        public UIntPtr PhysicalTotal;
+        public UIntPtr PhysicalAvailable;
+        public UIntPtr SystemCache;
+        public UIntPtr KernelTotal;
+        public UIntPtr KernelPaged;
+        public UIntPtr KernelNonpaged;
+        public UIntPtr PageSize;
+        public uint HandleCount;
+        public uint ProcessCount;
+        public uint ThreadCount;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     internal struct PDH_FMT_COUNTERVALUE_DOUBLE
     {
         public uint CStatus;
@@ -591,6 +810,12 @@ namespace __APPNAME__
 
         [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool GlobalMemoryStatusEx(ref MEMORYSTATUSEX lpBuffer);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool GetPhysicallyInstalledSystemMemory(out ulong totalMemoryInKilobytes);
+
+        [DllImport("psapi.dll", SetLastError = true)]
+        private static extern bool GetPerformanceInfo(out PERFORMANCE_INFORMATION pPerformanceInformation, uint cb);
 
         [DllImport("pdh.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern int PdhOpenQuery(string? szDataSource, IntPtr dwUserData, out IntPtr phQuery);
@@ -610,9 +835,18 @@ namespace __APPNAME__
         private IntPtr _hPdhQuery = IntPtr.Zero;
         private IntPtr _hPdhCounter = IntPtr.Zero;
 
+        // PDH Disk Counter Handles
+        private IntPtr _hPdhDiskTimeCounter = IntPtr.Zero;
+        private IntPtr _hPdhDiskResponseCounter = IntPtr.Zero;
+        private IntPtr _hPdhDiskReadCounter = IntPtr.Zero;
+        private IntPtr _hPdhDiskWriteCounter = IntPtr.Zero;
+        private IntPtr _hPdhDiskTransferCounter = IntPtr.Zero;
+
         private bool _isInitialized = false;
         private DispatcherTimer? _timer;
-        private int _updateIntervalSec = 4;
+        private int _updateIntervalSec = 1;
+        private PerformancePanel _activePanel = PerformancePanel.Cpu;
+
         private long[]? _prevCoreIdle;
         private long[]? _prevCoreTotal;
         private long[]? _prevCoreKernel;
@@ -624,10 +858,21 @@ namespace __APPNAME__
 
         private readonly List<double> _memHistory = new List<double>();
         private readonly List<double> _diskHistory = new List<double>();
+        private readonly List<double> _diskTransferHistory = new List<double>();
+        private double _latestPeakTransferRate = 100 * 1024.0;
+
         private readonly List<double> _wifiHistory = new List<double>();
         private readonly List<double> _eth1History = new List<double>();
         private readonly List<double> _eth2History = new List<double>();
         private readonly List<double> _gpuHistory = new List<double>();
+
+        private double _latestMemInUseGb = 10.9;
+        private double _latestMemAvailGb = 16.8;
+        private double _latestMemTotalGb = 27.7;
+        private double _latestMemCachedGb = 15.8;
+        private double _latestMemStandbyGb = 15.0;
+        private double _latestMemModifiedGb = 0.2;
+        private double _latestMemFreeGb = 1.8;
 
         private long _prevWifiBytesSent = 0;
         private long _prevWifiBytesRecv = 0;
@@ -653,6 +898,7 @@ namespace __APPNAME__
         private MenuItem? _menuView;
         private MenuItem? _menuAlwaysOnTop;
         private MenuItem? _menuDarkMode;
+        private MenuItem? _menuChangeGraphRoot;
 
         private TextBlock? _tabProcesses;
         private TextBlock? _tabPerformance;
@@ -701,6 +947,8 @@ namespace __APPNAME__
         private Canvas? _miniEth2Canvas;
         private Canvas? _miniGpuCanvas;
 
+        // CPU Panel Controls
+        private Grid? _cpuView;
         private TextBlock? _cpuBigHeader;
         private TextBlock? _cpuBrandText;
         private TextBlock? _graphHeaderLabel;
@@ -742,6 +990,85 @@ namespace __APPNAME__
         private TextBlock? _metaL1;
         private TextBlock? _metaL2;
         private TextBlock? _metaL3;
+
+        // Memory Panel Controls
+        private Grid? _memoryView;
+        private TextBlock? _memBigHeader;
+        private TextBlock? _memTotalHeader;
+        private TextBlock? _memGraphHeaderLabel;
+        private TextBlock? _memGraphScaleMax;
+        private TextBlock? _memGraphScaleTime;
+        private TextBlock? _memGraphScaleZero;
+        private Border? _overallMemBorder;
+        private Canvas? _overallMemCanvas;
+        private TextBlock? _labelMemComposition;
+        private Border? _memCompositionBorder;
+        private Canvas? _memCompositionCanvas;
+
+        private TextBlock? _labelMemInUse;
+        private TextBlock? _labelMemAvailable;
+        private TextBlock? _labelMemCommitted;
+        private TextBlock? _labelMemCached;
+        private TextBlock? _labelMemPagedPool;
+        private TextBlock? _labelMemNonPagedPool;
+
+        private TextBlock? _statMemInUse;
+        private TextBlock? _statMemAvailable;
+        private TextBlock? _statMemCommitted;
+        private TextBlock? _statMemCached;
+        private TextBlock? _statMemPagedPool;
+        private TextBlock? _statMemNonPagedPool;
+
+        private TextBlock? _labelMemSpeed;
+        private TextBlock? _labelMemSlots;
+        private TextBlock? _labelMemFormFactor;
+        private TextBlock? _labelMemReserved;
+
+        private TextBlock? _metaMemSpeed;
+        private TextBlock? _metaMemSlots;
+        private TextBlock? _metaMemFormFactor;
+        private TextBlock? _metaMemReserved;
+
+        // Disk Panel Controls
+        private Grid? _diskView;
+        private TextBlock? _diskBigHeader;
+        private TextBlock? _diskModelText;
+        private TextBlock? _diskActiveTimeHeaderLabel;
+        private TextBlock? _diskActiveTimeScaleMax;
+        private Border? _diskActiveBorder;
+        private Canvas? _diskActiveCanvas;
+        private TextBlock? _diskActiveScaleTime;
+        private TextBlock? _diskActiveScaleZero;
+
+        private TextBlock? _diskTransferHeaderLabel;
+        private TextBlock? _diskTransferScaleMax;
+        private Border? _diskTransferBorder;
+        private Canvas? _diskTransferCanvas;
+        private TextBlock? _diskTransferScaleTime;
+        private TextBlock? _diskTransferScaleZero;
+
+        private TextBlock? _labelDiskActiveTime;
+        private TextBlock? _labelDiskResponseTime;
+        private TextBlock? _labelDiskReadSpeed;
+        private TextBlock? _labelDiskWriteSpeed;
+
+        private TextBlock? _statDiskActiveTime;
+        private TextBlock? _statDiskResponseTime;
+        private TextBlock? _statDiskReadSpeed;
+        private TextBlock? _statDiskWriteSpeed;
+
+        private TextBlock? _labelDiskCapacity;
+        private TextBlock? _labelDiskFormatted;
+        private TextBlock? _labelDiskSystemDisk;
+        private TextBlock? _labelDiskPageFile;
+        private TextBlock? _labelDiskType;
+
+        private TextBlock? _metaDiskCapacity;
+        private TextBlock? _metaDiskFormatted;
+        private TextBlock? _metaDiskSystemDisk;
+        private TextBlock? _metaDiskPageFile;
+        private TextBlock? _metaDiskType;
+
         private TextBlock? _bottomFewerDetails;
         private TextBlock? _bottomResmonText;
 
@@ -754,7 +1081,10 @@ namespace __APPNAME__
             LoadSettings();
             BindControls();
             InitHardwareMetadata();
+            InitMemoryMetadata();
+            InitDiskMetadata();
             InitPdhFrequencyCounter();
+            InitPdhDiskCounters();
             InitLogicalGraphs();
             SetupGraphContextMenus();
             ApplyThemeColors();
@@ -834,6 +1164,7 @@ namespace __APPNAME__
             _menuView = this.FindControl<MenuItem>("MenuView");
             _menuAlwaysOnTop = this.FindControl<MenuItem>("MenuAlwaysOnTop");
             _menuDarkMode = this.FindControl<MenuItem>("MenuDarkMode");
+            _menuChangeGraphRoot = this.FindControl<MenuItem>("MenuChangeGraphRoot");
 
             _tabProcesses = this.FindControl<TextBlock>("TabProcesses");
             _tabPerformance = this.FindControl<TextBlock>("TabPerformance");
@@ -882,6 +1213,8 @@ namespace __APPNAME__
             _miniEth2Canvas = this.FindControl<Canvas>("MiniEth2Canvas");
             _miniGpuCanvas = this.FindControl<Canvas>("MiniGpuCanvas");
 
+            // CPU View Binding
+            _cpuView = this.FindControl<Grid>("CpuView");
             _cpuBigHeader = this.FindControl<TextBlock>("CpuBigHeader");
             _cpuBrandText = this.FindControl<TextBlock>("CpuBrandText");
             _graphHeaderLabel = this.FindControl<TextBlock>("GraphHeaderLabel");
@@ -923,6 +1256,85 @@ namespace __APPNAME__
             _metaL1 = this.FindControl<TextBlock>("MetaL1");
             _metaL2 = this.FindControl<TextBlock>("MetaL2");
             _metaL3 = this.FindControl<TextBlock>("MetaL3");
+
+            // Memory View Binding
+            _memoryView = this.FindControl<Grid>("MemoryView");
+            _memBigHeader = this.FindControl<TextBlock>("MemBigHeader");
+            _memTotalHeader = this.FindControl<TextBlock>("MemTotalHeader");
+            _memGraphHeaderLabel = this.FindControl<TextBlock>("MemGraphHeaderLabel");
+            _memGraphScaleMax = this.FindControl<TextBlock>("MemGraphScaleMax");
+            _memGraphScaleTime = this.FindControl<TextBlock>("MemGraphScaleTime");
+            _memGraphScaleZero = this.FindControl<TextBlock>("MemGraphScaleZero");
+            _overallMemBorder = this.FindControl<Border>("OverallMemBorder");
+            _overallMemCanvas = this.FindControl<Canvas>("OverallMemCanvas");
+            _labelMemComposition = this.FindControl<TextBlock>("LabelMemComposition");
+            _memCompositionBorder = this.FindControl<Border>("MemCompositionBorder");
+            _memCompositionCanvas = this.FindControl<Canvas>("MemCompositionCanvas");
+
+            _labelMemInUse = this.FindControl<TextBlock>("LabelMemInUse");
+            _labelMemAvailable = this.FindControl<TextBlock>("LabelMemAvailable");
+            _labelMemCommitted = this.FindControl<TextBlock>("LabelMemCommitted");
+            _labelMemCached = this.FindControl<TextBlock>("LabelMemCached");
+            _labelMemPagedPool = this.FindControl<TextBlock>("LabelMemPagedPool");
+            _labelMemNonPagedPool = this.FindControl<TextBlock>("LabelMemNonPagedPool");
+
+            _statMemInUse = this.FindControl<TextBlock>("StatMemInUse");
+            _statMemAvailable = this.FindControl<TextBlock>("StatMemAvailable");
+            _statMemCommitted = this.FindControl<TextBlock>("StatMemCommitted");
+            _statMemCached = this.FindControl<TextBlock>("StatMemCached");
+            _statMemPagedPool = this.FindControl<TextBlock>("StatMemPagedPool");
+            _statMemNonPagedPool = this.FindControl<TextBlock>("StatMemNonPagedPool");
+
+            _labelMemSpeed = this.FindControl<TextBlock>("LabelMemSpeed");
+            _labelMemSlots = this.FindControl<TextBlock>("LabelMemSlots");
+            _labelMemFormFactor = this.FindControl<TextBlock>("LabelMemFormFactor");
+            _labelMemReserved = this.FindControl<TextBlock>("LabelMemReserved");
+
+            _metaMemSpeed = this.FindControl<TextBlock>("MetaMemSpeed");
+            _metaMemSlots = this.FindControl<TextBlock>("MetaMemSlots");
+            _metaMemFormFactor = this.FindControl<TextBlock>("MetaMemFormFactor");
+            _metaMemReserved = this.FindControl<TextBlock>("MetaMemReserved");
+
+            // Disk View Binding
+            _diskView = this.FindControl<Grid>("DiskView");
+            _diskBigHeader = this.FindControl<TextBlock>("DiskBigHeader");
+            _diskModelText = this.FindControl<TextBlock>("DiskModelText");
+            _diskActiveTimeHeaderLabel = this.FindControl<TextBlock>("DiskActiveTimeHeaderLabel");
+            _diskActiveTimeScaleMax = this.FindControl<TextBlock>("DiskActiveTimeScaleMax");
+            _diskActiveBorder = this.FindControl<Border>("DiskActiveBorder");
+            _diskActiveCanvas = this.FindControl<Canvas>("DiskActiveCanvas");
+            _diskActiveScaleTime = this.FindControl<TextBlock>("DiskActiveScaleTime");
+            _diskActiveScaleZero = this.FindControl<TextBlock>("DiskActiveScaleZero");
+
+            _diskTransferHeaderLabel = this.FindControl<TextBlock>("DiskTransferHeaderLabel");
+            _diskTransferScaleMax = this.FindControl<TextBlock>("DiskTransferScaleMax");
+            _diskTransferBorder = this.FindControl<Border>("DiskTransferBorder");
+            _diskTransferCanvas = this.FindControl<Canvas>("DiskTransferCanvas");
+            _diskTransferScaleTime = this.FindControl<TextBlock>("DiskTransferScaleTime");
+            _diskTransferScaleZero = this.FindControl<TextBlock>("DiskTransferScaleZero");
+
+            _labelDiskActiveTime = this.FindControl<TextBlock>("LabelDiskActiveTime");
+            _labelDiskResponseTime = this.FindControl<TextBlock>("LabelDiskResponseTime");
+            _labelDiskReadSpeed = this.FindControl<TextBlock>("LabelDiskReadSpeed");
+            _labelDiskWriteSpeed = this.FindControl<TextBlock>("LabelDiskWriteSpeed");
+
+            _statDiskActiveTime = this.FindControl<TextBlock>("StatDiskActiveTime");
+            _statDiskResponseTime = this.FindControl<TextBlock>("StatDiskResponseTime");
+            _statDiskReadSpeed = this.FindControl<TextBlock>("StatDiskReadSpeed");
+            _statDiskWriteSpeed = this.FindControl<TextBlock>("StatDiskWriteSpeed");
+
+            _labelDiskCapacity = this.FindControl<TextBlock>("LabelDiskCapacity");
+            _labelDiskFormatted = this.FindControl<TextBlock>("LabelDiskFormatted");
+            _labelDiskSystemDisk = this.FindControl<TextBlock>("LabelDiskSystemDisk");
+            _labelDiskPageFile = this.FindControl<TextBlock>("LabelDiskPageFile");
+            _labelDiskType = this.FindControl<TextBlock>("LabelDiskType");
+
+            _metaDiskCapacity = this.FindControl<TextBlock>("MetaDiskCapacity");
+            _metaDiskFormatted = this.FindControl<TextBlock>("MetaDiskFormatted");
+            _metaDiskSystemDisk = this.FindControl<TextBlock>("MetaDiskSystemDisk");
+            _metaDiskPageFile = this.FindControl<TextBlock>("MetaDiskPageFile");
+            _metaDiskType = this.FindControl<TextBlock>("MetaDiskType");
+
             _bottomFewerDetails = this.FindControl<TextBlock>("BottomFewerDetails");
             _bottomResmonText = this.FindControl<TextBlock>("BottomResmonText");
         }
@@ -991,6 +1403,7 @@ namespace __APPNAME__
                 _overallKernelHistory.Add(1.0);
                 _memHistory.Add(39.0);
                 _diskHistory.Add(0.0);
+                _diskTransferHistory.Add(0.0);
                 _wifiHistory.Add(15.0);
                 _eth1History.Add(0.0);
                 _eth2History.Add(0.0);
@@ -1001,6 +1414,128 @@ namespace __APPNAME__
                     _coreKernelHistories[c].Add(1.0);
                 }
             }
+        }
+
+        private void InitMemoryMetadata()
+        {
+            double totalInstalledGb = 32.0;
+            double hardwareReservedGb = 4.3;
+            try
+            {
+                var mem = new MEMORYSTATUSEX { dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>() };
+                if (GlobalMemoryStatusEx(ref mem))
+                {
+                    _latestMemTotalGb = mem.ullTotalPhys / (1024.0 * 1024.0 * 1024.0);
+                    if (GetPhysicallyInstalledSystemMemory(out ulong totalKb))
+                    {
+                        totalInstalledGb = totalKb / (1024.0 * 1024.0);
+                        hardwareReservedGb = Math.Max(0.1, (totalKb * 1024.0 - mem.ullTotalPhys) / (1024.0 * 1024.0 * 1024.0));
+                    }
+                    else
+                    {
+                        totalInstalledGb = Math.Ceiling(_latestMemTotalGb / 8.0) * 8.0;
+                        hardwareReservedGb = Math.Max(0.1, totalInstalledGb - _latestMemTotalGb);
+                    }
+                }
+            }
+            catch { }
+
+            string memHeader = $"{totalInstalledGb:F1} GB";
+            if (Math.Abs(totalInstalledGb - Math.Round(totalInstalledGb)) < 0.1)
+            {
+                memHeader = $"{Math.Round(totalInstalledGb):F0} GB";
+            }
+
+            if (_memTotalHeader != null) _memTotalHeader.Text = memHeader;
+            if (_memGraphScaleMax != null) _memGraphScaleMax.Text = $"{_latestMemTotalGb:F1} GB";
+            if (_metaMemReserved != null)
+            {
+                _metaMemReserved.Text = hardwareReservedGb >= 1.0 
+                    ? $"{hardwareReservedGb:F1} GB" 
+                    : $"{Math.Round(hardwareReservedGb * 1024.0)} MB";
+            }
+            if (_metaMemSpeed != null) _metaMemSpeed.Text = "5600 MHz";
+            if (_metaMemSlots != null) _metaMemSlots.Text = "2 of 2";
+            if (_metaMemFormFactor != null) _metaMemFormFactor.Text = "SODIMM";
+        }
+
+        private void InitDiskMetadata()
+        {
+            string sysRoot = System.IO.Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\";
+            string driveLetter = sysRoot.TrimEnd('\\');
+            string diskTitle = $"Disk 0 ({driveLetter})";
+            string modelName = "NVMe Samsung SSD 980 PRO 1TB";
+            string capacityStr = "512 GB";
+            string formattedStr = "476 GB";
+            string diskType = "SSD";
+
+            try
+            {
+                var di = new System.IO.DriveInfo(sysRoot);
+                if (di.IsReady)
+                {
+                    double totalBytes = di.TotalSize;
+                    double formattedGb = totalBytes / (1024.0 * 1024.0 * 1024.0);
+                    formattedStr = $"{Math.Round(formattedGb):F0} GB";
+
+                    double rawGb = Math.Round(totalBytes / 1_000_000_000.0);
+                    if (rawGb >= 900) capacityStr = "1000 GB";
+                    else if (rawGb >= 450) capacityStr = "512 GB";
+                    else if (rawGb >= 220) capacityStr = "256 GB";
+                    else capacityStr = $"{rawGb:F0} GB";
+                }
+            }
+            catch { }
+
+            try
+            {
+                using var scsiKey = Registry.LocalMachine.OpenSubKey(@"HARDWARE\DEVICEMAP\Scsi");
+                if (scsiKey != null)
+                {
+                    foreach (var port in scsiKey.GetSubKeyNames())
+                    {
+                        using var portKey = scsiKey.OpenSubKey(port);
+                        if (portKey == null) continue;
+                        foreach (var bus in portKey.GetSubKeyNames())
+                        {
+                            using var busKey = portKey.OpenSubKey(bus);
+                            if (busKey == null) continue;
+                            foreach (var target in busKey.GetSubKeyNames())
+                            {
+                                using var targetKey = busKey.OpenSubKey(target);
+                                if (targetKey == null) continue;
+                                foreach (var lun in targetKey.GetSubKeyNames())
+                                {
+                                    using var lunKey = targetKey.OpenSubKey(lun);
+                                    var idObj = lunKey?.GetValue("Identifier");
+                                    if (idObj != null && !string.IsNullOrWhiteSpace(idObj.ToString()))
+                                    {
+                                        string foundModel = idObj.ToString()!.Trim();
+                                        if (foundModel.Length > 2)
+                                        {
+                                            modelName = foundModel;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (modelName != "NVMe Samsung SSD 980 PRO 1TB") break;
+                            }
+                            if (modelName != "NVMe Samsung SSD 980 PRO 1TB") break;
+                        }
+                        if (modelName != "NVMe Samsung SSD 980 PRO 1TB") break;
+                    }
+                }
+            }
+            catch { }
+
+            if (_diskBigHeader != null) _diskBigHeader.Text = diskTitle;
+            if (_miniDiskHeading != null) _miniDiskHeading.Text = diskTitle;
+            if (_diskModelText != null) _diskModelText.Text = modelName;
+            if (_metaDiskCapacity != null) _metaDiskCapacity.Text = capacityStr;
+            if (_metaDiskFormatted != null) _metaDiskFormatted.Text = formattedStr;
+            if (_metaDiskSystemDisk != null) _metaDiskSystemDisk.Text = "Yes";
+            if (_metaDiskPageFile != null) _metaDiskPageFile.Text = "Yes";
+            if (_metaDiskType != null) _metaDiskType.Text = diskType;
         }
 
         private void InitPdhFrequencyCounter()
@@ -1021,6 +1556,29 @@ namespace __APPNAME__
                     }
                     PdhCollectQueryData(_hPdhQuery);
                 }
+            }
+            catch { }
+        }
+
+        private void InitPdhDiskCounters()
+        {
+            if (_hPdhQuery == IntPtr.Zero) return;
+            try
+            {
+                int res = PdhAddEnglishCounterW(_hPdhQuery, @"\PhysicalDisk(_Total)\% Disk Time", IntPtr.Zero, out _hPdhDiskTimeCounter);
+                if (res != 0) PdhAddEnglishCounterW(_hPdhQuery, @"\PhysicalDisk(0 C:)\% Disk Time", IntPtr.Zero, out _hPdhDiskTimeCounter);
+
+                res = PdhAddEnglishCounterW(_hPdhQuery, @"\PhysicalDisk(_Total)\Avg. Disk sec/Transfer", IntPtr.Zero, out _hPdhDiskResponseCounter);
+                if (res != 0) PdhAddEnglishCounterW(_hPdhQuery, @"\PhysicalDisk(0 C:)\Avg. Disk sec/Transfer", IntPtr.Zero, out _hPdhDiskResponseCounter);
+
+                res = PdhAddEnglishCounterW(_hPdhQuery, @"\PhysicalDisk(_Total)\Disk Read Bytes/sec", IntPtr.Zero, out _hPdhDiskReadCounter);
+                if (res != 0) PdhAddEnglishCounterW(_hPdhQuery, @"\PhysicalDisk(0 C:)\Disk Read Bytes/sec", IntPtr.Zero, out _hPdhDiskReadCounter);
+
+                res = PdhAddEnglishCounterW(_hPdhQuery, @"\PhysicalDisk(_Total)\Disk Write Bytes/sec", IntPtr.Zero, out _hPdhDiskWriteCounter);
+                if (res != 0) PdhAddEnglishCounterW(_hPdhQuery, @"\PhysicalDisk(0 C:)\Disk Write Bytes/sec", IntPtr.Zero, out _hPdhDiskWriteCounter);
+
+                res = PdhAddEnglishCounterW(_hPdhQuery, @"\PhysicalDisk(_Total)\Disk Bytes/sec", IntPtr.Zero, out _hPdhDiskTransferCounter);
+                if (res != 0) PdhAddEnglishCounterW(_hPdhQuery, @"\PhysicalDisk(0 C:)\Disk Bytes/sec", IntPtr.Zero, out _hPdhDiskTransferCounter);
             }
             catch { }
         }
@@ -1072,7 +1630,7 @@ namespace __APPNAME__
             }
         }
 
-        private ContextMenu CreateGraphContextMenu()
+        private ContextMenu CreateCpuContextMenu()
         {
             var menu = new ContextMenu();
             var changeItem = new MenuItem { Header = "Change graph to" };
@@ -1095,12 +1653,37 @@ namespace __APPNAME__
             return menu;
         }
 
+        private ContextMenu CreateMemoryContextMenu()
+        {
+            var menu = new ContextMenu();
+            var copyOpt = new MenuItem { Header = "Copy" };
+            copyOpt.Click += (s, e) => CopyMemoryStatsToClipboard();
+            menu.Items.Add(copyOpt);
+            return menu;
+        }
+
+        private ContextMenu CreateDiskContextMenu()
+        {
+            var menu = new ContextMenu();
+            var copyOpt = new MenuItem { Header = "Copy" };
+            copyOpt.Click += (s, e) => CopyDiskStatsToClipboard();
+            menu.Items.Add(copyOpt);
+            return menu;
+        }
+
         private void SetupGraphContextMenus()
         {
-            var m1 = CreateGraphContextMenu();
+            var m1 = CreateCpuContextMenu();
             if (_logicalCoresGrid != null) _logicalCoresGrid.ContextMenu = m1;
-            var m2 = CreateGraphContextMenu();
+            var m2 = CreateCpuContextMenu();
             if (_overallGraphBorder != null) _overallGraphBorder.ContextMenu = m2;
+
+            var memMenu = CreateMemoryContextMenu();
+            if (_overallMemBorder != null) _overallMemBorder.ContextMenu = memMenu;
+
+            var diskMenu = CreateDiskContextMenu();
+            if (_diskActiveBorder != null) _diskActiveBorder.ContextMenu = diskMenu;
+            if (_diskTransferBorder != null) _diskTransferBorder.ContextMenu = diskMenu;
         }
 
         private async void CopyCpuStatsToClipboard()
@@ -1128,6 +1711,87 @@ namespace __APPNAME__
             }
             catch { }
         }
+
+        private async void CopyMemoryStatsToClipboard()
+        {
+            try
+            {
+                string info = $"Memory\r\n\r\n{_memTotalHeader?.Text}\r\n\r\n" +
+                              $"Speed:\t{_metaMemSpeed?.Text}\r\n" +
+                              $"Slots used:\t{_metaMemSlots?.Text}\r\n" +
+                              $"Form factor:\t{_metaMemFormFactor?.Text}\r\n" +
+                              $"Hardware reserved:\t{_metaMemReserved?.Text}\r\n\r\n" +
+                              $"Available\t{_statMemAvailable?.Text}\r\n" +
+                              $"Cached\t{_statMemCached?.Text}\r\n" +
+                              $"Committed\t{_statMemCommitted?.Text}\r\n" +
+                              $"Total\t{_latestMemTotalGb:F1} GB\r\n" +
+                              $"In use\t{_statMemInUse?.Text}\r\n" +
+                              $"Paged pool\t{_statMemPagedPool?.Text}\r\n" +
+                              $"Non-paged pool\t{_statMemNonPagedPool?.Text}";
+
+                var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                if (clipboard != null) await clipboard.SetTextAsync(info);
+            }
+            catch { }
+        }
+
+        private async void CopyDiskStatsToClipboard()
+        {
+            try
+            {
+                string info = $"{_diskBigHeader?.Text}\r\n\r\n{_diskModelText?.Text}\r\n\r\n" +
+                              $"Capacity:\t{_metaDiskCapacity?.Text}\r\n" +
+                              $"Formatted:\t{_metaDiskFormatted?.Text}\r\n" +
+                              $"System disk:\t{_metaDiskSystemDisk?.Text}\r\n" +
+                              $"Page file:\t{_metaDiskPageFile?.Text}\r\n" +
+                              $"Type:\t{_metaDiskType?.Text}\r\n\r\n" +
+                              $"Active time\t{_statDiskActiveTime?.Text}\r\n" +
+                              $"Average response time\t{_statDiskResponseTime?.Text}\r\n" +
+                              $"Read speed\t{_statDiskReadSpeed?.Text}\r\n" +
+                              $"Write speed\t{_statDiskWriteSpeed?.Text}";
+
+                var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                if (clipboard != null) await clipboard.SetTextAsync(info);
+            }
+            catch { }
+        }
+
+        private void SetActivePanel(PerformancePanel panel)
+        {
+            if (!_isInitialized) return;
+            _activePanel = panel;
+
+            if (_cpuView != null) _cpuView.IsVisible = (panel == PerformancePanel.Cpu);
+            if (_memoryView != null) _memoryView.IsVisible = (panel == PerformancePanel.Memory);
+            if (_diskView != null) _diskView.IsVisible = (panel == PerformancePanel.Disk);
+            if (_menuChangeGraphRoot != null) _menuChangeGraphRoot.IsEnabled = (panel == PerformancePanel.Cpu);
+
+            var selTileBg = new SolidColorBrush(_isDark ? Color.Parse("#2B3844") : Color.Parse("#E5F1FB"));
+            var selTileBorder = new SolidColorBrush(_isDark ? Color.Parse("#4CC2FF") : Color.Parse("#70C0E7"));
+            var trans = Brushes.Transparent;
+
+            if (_cpuTileBorder != null)
+            {
+                _cpuTileBorder.Background = (panel == PerformancePanel.Cpu) ? selTileBg : trans;
+                _cpuTileBorder.BorderBrush = (panel == PerformancePanel.Cpu) ? selTileBorder : trans;
+            }
+            if (_memTileBorder != null)
+            {
+                _memTileBorder.Background = (panel == PerformancePanel.Memory) ? selTileBg : trans;
+                _memTileBorder.BorderBrush = (panel == PerformancePanel.Memory) ? selTileBorder : trans;
+            }
+            if (_diskTileBorder != null)
+            {
+                _diskTileBorder.Background = (panel == PerformancePanel.Disk) ? selTileBg : trans;
+                _diskTileBorder.BorderBrush = (panel == PerformancePanel.Disk) ? selTileBorder : trans;
+            }
+
+            Dispatcher.UIThread.Post(() => RedrawAllCharts(), DispatcherPriority.Render);
+        }
+
+        private void OnCpuTileClick(object? sender, PointerPressedEventArgs e) => SetActivePanel(PerformancePanel.Cpu);
+        private void OnMemTileClick(object? sender, PointerPressedEventArgs e) => SetActivePanel(PerformancePanel.Memory);
+        private void OnDiskTileClick(object? sender, PointerPressedEventArgs e) => SetActivePanel(PerformancePanel.Disk);
 
         private void SwitchGraphView(bool logical)
         {
@@ -1158,6 +1822,10 @@ namespace __APPNAME__
             {
                 _graphScaleZero.IsVisible = showBottomScale;
             }
+
+            if (_memGraphScaleTime != null) _memGraphScaleTime.Text = timeText;
+            if (_diskActiveScaleTime != null) _diskActiveScaleTime.Text = timeText;
+            if (_diskTransferScaleTime != null) _diskTransferScaleTime.Text = timeText;
         }
 
         private void RedrawAllCharts()
@@ -1165,21 +1833,150 @@ namespace __APPNAME__
             Color cpuLineColor = _isDark ? Color.Parse("#4CC2FF") : Color.Parse("#1070B8");
             Color cpuFillColor = _isDark ? Color.FromArgb(0x25, 0x4C, 0xC2, 0xFF) : Color.FromArgb(0x1F, 0x10, 0x70, 0xB8);
 
+            Color memLineColor = _isDark ? Color.Parse("#B45AC7") : Color.Parse("#762A83");
+            Color memFillColor = _isDark ? Color.FromArgb(0x25, 0xB4, 0x5A, 0xC7) : Color.FromArgb(0x1F, 0x76, 0x2A, 0x83);
+
+            Color diskLineColor = _isDark ? Color.Parse("#76C437") : Color.Parse("#4E7A27");
+            Color diskFillColor = _isDark ? Color.FromArgb(0x25, 0x76, 0xC4, 0x37) : Color.FromArgb(0x1F, 0x4E, 0x7A, 0x27);
+
             DrawChart(_miniCpuCanvas, _overallHistory, null, cpuLineColor, cpuFillColor, isMini: true);
-            DrawChart(_miniMemCanvas, _memHistory, null, Color.Parse("#B45AC7"), Color.FromArgb(0x1F, 0x76, 0x2A, 0x83), isMini: true);
-            DrawChart(_miniDiskCanvas, _diskHistory, null, Color.Parse("#6BA832"), Color.FromArgb(0x1F, 0x4E, 0x7A, 0x27), isMini: true);
+            DrawChart(_miniMemCanvas, _memHistory, null, memLineColor, memFillColor, isMini: true);
+            DrawChart(_miniDiskCanvas, _diskHistory, null, diskLineColor, diskFillColor, isMini: true);
             DrawChart(_miniWifiCanvas, _wifiHistory, null, Color.Parse("#D08836"), Color.FromArgb(0x1F, 0x8E, 0x5A, 0x23), isMini: true);
             DrawChart(_miniEth1Canvas, _eth1History, null, Color.Parse("#D08836"), Color.FromArgb(0x1F, 0x8E, 0x5A, 0x23), isMini: true);
             DrawChart(_miniEth2Canvas, _eth2History, null, Color.Parse("#D08836"), Color.FromArgb(0x1F, 0x8E, 0x5A, 0x23), isMini: true);
             DrawChart(_miniGpuCanvas, _gpuHistory, null, cpuLineColor, cpuFillColor, isMini: true);
 
-            for (int i = 0; i < _coreCanvases.Count; i++)
+            if (_activePanel == PerformancePanel.Cpu)
             {
-                var kHist = _showKernelTimes ? _coreKernelHistories[i] : null;
-                DrawChart(_coreCanvases[i], _coreHistories[i], kHist, cpuLineColor, cpuFillColor, isMini: false);
+                for (int i = 0; i < _coreCanvases.Count; i++)
+                {
+                    var kHist = _showKernelTimes ? _coreKernelHistories[i] : null;
+                    DrawChart(_coreCanvases[i], _coreHistories[i], kHist, cpuLineColor, cpuFillColor, isMini: false);
+                }
+                var overallKHist = _showKernelTimes ? _overallKernelHistory : null;
+                DrawChart(_overallCpuCanvas, _overallHistory, overallKHist, cpuLineColor, cpuFillColor, isMini: false);
             }
-            var overallKHist = _showKernelTimes ? _overallKernelHistory : null;
-            DrawChart(_overallCpuCanvas, _overallHistory, overallKHist, cpuLineColor, cpuFillColor, isMini: false);
+            else if (_activePanel == PerformancePanel.Memory)
+            {
+                DrawChart(_overallMemCanvas, _memHistory, null, memLineColor, memFillColor, isMini: false, isMemory: true);
+                DrawMemoryCompositionBar(_memCompositionCanvas);
+            }
+            else if (_activePanel == PerformancePanel.Disk)
+            {
+                DrawChart(_diskActiveCanvas, _diskHistory, null, diskLineColor, diskFillColor, isMini: false, isDisk: true);
+
+                var (maxBytes, scaleLabel) = GetTransferScale(_latestPeakTransferRate);
+                if (_diskTransferScaleMax != null) _diskTransferScaleMax.Text = scaleLabel;
+
+                var normTransfer = new List<double>();
+                foreach (var b in _diskTransferHistory)
+                {
+                    normTransfer.Add(Math.Clamp((b / maxBytes) * 100.0, 0.0, 100.0));
+                }
+                DrawChart(_diskTransferCanvas, normTransfer, null, diskLineColor, diskFillColor, isMini: false, isDisk: true);
+            }
+        }
+
+        private static (double maxBytes, string label) GetTransferScale(double peakBytesPerSec)
+        {
+            double[] thresholds = {
+                100 * 1024.0,
+                500 * 1024.0,
+                1 * 1024.0 * 1024.0,
+                5 * 1024.0 * 1024.0,
+                10 * 1024.0 * 1024.0,
+                20 * 1024.0 * 1024.0,
+                50 * 1024.0 * 1024.0,
+                100 * 1024.0 * 1024.0,
+                250 * 1024.0 * 1024.0,
+                500 * 1024.0 * 1024.0,
+                1024.0 * 1024.0 * 1024.0
+            };
+            string[] labels = {
+                "100 KB/s",
+                "500 KB/s",
+                "1.0 MB/s",
+                "5.0 MB/s",
+                "10 MB/s",
+                "20 MB/s",
+                "50 MB/s",
+                "100 MB/s",
+                "250 MB/s",
+                "500 MB/s",
+                "1.0 GB/s"
+            };
+
+            for (int i = 0; i < thresholds.Length; i++)
+            {
+                if (peakBytesPerSec <= thresholds[i])
+                    return (thresholds[i], labels[i]);
+            }
+
+            double gbScale = Math.Ceiling(peakBytesPerSec / (1024.0 * 1024.0 * 1024.0));
+            return (gbScale * 1024.0 * 1024.0 * 1024.0, $"{gbScale:F0} GB/s");
+        }
+
+        private static string FormatTransferRate(double bytesPerSec)
+        {
+            if (bytesPerSec < 1024.0) return $"{Math.Round(bytesPerSec)} B/s";
+            if (bytesPerSec < 1024.0 * 1024.0) return $"{bytesPerSec / 1024.0:F1} KB/s";
+            if (bytesPerSec < 1024.0 * 1024.0 * 1024.0) return $"{bytesPerSec / (1024.0 * 1024.0):F1} MB/s";
+            return $"{bytesPerSec / (1024.0 * 1024.0 * 1024.0):F2} GB/s";
+        }
+
+        private void DrawMemoryCompositionBar(Canvas? canvas)
+        {
+            if (canvas == null) return;
+            canvas.Children.Clear();
+            double w = canvas.Bounds.Width;
+            double h = canvas.Bounds.Height;
+            if (double.IsNaN(w) || w <= 4) w = 500;
+            if (double.IsNaN(h) || h <= 4) h = 16;
+
+            double total = Math.Max(0.1, _latestMemTotalGb);
+            double inUseRatio = Math.Clamp(_latestMemInUseGb / total, 0.0, 1.0);
+            double modRatio = Math.Clamp(_latestMemModifiedGb / total, 0.0, 1.0);
+            double standbyRatio = Math.Clamp(_latestMemStandbyGb / total, 0.0, 1.0);
+
+            var inUseBrush = new SolidColorBrush(_isDark ? Color.Parse("#8E3B9E") : Color.Parse("#762A83"));
+            var modBrush = new SolidColorBrush(_isDark ? Color.Parse("#B357C4") : Color.Parse("#9C47AC"));
+            var standbyBrush = new SolidColorBrush(_isDark ? Color.Parse("#3A6890") : Color.Parse("#6EA8D9"));
+            var freeBrush = new SolidColorBrush(_isDark ? Color.Parse("#2B2B2B") : Color.Parse("#E0E0E0"));
+
+            double wInUse = Math.Round(w * inUseRatio);
+            double wMod = Math.Round(w * modRatio);
+            double wStandby = Math.Round(w * standbyRatio);
+            double wFree = Math.Max(0, w - (wInUse + wMod + wStandby));
+
+            double curX = 0;
+            if (wInUse > 0)
+            {
+                var r = new Rectangle { Width = wInUse, Height = h, Fill = inUseBrush };
+                Canvas.SetLeft(r, curX);
+                canvas.Children.Add(r);
+                curX += wInUse;
+            }
+            if (wMod > 0)
+            {
+                var r = new Rectangle { Width = wMod, Height = h, Fill = modBrush };
+                Canvas.SetLeft(r, curX);
+                canvas.Children.Add(r);
+                curX += wMod;
+            }
+            if (wStandby > 0)
+            {
+                var r = new Rectangle { Width = wStandby, Height = h, Fill = standbyBrush };
+                Canvas.SetLeft(r, curX);
+                canvas.Children.Add(r);
+                curX += wStandby;
+            }
+            if (wFree > 0)
+            {
+                var r = new Rectangle { Width = wFree, Height = h, Fill = freeBrush };
+                Canvas.SetLeft(r, curX);
+                canvas.Children.Add(r);
+            }
         }
 
         private void ApplyThemeColors()
@@ -1228,7 +2025,22 @@ namespace __APPNAME__
 
             var selTileBg = new SolidColorBrush(_isDark ? Color.Parse("#2B3844") : Color.Parse("#E5F1FB"));
             var selTileBorder = new SolidColorBrush(_isDark ? Color.Parse("#4CC2FF") : Color.Parse("#70C0E7"));
-            if (_cpuTileBorder != null) { _cpuTileBorder.Background = selTileBg; _cpuTileBorder.BorderBrush = selTileBorder; }
+            
+            if (_cpuTileBorder != null)
+            {
+                _cpuTileBorder.Background = (_activePanel == PerformancePanel.Cpu) ? selTileBg : Brushes.Transparent;
+                _cpuTileBorder.BorderBrush = (_activePanel == PerformancePanel.Cpu) ? selTileBorder : Brushes.Transparent;
+            }
+            if (_memTileBorder != null)
+            {
+                _memTileBorder.Background = (_activePanel == PerformancePanel.Memory) ? selTileBg : Brushes.Transparent;
+                _memTileBorder.BorderBrush = (_activePanel == PerformancePanel.Memory) ? selTileBorder : Brushes.Transparent;
+            }
+            if (_diskTileBorder != null)
+            {
+                _diskTileBorder.Background = (_activePanel == PerformancePanel.Disk) ? selTileBg : Brushes.Transparent;
+                _diskTileBorder.BorderBrush = (_activePanel == PerformancePanel.Disk) ? selTileBorder : Brushes.Transparent;
+            }
 
             var miniBoxBg = new SolidColorBrush(_isDark ? Color.Parse("#191919") : Color.Parse("#FFFFFF"));
             if (_miniCpuBox != null) { _miniCpuBox.Background = miniBoxBg; _miniCpuBox.BorderBrush = new SolidColorBrush(_isDark ? Color.Parse("#2A5A84") : Color.Parse("#70A5CC")); }
@@ -1254,16 +2066,39 @@ namespace __APPNAME__
             if (_miniGpuHeading != null) _miniGpuHeading.Foreground = textHigh;
             if (_miniGpuText != null) _miniGpuText.Foreground = textMid;
 
-            var cellBorderColor = new SolidColorBrush(_isDark ? Color.Parse("#2A5A84") : Color.Parse("#70A5CC"));
+            var cpuGraphBorderColor = new SolidColorBrush(_isDark ? Color.Parse("#2A5A84") : Color.Parse("#70A5CC"));
             if (_overallGraphBorder != null)
             {
                 _overallGraphBorder.Background = mainBg;
-                _overallGraphBorder.BorderBrush = cellBorderColor;
+                _overallGraphBorder.BorderBrush = cpuGraphBorderColor;
             }
             foreach (var card in _coreCards)
             {
                 card.Background = mainBg;
-                card.BorderBrush = cellBorderColor;
+                card.BorderBrush = cpuGraphBorderColor;
+            }
+
+            var memGraphBorderColor = new SolidColorBrush(_isDark ? Color.Parse("#8E3B9E") : Color.Parse("#762A83"));
+            if (_overallMemBorder != null)
+            {
+                _overallMemBorder.Background = mainBg;
+                _overallMemBorder.BorderBrush = memGraphBorderColor;
+            }
+            if (_memCompositionBorder != null)
+            {
+                _memCompositionBorder.BorderBrush = memGraphBorderColor;
+            }
+
+            var diskGraphBorderColor = new SolidColorBrush(_isDark ? Color.Parse("#4E7A27") : Color.Parse("#6BA832"));
+            if (_diskActiveBorder != null)
+            {
+                _diskActiveBorder.Background = mainBg;
+                _diskActiveBorder.BorderBrush = diskGraphBorderColor;
+            }
+            if (_diskTransferBorder != null)
+            {
+                _diskTransferBorder.Background = mainBg;
+                _diskTransferBorder.BorderBrush = diskGraphBorderColor;
             }
 
             if (_cpuBigHeader != null) _cpuBigHeader.Foreground = textHigh;
@@ -1304,6 +2139,75 @@ namespace __APPNAME__
             if (_metaL1 != null) _metaL1.Foreground = textHigh;
             if (_metaL2 != null) _metaL2.Foreground = textHigh;
             if (_metaL3 != null) _metaL3.Foreground = textHigh;
+
+            // Memory Text Colors
+            if (_memBigHeader != null) _memBigHeader.Foreground = textHigh;
+            if (_memTotalHeader != null) _memTotalHeader.Foreground = textMid;
+            if (_memGraphHeaderLabel != null) _memGraphHeaderLabel.Foreground = textMid;
+            if (_memGraphScaleMax != null) _memGraphScaleMax.Foreground = textMid;
+            if (_memGraphScaleTime != null) _memGraphScaleTime.Foreground = textMid;
+            if (_memGraphScaleZero != null) _memGraphScaleZero.Foreground = textMid;
+            if (_labelMemComposition != null) _labelMemComposition.Foreground = textMid;
+
+            if (_labelMemInUse != null) _labelMemInUse.Foreground = textMid;
+            if (_labelMemAvailable != null) _labelMemAvailable.Foreground = textMid;
+            if (_labelMemCommitted != null) _labelMemCommitted.Foreground = textMid;
+            if (_labelMemCached != null) _labelMemCached.Foreground = textMid;
+            if (_labelMemPagedPool != null) _labelMemPagedPool.Foreground = textMid;
+            if (_labelMemNonPagedPool != null) _labelMemNonPagedPool.Foreground = textMid;
+
+            if (_statMemInUse != null) _statMemInUse.Foreground = textHigh;
+            if (_statMemAvailable != null) _statMemAvailable.Foreground = textHigh;
+            if (_statMemCommitted != null) _statMemCommitted.Foreground = textHigh;
+            if (_statMemCached != null) _statMemCached.Foreground = textHigh;
+            if (_statMemPagedPool != null) _statMemPagedPool.Foreground = textHigh;
+            if (_statMemNonPagedPool != null) _statMemNonPagedPool.Foreground = textHigh;
+
+            if (_labelMemSpeed != null) _labelMemSpeed.Foreground = textMid;
+            if (_labelMemSlots != null) _labelMemSlots.Foreground = textMid;
+            if (_labelMemFormFactor != null) _labelMemFormFactor.Foreground = textMid;
+            if (_labelMemReserved != null) _labelMemReserved.Foreground = textMid;
+
+            if (_metaMemSpeed != null) _metaMemSpeed.Foreground = textHigh;
+            if (_metaMemSlots != null) _metaMemSlots.Foreground = textHigh;
+            if (_metaMemFormFactor != null) _metaMemFormFactor.Foreground = textHigh;
+            if (_metaMemReserved != null) _metaMemReserved.Foreground = textHigh;
+
+            // Disk Text Colors
+            if (_diskBigHeader != null) _diskBigHeader.Foreground = textHigh;
+            if (_diskModelText != null) _diskModelText.Foreground = textMid;
+            if (_diskActiveTimeHeaderLabel != null) _diskActiveTimeHeaderLabel.Foreground = textMid;
+            if (_diskActiveTimeScaleMax != null) _diskActiveTimeScaleMax.Foreground = textMid;
+            if (_diskActiveScaleTime != null) _diskActiveScaleTime.Foreground = textMid;
+            if (_diskActiveScaleZero != null) _diskActiveScaleZero.Foreground = textMid;
+
+            if (_diskTransferHeaderLabel != null) _diskTransferHeaderLabel.Foreground = textMid;
+            if (_diskTransferScaleMax != null) _diskTransferScaleMax.Foreground = textMid;
+            if (_diskTransferScaleTime != null) _diskTransferScaleTime.Foreground = textMid;
+            if (_diskTransferScaleZero != null) _diskTransferScaleZero.Foreground = textMid;
+
+            if (_labelDiskActiveTime != null) _labelDiskActiveTime.Foreground = textMid;
+            if (_labelDiskResponseTime != null) _labelDiskResponseTime.Foreground = textMid;
+            if (_labelDiskReadSpeed != null) _labelDiskReadSpeed.Foreground = textMid;
+            if (_labelDiskWriteSpeed != null) _labelDiskWriteSpeed.Foreground = textMid;
+
+            if (_statDiskActiveTime != null) _statDiskActiveTime.Foreground = textHigh;
+            if (_statDiskResponseTime != null) _statDiskResponseTime.Foreground = textHigh;
+            if (_statDiskReadSpeed != null) _statDiskReadSpeed.Foreground = textHigh;
+            if (_statDiskWriteSpeed != null) _statDiskWriteSpeed.Foreground = textHigh;
+
+            if (_labelDiskCapacity != null) _labelDiskCapacity.Foreground = textMid;
+            if (_labelDiskFormatted != null) _labelDiskFormatted.Foreground = textMid;
+            if (_labelDiskSystemDisk != null) _labelDiskSystemDisk.Foreground = textMid;
+            if (_labelDiskPageFile != null) _labelDiskPageFile.Foreground = textMid;
+            if (_labelDiskType != null) _labelDiskType.Foreground = textMid;
+
+            if (_metaDiskCapacity != null) _metaDiskCapacity.Foreground = textHigh;
+            if (_metaDiskFormatted != null) _metaDiskFormatted.Foreground = textHigh;
+            if (_metaDiskSystemDisk != null) _metaDiskSystemDisk.Foreground = textHigh;
+            if (_metaDiskPageFile != null) _metaDiskPageFile.Foreground = textHigh;
+            if (_metaDiskType != null) _metaDiskType.Foreground = textHigh;
+
             if (_bottomFewerDetails != null) _bottomFewerDetails.Foreground = textHigh;
             if (_bottomResmonText != null) _bottomResmonText.Foreground = cpuColor;
         }
@@ -1360,6 +2264,7 @@ namespace __APPNAME__
             if (_miniCpuText != null) _miniCpuText.Text = ((int)Math.Round(cpuPct)) + "% " + speedGhz.ToString("F2") + " GHz";
 
             SampleMemoryUsage();
+            SampleDiskActivity();
             SampleNetworkTraffic();
 
             TimeSpan uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
@@ -1432,19 +2337,133 @@ namespace __APPNAME__
                 if (GlobalMemoryStatusEx(ref mem))
                 {
                     double totalGb = mem.ullTotalPhys / (1024.0 * 1024.0 * 1024.0);
-                    double usedGb = (mem.ullTotalPhys - mem.ullAvailPhys) / (1024.0 * 1024.0 * 1024.0);
+                    double availGb = mem.ullAvailPhys / (1024.0 * 1024.0 * 1024.0);
+                    double inUseGb = (mem.ullTotalPhys - mem.ullAvailPhys) / (1024.0 * 1024.0 * 1024.0);
                     uint memPct = mem.dwMemoryLoad;
+
+                    _latestMemTotalGb = totalGb;
+                    _latestMemInUseGb = inUseGb;
+                    _latestMemAvailGb = availGb;
 
                     _memHistory.Add((double)memPct);
                     if (_memHistory.Count > 60) _memHistory.RemoveAt(0);
 
                     if (_miniMemText != null)
                     {
-                        _miniMemText.Text = $"{usedGb:F1}/{totalGb:F1} GB ({memPct}%)";
+                        _miniMemText.Text = $"{inUseGb:F1}/{totalGb:F1} GB ({memPct}%)";
+                    }
+
+                    if (_statMemInUse != null) _statMemInUse.Text = $"{inUseGb:F1} GB";
+                    if (_statMemAvailable != null) _statMemAvailable.Text = $"{availGb:F1} GB";
+
+                    var perfInfo = new PERFORMANCE_INFORMATION { cb = (uint)Marshal.SizeOf<PERFORMANCE_INFORMATION>() };
+                    if (GetPerformanceInfo(out perfInfo, perfInfo.cb))
+                    {
+                        double pageSize = perfInfo.PageSize.ToUInt64();
+                        double commitTotalGb = (perfInfo.CommitTotal.ToUInt64() * pageSize) / (1024.0 * 1024.0 * 1024.0);
+                        double commitLimitGb = (perfInfo.CommitLimit.ToUInt64() * pageSize) / (1024.0 * 1024.0 * 1024.0);
+                        double cachedGb = (perfInfo.SystemCache.ToUInt64() * pageSize) / (1024.0 * 1024.0 * 1024.0);
+                        double pagedMb = (perfInfo.KernelPaged.ToUInt64() * pageSize) / (1024.0 * 1024.0);
+                        double nonPagedMb = (perfInfo.KernelNonpaged.ToUInt64() * pageSize) / (1024.0 * 1024.0);
+
+                        _latestMemCachedGb = cachedGb;
+                        _latestMemStandbyGb = Math.Min(availGb, cachedGb);
+                        _latestMemModifiedGb = Math.Max(0.05, Math.Min(0.4, inUseGb * 0.02));
+                        _latestMemFreeGb = Math.Max(0.0, availGb - _latestMemStandbyGb);
+
+                        if (_statMemCommitted != null) _statMemCommitted.Text = $"{commitTotalGb:F1}/{commitLimitGb:F1} GB";
+                        if (_statMemCached != null) _statMemCached.Text = $"{cachedGb:F1} GB";
+                        if (_statMemPagedPool != null) _statMemPagedPool.Text = $"{Math.Round(pagedMb)} MB";
+                        if (_statMemNonPagedPool != null) _statMemNonPagedPool.Text = $"{Math.Round(nonPagedMb)} MB";
                     }
                 }
             }
             catch { }
+        }
+
+        private void SampleDiskActivity()
+        {
+            double activePct = 0.0;
+            double responseMs = 0.0;
+            double readBytesSec = 0.0;
+            double writeBytesSec = 0.0;
+            double totalBytesSec = 0.0;
+
+            if (_hPdhQuery != IntPtr.Zero)
+            {
+                try
+                {
+                    if (_hPdhDiskTimeCounter != IntPtr.Zero)
+                    {
+                        if (PdhGetFormattedCounterValue(_hPdhDiskTimeCounter, 0x00000200, out _, out PDH_FMT_COUNTERVALUE_DOUBLE val) == 0 && val.CStatus == 0)
+                        {
+                            activePct = Math.Clamp(val.doubleValue, 0.0, 100.0);
+                        }
+                    }
+                    if (_hPdhDiskResponseCounter != IntPtr.Zero)
+                    {
+                        if (PdhGetFormattedCounterValue(_hPdhDiskResponseCounter, 0x00000200, out _, out PDH_FMT_COUNTERVALUE_DOUBLE val) == 0 && val.CStatus == 0)
+                        {
+                            responseMs = Math.Max(0.0, val.doubleValue * 1000.0);
+                        }
+                    }
+                    if (_hPdhDiskReadCounter != IntPtr.Zero)
+                    {
+                        if (PdhGetFormattedCounterValue(_hPdhDiskReadCounter, 0x00000200, out _, out PDH_FMT_COUNTERVALUE_DOUBLE val) == 0 && val.CStatus == 0)
+                        {
+                            readBytesSec = Math.Max(0.0, val.doubleValue);
+                        }
+                    }
+                    if (_hPdhDiskWriteCounter != IntPtr.Zero)
+                    {
+                        if (PdhGetFormattedCounterValue(_hPdhDiskWriteCounter, 0x00000200, out _, out PDH_FMT_COUNTERVALUE_DOUBLE val) == 0 && val.CStatus == 0)
+                        {
+                            writeBytesSec = Math.Max(0.0, val.doubleValue);
+                        }
+                    }
+                    if (_hPdhDiskTransferCounter != IntPtr.Zero)
+                    {
+                        if (PdhGetFormattedCounterValue(_hPdhDiskTransferCounter, 0x00000200, out _, out PDH_FMT_COUNTERVALUE_DOUBLE val) == 0 && val.CStatus == 0)
+                        {
+                            totalBytesSec = Math.Max(0.0, val.doubleValue);
+                        }
+                    }
+                    else
+                    {
+                        totalBytesSec = readBytesSec + writeBytesSec;
+                    }
+                }
+                catch { }
+            }
+
+            _diskHistory.Add(activePct);
+            if (_diskHistory.Count > 60) _diskHistory.RemoveAt(0);
+
+            _diskTransferHistory.Add(totalBytesSec);
+            if (_diskTransferHistory.Count > 60) _diskTransferHistory.RemoveAt(0);
+
+            _latestPeakTransferRate = _diskTransferHistory.Count > 0 ? _diskTransferHistory.Max() : 100 * 1024.0;
+
+            if (_miniDiskText != null)
+            {
+                _miniDiskText.Text = $"{_metaDiskType?.Text ?? "SSD"}\n{Math.Round(activePct)}%";
+            }
+            if (_statDiskActiveTime != null)
+            {
+                _statDiskActiveTime.Text = $"{Math.Round(activePct)}%";
+            }
+            if (_statDiskResponseTime != null)
+            {
+                _statDiskResponseTime.Text = $"{responseMs:F1} ms";
+            }
+            if (_statDiskReadSpeed != null)
+            {
+                _statDiskReadSpeed.Text = FormatTransferRate(readBytesSec);
+            }
+            if (_statDiskWriteSpeed != null)
+            {
+                _statDiskWriteSpeed.Text = FormatTransferRate(writeBytesSec);
+            }
         }
 
         private void SampleNetworkTraffic()
@@ -1575,7 +2594,7 @@ namespace __APPNAME__
             catch { }
         }
 
-        private void DrawChart(Canvas? canvas, List<double> history, List<double>? kernelHistory, Color lineColor, Color fillColor, bool isMini = false)
+        private void DrawChart(Canvas? canvas, List<double> history, List<double>? kernelHistory, Color lineColor, Color fillColor, bool isMini = false, bool isMemory = false, bool isDisk = false)
         {
             if (canvas == null) return;
             canvas.Children.Clear();
@@ -1586,7 +2605,19 @@ namespace __APPNAME__
             if (double.IsNaN(w) || w <= 4) w = isMini ? 52 : 500;
             if (double.IsNaN(h) || h <= 4) h = isMini ? 38 : 220;
 
-            Color gridColor = _isDark ? Color.Parse("#233848") : Color.Parse("#E5F2FB");
+            Color gridColor;
+            if (isMemory)
+            {
+                gridColor = _isDark ? Color.Parse("#2D2330") : Color.Parse("#F5EBF7");
+            }
+            else if (isDisk)
+            {
+                gridColor = _isDark ? Color.Parse("#232E1B") : Color.Parse("#EAF2E6");
+            }
+            else
+            {
+                gridColor = _isDark ? Color.Parse("#233848") : Color.Parse("#E5F2FB");
+            }
             var gridPen = new SolidColorBrush(gridColor);
 
             int horizDivs = isMini ? 3 : 10;
@@ -1707,9 +2738,15 @@ namespace __APPNAME__
             _timer?.Stop();
         }
 
-        private void OnOverallGraphClick(object? sender, RoutedEventArgs e) => SwitchGraphView(false);
+        private void OnOverallGraphClick(object? sender, RoutedEventArgs e)
+        {
+            if (_activePanel == PerformancePanel.Cpu) SwitchGraphView(false);
+        }
 
-        private void OnLogicalGraphClick(object? sender, RoutedEventArgs e) => SwitchGraphView(true);
+        private void OnLogicalGraphClick(object? sender, RoutedEventArgs e)
+        {
+            if (_activePanel == PerformancePanel.Cpu) SwitchGraphView(true);
+        }
 
         private void OnOpenResmonClick(object? sender, PointerPressedEventArgs e)
         {
@@ -1852,7 +2889,7 @@ try {
         Write-Stage '8/8' 'Auto-launch skipped (-NoLaunch provided)'
         Write-Info "Run the app by double-clicking: $exe"
     } else {
-        Write-Stage '8/8' 'Launching freshly built Task Manager CPU application'
+        Write-Stage '8/8' 'Launching freshly built Task Manager application'
         if (-not (Start-PublishedApp -Exe $exe -WorkDir $PublishDir)) { exit 6 }
     }
 
@@ -1869,7 +2906,7 @@ try {
 }
 catch {
     $code = 1
-    if ($_.Exception.Message -match '^\[(\d)\]') { $code = [int]$Matches }
+    if ($_.Exception.Message -match '^\[(\d+)\]') { $code = [int]$Matches[1] }
     Write-Host ''
     Write-Err2 "FAILED during stage: $($Script:StageName)"
     Write-Err2 "Error: $($_.Exception.Message)"
