@@ -177,6 +177,7 @@ $projAva = @'
     <PackageReference Include="Avalonia.Win32" Version="11.0.10" />
     <PackageReference Include="Avalonia.Skia" Version="11.0.10" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.10" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 </Project>
 '@
@@ -290,39 +291,39 @@ $mwAxaml = @'
     <!-- Row 1: Tab Bar -->
     <Border Grid.Row="1" x:Name="TabBarBorder" Height="30" Padding="8,0" BorderThickness="0,0,0,1">
       <StackPanel Orientation="Horizontal" Spacing="2" VerticalAlignment="Bottom">
-        <Border Padding="10,4,10,6">
+        <Border x:Name="TabProcessesBorder" Padding="10,4,10,6" Cursor="Hand" PointerPressed="OnProcessesTabClick">
           <TextBlock x:Name="TabProcesses" Text="Processes" FontSize="12"/>
         </Border>
         <Border x:Name="TabPerfBorder" BorderThickness="1,1,1,0" Padding="12,5,12,6" Margin="0,0,0,-1">
           <TextBlock x:Name="TabPerformance" Text="Performance" FontSize="12" FontWeight="SemiBold"/>
         </Border>
-        <Border Padding="10,4,10,6">
+        <Border x:Name="TabAppHistoryBorder" Padding="10,4,10,6" Cursor="Hand" PointerPressed="OnAppHistoryTabClick">
           <TextBlock x:Name="TabAppHistory" Text="App history" FontSize="12"/>
         </Border>
-        <Border Padding="10,4,10,6">
+        <Border x:Name="TabStartupBorder" Padding="10,4,10,6" Cursor="Hand" PointerPressed="OnStartupTabClick">
           <TextBlock x:Name="TabStartup" Text="Startup" FontSize="12"/>
         </Border>
-        <Border Padding="10,4,10,6">
+        <Border x:Name="TabUsersBorder" Padding="10,4,10,6" Cursor="Hand" PointerPressed="OnUsersTabClick">
           <TextBlock x:Name="TabUsers" Text="Users" FontSize="12"/>
         </Border>
-        <Border Padding="10,4,10,6">
+        <Border x:Name="TabDetailsBorder" Padding="10,4,10,6" Cursor="Hand" PointerPressed="OnDetailsTabClick">
           <TextBlock x:Name="TabDetails" Text="Details" FontSize="12"/>
         </Border>
-        <Border Padding="10,4,10,6">
+        <Border x:Name="TabServicesBorder" Padding="10,4,10,6" Cursor="Hand" PointerPressed="OnServicesTabClick">
           <TextBlock x:Name="TabServices" Text="Services" FontSize="12"/>
         </Border>
       </StackPanel>
     </Border>
 
     <!-- Row 2: Main Split View (Sidebar + Content) -->
-    <Grid Grid.Row="2" ColumnDefinitions="230,*">
+    <Grid Grid.Row="2" x:Name="PerformanceMainGrid" ColumnDefinitions="230,*">
       <!-- Left Sidebar: Performance List -->
       <Border Grid.Column="0" x:Name="SidebarBorder" BorderThickness="0,0,1,0">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
           <StackPanel Margin="0,4,0,4">
             <!-- CPU Tile -->
-            <Border x:Name="CpuTileBorder" BorderThickness="1" Padding="8,6" Margin="4,2" Cursor="Hand" PointerPressed="OnCpuTileClick">
-              <Grid ColumnDefinitions="58,*" RowDefinitions="Auto,Auto">
+            <Border x:Name="CpuTileBorder" Height="64" BorderThickness="1" Padding="8,6" Margin="4,2" Cursor="Hand" PointerPressed="OnCpuTileClick">
+              <Grid ColumnDefinitions="58,*" RowDefinitions="20,20" VerticalAlignment="Top">
                 <Border Grid.RowSpan="2" Grid.Column="0" x:Name="MiniCpuBox" Height="40" Width="54" HorizontalAlignment="Left" BorderThickness="1">
                   <Canvas x:Name="MiniCpuCanvas" Height="38" Width="52" ClipToBounds="True"/>
                 </Border>
@@ -332,8 +333,8 @@ $mwAxaml = @'
             </Border>
 
             <!-- Memory Tile -->
-            <Border x:Name="MemTileBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2" Cursor="Hand" PointerPressed="OnMemTileClick">
-              <Grid ColumnDefinitions="58,*" RowDefinitions="Auto,Auto">
+            <Border x:Name="MemTileBorder" Height="64" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2" Cursor="Hand" PointerPressed="OnMemTileClick">
+              <Grid ColumnDefinitions="58,*" RowDefinitions="20,20" VerticalAlignment="Top">
                 <Border Grid.RowSpan="2" Grid.Column="0" x:Name="MiniMemBox" Height="40" Width="54" HorizontalAlignment="Left" BorderThickness="1">
                   <Canvas x:Name="MiniMemCanvas" Height="38" Width="52" ClipToBounds="True"/>
                 </Border>
@@ -343,8 +344,8 @@ $mwAxaml = @'
             </Border>
 
             <!-- Disk 0 Tile -->
-            <Border x:Name="DiskTileBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2" Cursor="Hand" PointerPressed="OnDiskTileClick">
-              <Grid ColumnDefinitions="58,*" RowDefinitions="Auto,Auto">
+            <Border x:Name="DiskTileBorder" Height="64" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2" Cursor="Hand" PointerPressed="OnDiskTileClick">
+              <Grid ColumnDefinitions="58,*" RowDefinitions="20,20" VerticalAlignment="Top">
                 <Border Grid.RowSpan="2" Grid.Column="0" x:Name="MiniDiskBox" Height="40" Width="54" HorizontalAlignment="Left" BorderThickness="1">
                   <Canvas x:Name="MiniDiskCanvas" Height="38" Width="52" ClipToBounds="True"/>
                 </Border>
@@ -354,8 +355,8 @@ $mwAxaml = @'
             </Border>
 
             <!-- Wi-Fi Tile -->
-            <Border x:Name="WifiTileBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2">
-              <Grid ColumnDefinitions="58,*" RowDefinitions="Auto,Auto">
+            <Border x:Name="WifiTileBorder" Height="64" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2">
+              <Grid ColumnDefinitions="58,*" RowDefinitions="20,20" VerticalAlignment="Top">
                 <Border Grid.RowSpan="2" Grid.Column="0" x:Name="MiniWifiBox" Height="40" Width="54" HorizontalAlignment="Left" BorderThickness="1">
                   <Canvas x:Name="MiniWifiCanvas" Height="38" Width="52" ClipToBounds="True"/>
                 </Border>
@@ -365,8 +366,8 @@ $mwAxaml = @'
             </Border>
 
             <!-- Ethernet 1 Tile -->
-            <Border x:Name="Eth1TileBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2">
-              <Grid ColumnDefinitions="58,*" RowDefinitions="Auto,Auto">
+            <Border x:Name="Eth1TileBorder" Height="64" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2">
+              <Grid ColumnDefinitions="58,*" RowDefinitions="20,20" VerticalAlignment="Top">
                 <Border Grid.RowSpan="2" Grid.Column="0" x:Name="MiniEth1Box" Height="40" Width="54" HorizontalAlignment="Left" BorderThickness="1">
                   <Canvas x:Name="MiniEth1Canvas" Height="38" Width="52" ClipToBounds="True"/>
                 </Border>
@@ -376,8 +377,8 @@ $mwAxaml = @'
             </Border>
 
             <!-- Ethernet 2 Tile -->
-            <Border x:Name="Eth2TileBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2">
-              <Grid ColumnDefinitions="58,*" RowDefinitions="Auto,Auto">
+            <Border x:Name="Eth2TileBorder" Height="64" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2">
+              <Grid ColumnDefinitions="58,*" RowDefinitions="20,20" VerticalAlignment="Top">
                 <Border Grid.RowSpan="2" Grid.Column="0" x:Name="MiniEth2Box" Height="40" Width="54" HorizontalAlignment="Left" BorderThickness="1">
                   <Canvas x:Name="MiniEth2Canvas" Height="38" Width="52" ClipToBounds="True"/>
                 </Border>
@@ -387,13 +388,13 @@ $mwAxaml = @'
             </Border>
 
             <!-- GPU 0 Tile -->
-            <Border x:Name="GpuTileBorder" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2">
-              <Grid ColumnDefinitions="58,*" RowDefinitions="Auto,Auto">
+            <Border x:Name="GpuTileBorder" Height="64" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" Padding="8,6" Margin="4,2">
+              <Grid ColumnDefinitions="58,*" RowDefinitions="20,20" VerticalAlignment="Top">
                 <Border Grid.RowSpan="2" Grid.Column="0" x:Name="MiniGpuBox" Height="40" Width="54" HorizontalAlignment="Left" BorderThickness="1">
                   <Canvas x:Name="MiniGpuCanvas" Height="38" Width="52" ClipToBounds="True"/>
                 </Border>
                 <TextBlock Grid.Row="0" Grid.Column="1" x:Name="MiniGpuHeading" Text="GPU 0" FontSize="12" FontWeight="SemiBold" Margin="8,1,0,0"/>
-                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="MiniGpuText" Text="AMD Radeon 780M...&#x0a;1% (45 °C)" FontSize="11" Margin="8,2,0,0"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="MiniGpuText" Text="AMD Radeon 780M...&#x0a;1% (45 &#xB0;C)" FontSize="11" Margin="8,2,0,0"/>
               </Grid>
             </Border>
           </StackPanel>
@@ -685,8 +686,189 @@ $mwAxaml = @'
             </StackPanel>
           </Grid>
         </Grid>
+        <!-- Network Performance View (1-to-1 Windows 10 Task Manager) -->
+        <Grid x:Name="NetworkView" RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="24,12,24,12" IsVisible="False">
+          <!-- Row 0: Big Header & Adapter Description -->
+          <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,10">
+            <TextBlock Grid.Column="0" x:Name="NetBigHeader" Text="Wi-Fi" FontSize="32" FontWeight="Light" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" x:Name="NetAdapterText" Text="" FontSize="13" VerticalAlignment="Bottom" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+          </Grid>
+
+          <!-- Row 1: Throughput Graph Top Scale Labels -->
+          <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,0,0,2">
+            <TextBlock x:Name="NetGraphHeaderLabel" Text="Throughput" FontSize="11"/>
+            <TextBlock Grid.Column="1" x:Name="NetGraphScaleMax" Text="100 Kbps" FontSize="11"/>
+          </Grid>
+
+          <!-- Row 2: Throughput Graph Box -->
+          <Grid Grid.Row="2">
+            <Border x:Name="NetGraphBorder" BorderThickness="1">
+              <Canvas x:Name="NetGraphCanvas" ClipToBounds="True"/>
+            </Border>
+          </Grid>
+
+          <!-- Row 3: Graph Bottom Scale Labels -->
+          <Grid Grid.Row="3" ColumnDefinitions="*,Auto" Margin="0,2,0,14">
+            <TextBlock x:Name="NetGraphScaleTime" Text="60 seconds" FontSize="11"/>
+            <TextBlock Grid.Column="1" x:Name="NetGraphScaleZero" Text="0" FontSize="11"/>
+          </Grid>
+
+          <!-- Row 4: Send / Receive Statistics & Adapter Specs -->
+          <Grid Grid.Row="4" HorizontalAlignment="Left" ColumnDefinitions="115,115,Auto,Auto" Margin="0,0,0,0">
+            <StackPanel Grid.Column="0" Spacing="1">
+              <TextBlock x:Name="LabelNetSend" Text="Send" FontSize="11" Margin="0,0,0,1"/>
+              <TextBlock x:Name="StatNetSend" Text="0 bps" FontSize="22" FontWeight="Normal"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="1" Margin="4,0,0,0">
+              <TextBlock x:Name="LabelNetReceive" Text="Receive" FontSize="11" Margin="0,0,0,1"/>
+              <TextBlock x:Name="StatNetReceive" Text="0 bps" FontSize="22" FontWeight="Normal"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" Spacing="2" Margin="36,2,12,0" VerticalAlignment="Top">
+              <TextBlock x:Name="LabelNetAdapterName" Text="Adapter name:" FontSize="11"/>
+              <TextBlock x:Name="LabelNetConnType" Text="Connection type:" FontSize="11"/>
+              <TextBlock x:Name="LabelNetRow3" Text="SSID:" FontSize="11"/>
+              <TextBlock x:Name="LabelNetRow4" Text="Signal strength:" FontSize="11"/>
+              <TextBlock x:Name="LabelNetRow5" Text="IPv4 address:" FontSize="11"/>
+              <TextBlock x:Name="LabelNetRow6" Text="Link speed (Receive/Transmit):" FontSize="11"/>
+            </StackPanel>
+            <StackPanel Grid.Column="3" Spacing="2" Margin="0,2,0,0" VerticalAlignment="Top">
+              <TextBlock x:Name="MetaNetAdapterName" Text="" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaNetConnType" Text="" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaNetRow3" Text="" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaNetRow4" Text="" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaNetRow5" Text="" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaNetRow6" Text="" FontSize="11" FontWeight="Normal"/>
+            </StackPanel>
+          </Grid>
+        </Grid>
+
+        <!-- GPU Performance View (1-to-1 Windows 10 Task Manager) -->
+        <!-- GPU Performance View (1-to-1 Windows 10 Task Manager) -->
+        <Grid x:Name="GpuView" RowDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto" Margin="24,12,24,12" IsVisible="False">
+          <!-- Row 0: Big Header & GPU Name -->
+          <Grid Grid.Row="0" ColumnDefinitions="Auto,*" Margin="0,0,0,10">
+            <TextBlock Grid.Column="0" x:Name="GpuBigHeader" Text="GPU" FontSize="32" FontWeight="Light" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" x:Name="GpuNameText" Text="" FontSize="13" VerticalAlignment="Bottom" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis"/>
+          </Grid>
+
+          <!-- Row 1: Per-engine graphs (3D, Copy, Compute 0/1, ...) built in code -->
+          <Grid Grid.Row="1" x:Name="GpuEnginesGrid" MinHeight="140" Margin="0,0,0,8"/>
+
+          <!-- Row 2: Dedicated GPU memory usage label + scale -->
+          <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,2">
+            <TextBlock x:Name="GpuDedMemHeaderLabel" Text="Dedicated GPU memory usage" FontSize="11"/>
+            <TextBlock Grid.Column="1" x:Name="GpuDedMemScaleMax" Text="" FontSize="11"/>
+          </Grid>
+
+          <!-- Row 3: Dedicated GPU memory graph -->
+          <Grid Grid.Row="3" MinHeight="60" Margin="0,0,0,8">
+            <Border x:Name="GpuDedMemBorder" BorderThickness="1">
+              <Canvas x:Name="GpuDedMemCanvas" ClipToBounds="True"/>
+            </Border>
+          </Grid>
+
+          <!-- Row 4: Shared GPU memory usage label + scale -->
+          <Grid Grid.Row="4" ColumnDefinitions="*,Auto" Margin="0,0,0,2">
+            <TextBlock x:Name="GpuSharedMemHeaderLabel" Text="Shared GPU memory usage" FontSize="11"/>
+            <TextBlock Grid.Column="1" x:Name="GpuSharedMemScaleMax" Text="" FontSize="11"/>
+          </Grid>
+
+          <!-- Row 5: Shared GPU memory graph -->
+          <Grid Grid.Row="5" MinHeight="60" Margin="0,0,0,10">
+            <Border x:Name="GpuSharedMemBorder" BorderThickness="1">
+              <Canvas x:Name="GpuSharedMemCanvas" ClipToBounds="True"/>
+            </Border>
+          </Grid>
+
+          <!-- Row 6: Statistics & Specs -->
+          <Grid Grid.Row="6" HorizontalAlignment="Left" ColumnDefinitions="150,190,Auto,Auto" Margin="0,0,0,0">
+            <!-- Col 0: Utilization, GPU Memory -->
+            <StackPanel Grid.Column="0" Spacing="10">
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelGpuUtil" Text="Utilization" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatGpuUtil" Text="0%" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelGpuMem" Text="GPU Memory" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatGpuMem" Text="0 B" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Col 1: Dedicated, Shared, Temperature -->
+            <StackPanel Grid.Column="1" Spacing="10" Margin="4,0,0,0">
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelGpuDedicated" Text="Dedicated GPU memory" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatGpuDedicated" Text="0 B" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelGpuShared" Text="Shared GPU memory" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatGpuShared" Text="0 B" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
+              <StackPanel Spacing="1">
+                <TextBlock x:Name="LabelGpuTemp" Text="GPU Temperature" FontSize="11" Margin="0,0,0,1"/>
+                <TextBlock x:Name="StatGpuTemp" Text="&#x2014;" FontSize="22" FontWeight="Normal"/>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Col 2: Spec Labels -->
+            <StackPanel Grid.Column="2" Spacing="2" Margin="36,2,12,0" VerticalAlignment="Top">
+              <TextBlock x:Name="LabelGpuDriverVer" Text="Driver version:" FontSize="11"/>
+              <TextBlock x:Name="LabelGpuDriverDate" Text="Driver date:" FontSize="11"/>
+              <TextBlock x:Name="LabelGpuDx" Text="DirectX version:" FontSize="11"/>
+              <TextBlock x:Name="LabelGpuLocation" Text="Physical location:" FontSize="11"/>
+              <TextBlock x:Name="LabelGpuHwReserved" Text="Hardware reserved memory:" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Col 3: Spec Values -->
+            <StackPanel Grid.Column="3" Spacing="2" Margin="0,2,0,0" VerticalAlignment="Top">
+              <TextBlock x:Name="MetaGpuDriverVer" Text="" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaGpuDriverDate" Text="" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaGpuDx" Text="" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaGpuLocation" Text="" FontSize="11" FontWeight="Normal"/>
+              <TextBlock x:Name="MetaGpuHwReserved" Text="" FontSize="11" FontWeight="Normal"/>
+            </StackPanel>
+          </Grid>
+        </Grid>
       </Grid>
     </Grid>
+    
+    <!-- Processes Panel (hidden by default) -->
+    <Grid Grid.Row="2" x:Name="ProcessesPanel" IsVisible="False">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+      <!-- Column headers with totals -->
+      <Grid Grid.Row="0" x:Name="ProcHeaderGrid" Margin="8,4,8,2">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="100"/>
+          <ColumnDefinition Width="100"/>
+          <ColumnDefinition Width="100"/>
+          <ColumnDefinition Width="100"/>
+        </Grid.ColumnDefinitions>
+        <!-- Totals row -->
+        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="ProcTotalCpu" Text="0%" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+        <TextBlock Grid.Row="0" Grid.Column="2" x:Name="ProcTotalMem" Text="0%" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+        <TextBlock Grid.Row="0" Grid.Column="3" x:Name="ProcTotalDisk" Text="0%" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+        <TextBlock Grid.Row="0" Grid.Column="4" x:Name="ProcTotalNet" Text="0%" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+        <!-- Labels row -->
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Name" FontSize="12" Foreground="Gray"/>
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="CPU" FontSize="12" Foreground="Gray" HorizontalAlignment="Right"/>
+        <TextBlock Grid.Row="1" Grid.Column="2" Text="Memory" FontSize="12" Foreground="Gray" HorizontalAlignment="Right"/>
+        <TextBlock Grid.Row="1" Grid.Column="3" Text="Disk" FontSize="12" Foreground="Gray" HorizontalAlignment="Right"/>
+        <TextBlock Grid.Row="1" Grid.Column="4" Text="Network" FontSize="12" Foreground="Gray" HorizontalAlignment="Right"/>
+      </Grid>
+      <!-- Process list -->
+      <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <StackPanel x:Name="ProcessListPanel" Margin="8,0,8,8"/>
+      </ScrollViewer>
+    </Grid>
+
 
     <!-- Row 3: Bottom Bar (Fewer details & Open Resource Monitor) -->
     <Border Grid.Row="3" x:Name="BottomBarBorder" Height="34" Padding="14,0" BorderThickness="0,1,0,0">
@@ -709,6 +891,351 @@ $mwAxaml = @'
     </Border>
   </Grid>
 </Window>
+'@
+
+$mwProcCs = @'
+// MainWindow.Processes.cs
+// Processes tab for CpuTaskManager - Task Manager clone
+// Grouped process list with auto-refresh, matching Windows 10 Task Manager.
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Media;
+using Avalonia.Threading;
+
+namespace __APPNAME__
+{
+    internal sealed class ProcessInfo
+    {
+        public int Pid;
+        public string Name = "";
+        public string DisplayName = "";
+        public double CpuPercent;
+        public long MemoryBytes;
+        public TimeSpan TotalProcessorTime;
+        public DateTime LastSampleTime;
+        public bool IsApp;
+        public bool IsSystem;
+    }
+
+    internal sealed class ProcessGroup
+    {
+        public string Title = "";
+        public List<ProcessInfo> Processes = new List<ProcessInfo>();
+        public bool Expanded = true;
+        public double TotalCpu;
+        public long TotalMemory;
+    }
+
+    public partial class MainWindow
+    {
+        private Dictionary<int, ProcessInfo> _processCache = new Dictionary<int, ProcessInfo>();
+        private List<ProcessGroup> _processGroups = new List<ProcessGroup>();
+        private DispatcherTimer? _processTimer;
+        private bool _processesInitialized = false;
+        private double _totalCpuPercent;
+        private double _totalMemPercent;
+
+        private void InitializeProcessesTab()
+        {
+            if (_processesInitialized) return;
+            _processesInitialized = true;
+            // Start auto-refresh timer (2 seconds like Task Manager)
+            _processTimer = new DispatcherTimer();
+            _processTimer.Interval = TimeSpan.FromSeconds(2);
+            _processTimer.Tick += (s, e) =>
+            {
+                if (_activePanel == PerformancePanel.Processes)
+                {
+                    RefreshProcessList();
+                    UpdateProcessListUI();
+                }
+            };
+        }
+
+        private void RefreshProcessList()
+        {
+            try
+            {
+                var now = DateTime.UtcNow;
+                var currentPids = new HashSet<int>();
+                int cores = Environment.ProcessorCount;
+
+                foreach (var proc in Process.GetProcesses())
+                {
+                    try
+                    {
+                        int pid = proc.Id;
+                        currentPids.Add(pid);
+
+                        if (!_processCache.TryGetValue(pid, out var info))
+                        {
+                            info = new ProcessInfo
+                            {
+                                Pid = pid,
+                                Name = proc.ProcessName,
+                                DisplayName = GetProcessDisplayName(proc),
+                                TotalProcessorTime = proc.TotalProcessorTime,
+                                LastSampleTime = now,
+                                IsApp = HasVisibleWindow(proc),
+                                IsSystem = IsSystemProcess(proc),
+                            };
+                            try { info.MemoryBytes = proc.WorkingSet64; } catch { }
+                            _processCache[pid] = info;
+                        }
+                        else
+                        {
+                            try
+                            {
+                                var newCpuTime = proc.TotalProcessorTime;
+                                var timeDelta = (now - info.LastSampleTime).TotalMilliseconds;
+                                if (timeDelta > 100)
+                                {
+                                    var cpuDelta = (newCpuTime - info.TotalProcessorTime).TotalMilliseconds;
+                                    info.CpuPercent = Math.Max(0, Math.Min(100, (cpuDelta / timeDelta) / cores * 100.0));
+                                }
+                                info.TotalProcessorTime = newCpuTime;
+                                info.LastSampleTime = now;
+                                try { info.MemoryBytes = proc.WorkingSet64; } catch { }
+                            }
+                            catch { }
+                        }
+                    }
+                    catch { }
+                    finally { try { proc.Dispose(); } catch { } }
+                }
+
+                var dead = _processCache.Keys.Where(k => !currentPids.Contains(k)).ToList();
+                foreach (var pid in dead) _processCache.Remove(pid);
+
+                // Group processes like Task Manager
+                var apps = new ProcessGroup { Title = "Apps" };
+                var bg = new ProcessGroup { Title = "Background processes" };
+                var win = new ProcessGroup { Title = "Windows processes" };
+
+                foreach (var p in _processCache.Values)
+                {
+                    if (p.IsSystem) win.Processes.Add(p);
+                    else if (p.IsApp) apps.Processes.Add(p);
+                    else bg.Processes.Add(p);
+                }
+
+                // Sort each group by CPU descending
+                foreach (var g in new[] { apps, bg, win })
+                {
+                    g.Processes = g.Processes.OrderByDescending(p => p.CpuPercent).ToList();
+                    g.TotalCpu = g.Processes.Sum(p => p.CpuPercent);
+                    g.TotalMemory = g.Processes.Sum(p => p.MemoryBytes);
+                    g.Title = g.Title.Split('(')[0].Trim() + $" ({g.Processes.Count})";
+                }
+
+                _processGroups = new List<ProcessGroup> { apps, bg, win };
+                _totalCpuPercent = _processCache.Values.Sum(p => p.CpuPercent);
+                
+                // Memory percent
+                try
+                {
+                    var totalMem = GC.GetTotalMemory(false);
+                    // Use performance counter or estimate
+                    _totalMemPercent = Math.Min(100, _processCache.Values.Sum(p => p.MemoryBytes) / (16.0 * 1024 * 1024 * 1024) * 100);
+                }
+                catch { }
+            }
+            catch { }
+        }
+
+        private static bool IsSystemProcess(Process proc)
+        {
+            try
+            {
+                string name = proc.ProcessName.ToLowerInvariant();
+                // Windows system processes
+                return name == "system" || name == "registry" || name == "smss" ||
+                       name == "csrss" || name == "wininit" || name == "services" ||
+                       name == "lsass" || name == "lsalso" || name == "winlogon" ||
+                       name == "fontdrvhost" || name == "wudfhost" || name == "svchost" ||
+                       name.StartsWith("secure system");
+            }
+            catch { return false; }
+        }
+
+        private static string GetProcessDisplayName(Process proc)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(proc.MainWindowTitle))
+                    return proc.MainWindowTitle.Trim();
+            }
+            catch { }
+            try { return proc.ProcessName; } catch { return "?"; }
+        }
+
+        private static bool HasVisibleWindow(Process proc)
+        {
+            try { return proc.MainWindowHandle != IntPtr.Zero; }
+            catch { return false; }
+        }
+
+        private void ShowProcessesPanel()
+        {
+            if (!_isInitialized) return;
+            InitializeProcessesTab();
+            _activePanel = PerformancePanel.Processes;
+
+            var perfGrid = this.FindControl<Grid>("PerformanceMainGrid");
+            var procPanel = this.FindControl<Grid>("ProcessesPanel");
+            if (perfGrid != null) perfGrid.IsVisible = false;
+            if (procPanel != null) procPanel.IsVisible = true;
+
+            ClearMainTileHighlights();
+            HighlightNetGpuTiles(null, false);
+
+            _processTimer?.Start();
+            RefreshProcessList();
+            UpdateProcessListUI();
+        }
+
+        private void ShowPerformancePanel()
+        {
+            if (!_isInitialized) return;
+            _processTimer?.Stop();
+            _activePanel = PerformancePanel.Cpu;
+
+            var perfGrid = this.FindControl<Grid>("PerformanceMainGrid");
+            var procPanel = this.FindControl<Grid>("ProcessesPanel");
+            if (perfGrid != null) perfGrid.IsVisible = true;
+            if (procPanel != null) procPanel.IsVisible = false;
+
+            SetActivePanel(PerformancePanel.Cpu);
+        }
+
+        private void UpdateProcessListUI()
+        {
+            var listPanel = this.FindControl<StackPanel>("ProcessListPanel");
+            if (listPanel == null) return;
+
+            // Update column header totals (like real Task Manager)
+            var totalCpu = this.FindControl<TextBlock>("ProcTotalCpu");
+            var totalMem = this.FindControl<TextBlock>("ProcTotalMem");
+            var totalDisk = this.FindControl<TextBlock>("ProcTotalDisk");
+            var totalNet = this.FindControl<TextBlock>("ProcTotalNet");
+            if (totalCpu != null) totalCpu.Text = $"{_totalCpuPercent:F0}%";
+            if (totalMem != null) totalMem.Text = $"{_totalMemPercent:F0}%";
+            if (totalDisk != null) totalDisk.Text = "0%";
+            if (totalNet != null) totalNet.Text = "0%";
+
+            listPanel.Children.Clear();
+            var textColor = new SolidColorBrush(_isDark ? Color.Parse("#FFFFFF") : Color.Parse("#000000"));
+            var textDim = new SolidColorBrush(_isDark ? Color.Parse("#A0A0A0") : Color.Parse("#666666"));
+            var groupColor = new SolidColorBrush(_isDark ? Color.Parse("#4CC2FF") : Color.Parse("#0067B8"));
+            var highlightBg = new SolidColorBrush(_isDark ? Color.Parse("#3A3A00") : Color.Parse("#FFF8DC"));
+
+            foreach (var group in _processGroups)
+            {
+                if (group.Processes.Count == 0) continue;
+
+                // Group header
+                var headerBtn = new Button
+                {
+                    Content = (group.Expanded ? "v " : "> ") + group.Title,
+                    FontSize = 13,
+                    FontWeight = FontWeight.SemiBold,
+                    Foreground = groupColor,
+                    Background = Brushes.Transparent,
+                    BorderThickness = new Thickness(0),
+                    Padding = new Thickness(4, 6, 0, 6),
+                    HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
+                    Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+                };
+                var g = group;
+                headerBtn.Click += (s, e) => { g.Expanded = !g.Expanded; UpdateProcessListUI(); };
+                listPanel.Children.Add(headerBtn);
+
+                if (!group.Expanded) continue;
+
+                // Group processes
+                foreach (var p in group.Processes.Take(100))
+                {
+                    var grid = new Grid { Margin = new Thickness(16, 0, 0, 0) };
+                    grid.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+                    grid.ColumnDefinitions.Add(new ColumnDefinition(100, GridUnitType.Pixel));
+                    grid.ColumnDefinitions.Add(new ColumnDefinition(110, GridUnitType.Pixel));
+                    grid.ColumnDefinitions.Add(new ColumnDefinition(100, GridUnitType.Pixel));
+                    grid.ColumnDefinitions.Add(new ColumnDefinition(100, GridUnitType.Pixel));
+
+                    bool highCpu = p.CpuPercent > 5;
+                    if (highCpu) grid.Background = highlightBg;
+
+                    var nameBlock = new TextBlock
+                    {
+                        Text = string.IsNullOrEmpty(p.DisplayName) ? p.Name : p.DisplayName,
+                        FontSize = 12,
+                        Foreground = textColor,
+                        Margin = new Thickness(4, 3, 0, 3),
+                        TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
+                    };
+                    var cpuBlock = new TextBlock
+                    {
+                        Text = $"{p.CpuPercent:F1}%",
+                        FontSize = 12,
+                        Foreground = p.CpuPercent > 1 ? textColor : textDim,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                        Margin = new Thickness(0, 3, 8, 3),
+                    };
+                    var memBlock = new TextBlock
+                    {
+                        Text = FormatBytes(p.MemoryBytes),
+                        FontSize = 12,
+                        Foreground = textColor,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                        Margin = new Thickness(0, 3, 8, 3),
+                    };
+                    var diskBlock = new TextBlock
+                    {
+                        Text = "0 MB/s",
+                        FontSize = 12,
+                        Foreground = textDim,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                        Margin = new Thickness(0, 3, 8, 3),
+                    };
+                    var netBlock = new TextBlock
+                    {
+                        Text = "0 Mbps",
+                        FontSize = 12,
+                        Foreground = textDim,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+                        Margin = new Thickness(0, 3, 8, 3),
+                    };
+
+                    Grid.SetColumn(nameBlock, 0);
+                    Grid.SetColumn(cpuBlock, 1);
+                    Grid.SetColumn(memBlock, 2);
+                    Grid.SetColumn(diskBlock, 3);
+                    Grid.SetColumn(netBlock, 4);
+                    grid.Children.Add(nameBlock);
+                    grid.Children.Add(cpuBlock);
+                    grid.Children.Add(memBlock);
+                    grid.Children.Add(diskBlock);
+                    grid.Children.Add(netBlock);
+                    listPanel.Children.Add(grid);
+                }
+            }
+        }
+
+        private static string FormatBytes(long bytes)
+        {
+            if (bytes < 1024) return $"{bytes} B";
+            if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+            if (bytes < 1024 * 1024 * 1024) return $"{bytes / (1024.0 * 1024):F1} MB";
+            return $"{bytes / (1024.0 * 1024 * 1024):F1} GB";
+        }
+    }
+}
+
 '@
 
 $mwCs = @'
@@ -735,7 +1262,10 @@ namespace __APPNAME__
     {
         Cpu,
         Memory,
-        Disk
+        Disk,
+        Network,
+        Gpu,
+        Processes
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -802,6 +1332,10 @@ namespace __APPNAME__
 
     public partial class MainWindow : Window
     {
+        [DllImport("dwmapi.dll", PreserveSig = true)]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
         [DllImport("ntdll.dll", SetLastError = false)]
         private static extern int NtQuerySystemInformation(int systemInformationClass, IntPtr systemInformation, int systemInformationLength, out int returnLength);
 
@@ -1077,6 +1611,7 @@ namespace __APPNAME__
 
         public MainWindow()
         {
+            this.Opened += (s, e) => UpdateTitleBarDarkMode();
             InitializeComponent();
             LoadSettings();
             BindControls();
@@ -1085,10 +1620,12 @@ namespace __APPNAME__
             InitDiskMetadata();
             InitPdhFrequencyCounter();
             InitPdhDiskCounters();
+            InitNetworkGpu();
             InitLogicalGraphs();
             SetupGraphContextMenus();
             ApplyThemeColors();
             _isInitialized = true;
+
             this.Opened += OnOpened;
             this.Closed += OnClosedCleanup;
             this.SizeChanged += (s, e) =>
@@ -1764,6 +2301,8 @@ namespace __APPNAME__
             if (_cpuView != null) _cpuView.IsVisible = (panel == PerformancePanel.Cpu);
             if (_memoryView != null) _memoryView.IsVisible = (panel == PerformancePanel.Memory);
             if (_diskView != null) _diskView.IsVisible = (panel == PerformancePanel.Disk);
+            if (_networkView != null) _networkView.IsVisible = (panel == PerformancePanel.Network);
+            if (_gpuView != null) _gpuView.IsVisible = (panel == PerformancePanel.Gpu);
             if (_menuChangeGraphRoot != null) _menuChangeGraphRoot.IsEnabled = (panel == PerformancePanel.Cpu);
 
             var selTileBg = new SolidColorBrush(_isDark ? Color.Parse("#2B3844") : Color.Parse("#E5F1FB"));
@@ -1785,8 +2324,9 @@ namespace __APPNAME__
                 _diskTileBorder.Background = (panel == PerformancePanel.Disk) ? selTileBg : trans;
                 _diskTileBorder.BorderBrush = (panel == PerformancePanel.Disk) ? selTileBorder : trans;
             }
+            HighlightNetGpuTiles(null, false);
 
-            Dispatcher.UIThread.Post(() => RedrawAllCharts(), DispatcherPriority.Render);
+            RedrawAllCharts();
         }
 
         private void OnCpuTileClick(object? sender, PointerPressedEventArgs e) => SetActivePanel(PerformancePanel.Cpu);
@@ -1875,6 +2415,14 @@ namespace __APPNAME__
                     normTransfer.Add(Math.Clamp((b / maxBytes) * 100.0, 0.0, 100.0));
                 }
                 DrawChart(_diskTransferCanvas, normTransfer, null, diskLineColor, diskFillColor, isMini: false, isDisk: true);
+            }
+            else if (_activePanel == PerformancePanel.Network)
+            {
+                RedrawNetworkCharts();
+            }
+            else if (_activePanel == PerformancePanel.Gpu)
+            {
+                RedrawGpuCharts();
             }
         }
 
@@ -2265,7 +2813,8 @@ namespace __APPNAME__
 
             SampleMemoryUsage();
             SampleDiskActivity();
-            SampleNetworkTraffic();
+            SampleNetworkAdapters();
+            SampleGpuStats();
 
             TimeSpan uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
             if (_statUptime != null) _statUptime.Text = string.Format("{0}:{1:D2}:{2:D2}:{3:D2}", (int)uptime.TotalDays, uptime.Hours, uptime.Minutes, uptime.Seconds);
@@ -2597,6 +3146,10 @@ namespace __APPNAME__
         private void DrawChart(Canvas? canvas, List<double> history, List<double>? kernelHistory, Color lineColor, Color fillColor, bool isMini = false, bool isMemory = false, bool isDisk = false)
         {
             if (canvas == null) return;
+            // Skip if VISIBLE but layout isn't complete - prevents half-size renders
+            // (Hidden panels should still redraw to update theme colors)
+            if (canvas.IsVisible && (!canvas.IsMeasureValid || !canvas.IsArrangeValid))
+                return;
             canvas.Children.Clear();
             double w = canvas.Bounds.Width;
             double h = canvas.Bounds.Height;
@@ -2707,7 +3260,155 @@ namespace __APPNAME__
             _isDark = !_isDark;
             SaveSettings();
             ApplyThemeColors();
-            RedrawAllCharts();
+            ApplyNetworkGpuTheme();
+            RefreshTileHighlights();
+            UpdateTitleBarDarkMode();
+            // Post redraw to let layout settle with new theme colors
+            // (synchronous redraw can use stale Bounds/colors)
+            Dispatcher.UIThread.Post(() => RedrawAllCharts(), DispatcherPriority.Render);
+        }
+
+        // ================= Tab Switching =================
+        
+        private void OnProcessesTabClick(object? sender, PointerPressedEventArgs e)
+        {
+            SetActiveTopTab("Processes");
+            ShowProcessesPanel();
+        }
+        
+        private void OnPerformanceTabClick(object? sender, PointerPressedEventArgs e)
+        {
+            SetActiveTopTab("Performance");
+            ShowPerformancePanel();
+        }
+        
+        private void OnAppHistoryTabClick(object? sender, PointerPressedEventArgs e)
+        {
+            SetActiveTopTab("AppHistory");
+            // TODO: Show app history panel
+        }
+        
+        private void OnStartupTabClick(object? sender, PointerPressedEventArgs e)
+        {
+            SetActiveTopTab("Startup");
+            // TODO: Show startup panel
+        }
+        
+        private void OnUsersTabClick(object? sender, PointerPressedEventArgs e)
+        {
+            SetActiveTopTab("Users");
+            // TODO: Show users panel
+        }
+        
+        private void OnDetailsTabClick(object? sender, PointerPressedEventArgs e)
+        {
+            SetActiveTopTab("Details");
+            // TODO: Show details panel
+        }
+        
+        private void OnServicesTabClick(object? sender, PointerPressedEventArgs e)
+        {
+            SetActiveTopTab("Services");
+            // TODO: Show services panel
+        }
+        
+        private void SetActiveTopTab(string tab)
+        {
+            // Update tab visual states using Border x:Names directly
+            var borderNames = new Dictionary<string, string>
+            {
+                { "Processes", "TabProcessesBorder" },
+                { "Performance", "TabPerfBorder" },
+                { "AppHistory", "TabAppHistoryBorder" },
+                { "Startup", "TabStartupBorder" },
+                { "Users", "TabUsersBorder" },
+                { "Details", "TabDetailsBorder" },
+                { "Services", "TabServicesBorder" },
+            };
+            var textNames = new Dictionary<string, string>
+            {
+                { "Processes", "TabProcesses" },
+                { "Performance", "TabPerformance" },
+                { "AppHistory", "TabAppHistory" },
+                { "Startup", "TabStartup" },
+                { "Users", "TabUsers" },
+                { "Details", "TabDetails" },
+                { "Services", "TabServices" },
+            };
+            
+            // Active tab: dark bg in dark mode, white in light mode, with top border
+            // Inactive: transparent
+            var activeBg = new SolidColorBrush(_isDark ? Color.Parse("#1E1E1E") : Color.Parse("#FFFFFF"));
+            var activeBorderBrush = new SolidColorBrush(_isDark ? Color.Parse("#3A3A3A") : Color.Parse("#CCCCCC"));
+            
+            foreach (var kv in borderNames)
+            {
+                string tabKey = kv.Key;
+                string borderName = kv.Value;
+                var border = this.FindControl<Border>(borderName);
+                if (border != null)
+                {
+                    bool isActive = (tabKey == tab);
+                    border.Background = isActive ? activeBg : Brushes.Transparent;
+                    border.BorderBrush = activeBorderBrush;
+                    border.BorderThickness = isActive ? new Thickness(1, 1, 1, 0) : new Thickness(0);
+                }
+                // Update text weight
+                if (textNames.TryGetValue(tabKey, out var textName))
+                {
+                    var tb = this.FindControl<TextBlock>(textName);
+                    if (tb != null)
+                        tb.FontWeight = (tabKey == tab) ? FontWeight.SemiBold : FontWeight.Normal;
+                }
+            }
+        }
+        
+private void UpdateTitleBarDarkMode()
+        {
+            try
+            {
+                var handle = TryGetPlatformHandle();
+                if (handle != null)
+                {
+                    IntPtr hwnd = handle.Handle;
+                    if (hwnd != IntPtr.Zero)
+                    {
+                        int darkMode = _isDark ? 1 : 0;
+                        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ref darkMode, sizeof(int));
+                    }
+                }
+            }
+            catch { }
+        }
+
+        private void RefreshTileHighlights()
+        {
+            // Re-apply tile selection colors after theme change
+            // (SetActivePanel sets them, but theme change doesn't trigger it)
+            var selTileBg = new SolidColorBrush(_isDark ? Color.Parse("#2B3844") : Color.Parse("#E5F1FB"));
+            var selTileBorder = new SolidColorBrush(_isDark ? Color.Parse("#4CC2FF") : Color.Parse("#70C0E7"));
+            var trans = Brushes.Transparent;
+
+            if (_cpuTileBorder != null)
+            {
+                bool sel = (_activePanel == PerformancePanel.Cpu);
+                _cpuTileBorder.Background = sel ? selTileBg : trans;
+                _cpuTileBorder.BorderBrush = sel ? selTileBorder : trans;
+            }
+            if (_memTileBorder != null)
+            {
+                bool sel = (_activePanel == PerformancePanel.Memory);
+                _memTileBorder.Background = sel ? selTileBg : trans;
+                _memTileBorder.BorderBrush = sel ? selTileBorder : trans;
+            }
+            if (_diskTileBorder != null)
+            {
+                bool sel = (_activePanel == PerformancePanel.Disk);
+                _diskTileBorder.Background = sel ? selTileBg : trans;
+                _diskTileBorder.BorderBrush = sel ? selTileBorder : trans;
+            }
+            // Network/GPU tiles are in NetworkGpu.cs
+            RefreshNetGpuTileHighlights();
         }
 
         private void OnRefreshNowClick(object? sender, RoutedEventArgs e) => OnTick(this, EventArgs.Empty);
@@ -2761,7 +3462,2120 @@ Set-Content -LiteralPath (Join-Path $Dir 'Program.cs') -Value $progCs.Replace('_
 Set-Content -LiteralPath (Join-Path $Dir 'App.axaml') -Value $appAxaml.Replace('__APPNAME__', $Name) -Encoding UTF8
 Set-Content -LiteralPath (Join-Path $Dir 'App.axaml.cs') -Value $appCs.Replace('__APPNAME__', $Name) -Encoding UTF8
 Set-Content -LiteralPath (Join-Path $Dir 'MainWindow.axaml') -Value $mwAxaml.Replace('__APPNAME__', $Name) -Encoding UTF8
+$mwNetGpuCs = @'
+// MainWindow.NetworkGpu.cs
+// Adds the missing Performance detail views: Wi-Fi / Ethernet (Network) and GPU.
+// This is a second partial-class file for MainWindow. It needs NO changes to the
+// existing MainWindow.axaml.cs logic except the small hook edits listed in
+// APPLY_EDITS.md (enum values, InitNetworkGpu() call, SetActivePanel lines,
+// RedrawAllCharts branches, OnTick sampling lines, OnToggleDarkMode theme line).
+//
+// The build script must write this file with the same __APPNAME__ -> project name
+// replacement it already applies to the other sources.
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Management;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Shapes;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Threading;
+using Microsoft.Win32;
+
+namespace __APPNAME__
+{
+    #region WLAN interop (SSID / signal strength)
+
+    internal enum WLAN_INTF_OPCODE
+    {
+        wlan_intf_opcode_current_connection = 7,
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct DOT11_SSID
+    {
+        public uint uSSIDLength;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+        public byte[] ucSSID;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct WLAN_ASSOCIATION_ATTRIBUTES
+    {
+        public DOT11_SSID dot11Ssid;
+        public uint dot11BssType;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 6)]
+        public byte[] dot11Bssid;
+        public uint dot11PhyType;
+        public uint uDot11PhyIndex;
+        public uint wlanSignalQuality;
+        public uint ulRxRate;
+        public uint ulTxRate;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct WLAN_SECURITY_ATTRIBUTES
+    {
+        [MarshalAs(UnmanagedType.Bool)] public bool bSecurityEnabled;
+        [MarshalAs(UnmanagedType.Bool)] public bool bOneXEnabled;
+        public uint dot11AuthAlgorithm;
+        public uint dot11CipherAlgorithm;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct WLAN_CONNECTION_ATTRIBUTES
+    {
+        public uint isState;
+        public uint wlanConnectionMode;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+        public string strProfileName;
+        public WLAN_ASSOCIATION_ATTRIBUTES wlanAssociationAttributes;
+        public WLAN_SECURITY_ATTRIBUTES wlanSecurityAttributes;
+    }
+
+    // NOTE: Pack=4 so Marshal.SizeOf matches the native 532-byte stride when
+    // walking the InterfaceInfo[] array returned by WlanEnumInterfaces.
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode, Pack = 4)]
+    internal struct WLAN_INTERFACE_INFO
+    {
+        public Guid InterfaceGuid;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+        public string strInterfaceDescription;
+        public uint isState;
+    }
+
+    #endregion
+
+    #region PDH wildcard-array interop (GPU engine / adapter memory counters)
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct PDH_FMT_COUNTERVALUE_ITEM_DOUBLE
+    {
+        public IntPtr szName;
+        public uint CStatus;
+        public double doubleValue;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    internal struct DXGI_ADAPTER_DESC
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
+        public string Description;
+        public uint VendorId;
+        public uint DeviceId;
+        public uint SubSysId;
+        public uint Revision;
+        public UIntPtr DedicatedVideoMemory;
+        public UIntPtr DedicatedSystemMemory;
+        public UIntPtr SharedSystemMemory;
+        public uint AdapterLuidLow;
+        public int AdapterLuidHigh;
+    }
+
+    #endregion
+
+    internal sealed class GpuEngineTracker
+    {
+        public string Key = "";
+        public string Label = "";
+        public int SortOrder;
+        public readonly List<double> History = new List<double>();
+        public double LastValue;
+        public Border? Card;
+        public Canvas? Canvas;
+        public TextBlock? PctText;
+        public TextBlock? NameText;
+    }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    internal struct ADLAdapterInfo
+    {
+        public int iSize;
+        public int iAdapterIndex;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+        public string strUDID;
+        public int iBusNumber;
+        public int iDeviceNumber;
+        public int iFunctionNumber;
+        public int iVendorID;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+        public string strAdapterName;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+        public string strDisplayName;
+        public int iPresent;
+        public int iExist;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+        public string strDriverPath;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+        public string strDriverPathExt;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+        public string strPNPString;
+        public int iOSDisplayIndex;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct ADLTemperature
+    {
+        public int iSize;
+        public int iTemperature; // millidegrees Celsius
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct ADLPMActivity
+    {
+        public int iSize;
+        public int iEngineClock;
+        public int iMemoryClock;
+        public int iVddc;
+        public int iActivityPercent;
+        public int iCurrentPerformanceLevel;
+        public int iCurrentBusSpeed;
+        public int iCurrentBusLanes;
+        public int iMaximumBusLanes;
+        public int iReserved;
+    }
+
+    internal sealed class NetAdapterTracker
+    {
+        public string Key = "";
+        public string NicId = "";
+        public string Name = "";
+        public string Description = "";
+        public bool IsWifi;
+        public bool Present;
+        public double LinkSpeedBps;
+        public string WifiPhy = "802.11";
+        public long PrevSent;
+        public long PrevRecv;
+        public DateTime PrevTime = DateTime.UtcNow;
+        public bool HasPrev;
+        public double LastSendBps;
+        public double LastRecvBps;
+        public readonly List<double> SendHist = new List<double>();
+        public readonly List<double> RecvHist = new List<double>();
+    }
+
+    public partial class MainWindow
+    {
+        [DllImport("wlanapi.dll", SetLastError = true)]
+        private static extern int WlanOpenHandle(uint dwClientVersion, IntPtr pReserved, out uint pdwNegotiatedVersion, out IntPtr phClientHandle);
+
+        [DllImport("wlanapi.dll", SetLastError = true)]
+        private static extern int WlanEnumInterfaces(IntPtr hClientHandle, IntPtr pReserved, out IntPtr ppInterfaceList);
+
+        [DllImport("wlanapi.dll", SetLastError = true)]
+        private static extern int WlanQueryInterface(IntPtr hClientHandle, ref Guid pInterfaceGuid, WLAN_INTF_OPCODE OpCode, IntPtr pReserved, out uint pdwDataSize, out IntPtr ppData, IntPtr pWlanOpcodeValueType);
+
+        [DllImport("wlanapi.dll")]
+        private static extern void WlanFreeMemory(IntPtr pMemory);
+
+        [DllImport("pdh.dll", SetLastError = true)]
+        private static extern int PdhGetFormattedCounterArrayW(IntPtr hCounter, uint dwFormat, ref uint lpdwBufferSize, out uint lpdwItemCount, IntPtr lpBuffer);
+
+        [DllImport("pdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern int PdhEnumObjectItemsW(string? szDataSource, string? szMachineName, string szObjectName,
+            StringBuilder? mszCounterList, ref uint pcchCounterListLength,
+            StringBuilder? mszInstanceList, ref uint pcchInstanceListLength,
+            uint dwDetailLevel, uint dwFlags);
+
+        [DllImport("pdh.dll", SetLastError = true)]
+        private static extern int PdhRemoveCounter(IntPtr hCounter);
+
+        [DllImport("pdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern int PdhExpandWildCardPathW(string? szDataSource, string szWildCardPath, StringBuilder? mszExpandedPathList, ref uint pcchPathListLength, uint dwFlags);
+
+        [DllImport("pdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern int PdhValidatePathW(string szFullPathBuffer);
+
+        [DllImport("pdh.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern int PdhAddCounterW(IntPtr hQuery, string szFullCounterPath, IntPtr userData, out IntPtr phCounter);
+
+        [DllImport("dxgi.dll", CharSet = CharSet.Unicode)]
+        private static extern int CreateDXGIFactory(ref Guid riid, out IntPtr ppFactory);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int DxgiEnumAdaptersDelegate(IntPtr self, uint adapter, out IntPtr ppAdapter);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        private delegate int DxgiAdapterGetDescDelegate(IntPtr self, out DXGI_ADAPTER_DESC desc);
+
+        [DllImport("atiadlxx.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ADL2_Main_Control_Create(ADLMemoryAlloc callback, int enumConnectedAdapters, out IntPtr context);
+
+        [DllImport("atiadlxx.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ADL2_Overdrive6_Temperature_Get(IntPtr context, int adapterIndex, ref ADLTemperature temperature);
+
+        [DllImport("atiadlxx.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ADL2_OverdriveN_PerformanceStatus_Get(IntPtr context, int iAdapterIndex, IntPtr pPerformanceStatus);
+
+        [DllImport("d3d12.dll")]
+        private static extern int D3D12CreateDevice(IntPtr pAdapter, uint minimumFeatureLevel, ref Guid riid, out IntPtr ppDevice);
+
+        private delegate IntPtr ADLMemoryAlloc(int size);
+        private static readonly ADLMemoryAlloc _adlAlloc = size => Marshal.AllocHGlobal(size);
+
+        [DllImport("atiadlxx.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ADL_Main_Control_Create(ADLMemoryAlloc callback, int enumConnectedAdapters);
+
+        [DllImport("atiadlxx.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ADL_Adapter_NumberOfAdapters_Get(ref int numAdapters);
+
+        [DllImport("atiadlxx.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ADL_Adapter_AdapterInfo_Get(IntPtr info, int inputSize);
+
+        [DllImport("atiadlxx.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ADL_Overdrive5_Temperature_Get(int adapterIndex, int thermalControllerIndex, ref ADLTemperature temperature);
+
+        [DllImport("atiadlxx.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int ADL_Overdrive5_CurrentActivity_Get(int iAdapterIndex, ref ADLPMActivity lpActivity);
+
+        private static readonly Regex GpuEngRegex = new Regex(@"eng_(\d+)_engtype_([A-Za-z0-9]+)", RegexOptions.Compiled);
+
+        private const int PDH_MORE_DATA = unchecked((int)0x800007D2);
+        private const uint PDH_FMT_DOUBLE = 0x00000200;
+
+        // ---- Network view controls ----
+        private Grid? _networkView;
+        private TextBlock? _netBigHeader;
+        private TextBlock? _netAdapterText;
+        private TextBlock? _netGraphHeaderLabel;
+        private TextBlock? _netGraphScaleMax;
+        private TextBlock? _netGraphScaleTime;
+        private TextBlock? _netGraphScaleZero;
+        private Border? _netGraphBorder;
+        private Canvas? _netGraphCanvas;
+        private TextBlock? _labelNetSend;
+        private TextBlock? _labelNetReceive;
+        private TextBlock? _statNetSend;
+        private TextBlock? _statNetReceive;
+        private TextBlock? _labelNetAdapterName;
+        private TextBlock? _labelNetConnType;
+        private TextBlock? _labelNetRow3;
+        private TextBlock? _labelNetRow4;
+        private TextBlock? _labelNetRow5;
+        private TextBlock? _labelNetRow6;
+        private TextBlock? _metaNetAdapterName;
+        private TextBlock? _metaNetConnType;
+        private TextBlock? _metaNetRow3;
+        private TextBlock? _metaNetRow4;
+        private TextBlock? _metaNetRow5;
+        private TextBlock? _metaNetRow6;
+
+        // ---- GPU view controls ----
+        private Grid? _gpuView;
+        private TextBlock? _gpuBigHeader;
+        private TextBlock? _gpuNameText;
+        private Grid? _gpuEnginesGrid;
+        private TextBlock? _gpuDedMemHeaderLabel;
+        private TextBlock? _gpuDedMemScaleMax;
+        private Border? _gpuDedMemBorder;
+        private Canvas? _gpuDedMemCanvas;
+        private TextBlock? _gpuSharedMemHeaderLabel;
+        private TextBlock? _gpuSharedMemScaleMax;
+        private Border? _gpuSharedMemBorder;
+        private Canvas? _gpuSharedMemCanvas;
+        private TextBlock? _labelGpuUtil;
+        private TextBlock? _labelGpuMem;
+        private TextBlock? _statGpuUtil;
+        private TextBlock? _statGpuMem;
+        private TextBlock? _labelGpuDedicated;
+        private TextBlock? _labelGpuShared;
+        private TextBlock? _labelGpuTemp;
+        private TextBlock? _statGpuDedicated;
+        private TextBlock? _statGpuShared;
+        private TextBlock? _statGpuTemp;
+        private TextBlock? _labelGpuDriverVer;
+        private TextBlock? _labelGpuDriverDate;
+        private TextBlock? _labelGpuDx;
+        private TextBlock? _labelGpuLocation;
+        private TextBlock? _labelGpuHwReserved;
+        private TextBlock? _metaGpuDriverVer;
+        private TextBlock? _metaGpuDriverDate;
+        private TextBlock? _metaGpuDx;
+        private TextBlock? _metaGpuLocation;
+        private TextBlock? _metaGpuHwReserved;
+
+        // ---- Network / GPU state ----
+        private readonly List<NetAdapterTracker> _netAdapters = new List<NetAdapterTracker>();
+        private string _activeNetKey = "wifi";
+        private readonly Dictionary<string, GpuEngineTracker> _gpuEngines = new Dictionary<string, GpuEngineTracker>();
+        // 4 fixed engine slots like Task Manager; each slot displays one engine.
+        // Defaults: 3D, Copy, Compute_0, Compute_1. User can change via dropdown.
+        private readonly string[] _gpuEngineSlots = new string[4] { "3D", "Copy", "Compute_0", "Compute_1" };
+        private readonly HashSet<string> _gpuKnownEngines = new HashSet<string>(StringComparer.Ordinal);
+        private readonly List<double> _gpuDedHistory = new List<double>();
+        private readonly List<double> _gpuSharedHistory = new List<double>();
+        private readonly Dictionary<string, IntPtr> _gpuEngineCounters = new Dictionary<string, IntPtr>();
+        private IntPtr _hPdhGpuEngineWildcard = IntPtr.Zero;
+        private int _gpuEnumTick;
+        private IntPtr _adl2Context = IntPtr.Zero;
+        private int _adl2TempAdapter = -1;
+        private int _adlPciBus = -1;
+        private int _adlPciDevice;
+        private int _adlPciFunction;
+        private IntPtr _hPdhGpuDedUsage = IntPtr.Zero;
+        private IntPtr _hPdhGpuSharedUsage = IntPtr.Zero;
+        private IntPtr _hPdhGpuDedLimit = IntPtr.Zero;
+        private IntPtr _hPdhGpuSharedLimit = IntPtr.Zero;
+        private double _gpuDedLimitBytes;
+        private double _gpuSharedLimitBytes;
+        private double _gpuTempC = double.NaN;
+        private string _gpuFullName = "";
+        private string _gpuDriverVersion = "";
+        private double _gpuHwReservedBytes = 0;
+        private string _gpuDriverDate = "";
+        private string _gpuLocation = "";
+        private IntPtr _wlanHandle = IntPtr.Zero;
+        private bool _adlInit;
+        private bool _adlOk;
+        private int _adlTempAdapter;
+
+        // ================= Initialization =================
+
+        private void InitNetworkGpu()
+        {
+            BindNetworkGpuControls();
+            BuildNetworkAdapterList();
+            InitGpuMetadata();
+            InitGpuCounters();
+            for (int i = 0; i < 60; i++) { _gpuDedHistory.Add(0.0); _gpuSharedHistory.Add(0.0); }
+            WireNetworkGpuTiles();
+            SetupNetworkGpuContextMenus();
+            ApplyNetworkGpuTheme();
+        }
+
+        private void BindNetworkGpuControls()
+        {
+            _networkView = this.FindControl<Grid>("NetworkView");
+            _netBigHeader = this.FindControl<TextBlock>("NetBigHeader");
+            _netAdapterText = this.FindControl<TextBlock>("NetAdapterText");
+            _netGraphHeaderLabel = this.FindControl<TextBlock>("NetGraphHeaderLabel");
+            _netGraphScaleMax = this.FindControl<TextBlock>("NetGraphScaleMax");
+            _netGraphScaleTime = this.FindControl<TextBlock>("NetGraphScaleTime");
+            _netGraphScaleZero = this.FindControl<TextBlock>("NetGraphScaleZero");
+            _netGraphBorder = this.FindControl<Border>("NetGraphBorder");
+            _netGraphCanvas = this.FindControl<Canvas>("NetGraphCanvas");
+            _labelNetSend = this.FindControl<TextBlock>("LabelNetSend");
+            _labelNetReceive = this.FindControl<TextBlock>("LabelNetReceive");
+            _statNetSend = this.FindControl<TextBlock>("StatNetSend");
+            _statNetReceive = this.FindControl<TextBlock>("StatNetReceive");
+            _labelNetAdapterName = this.FindControl<TextBlock>("LabelNetAdapterName");
+            _labelNetConnType = this.FindControl<TextBlock>("LabelNetConnType");
+            _labelNetRow3 = this.FindControl<TextBlock>("LabelNetRow3");
+            _labelNetRow4 = this.FindControl<TextBlock>("LabelNetRow4");
+            _labelNetRow5 = this.FindControl<TextBlock>("LabelNetRow5");
+            _labelNetRow6 = this.FindControl<TextBlock>("LabelNetRow6");
+            _metaNetAdapterName = this.FindControl<TextBlock>("MetaNetAdapterName");
+            _metaNetConnType = this.FindControl<TextBlock>("MetaNetConnType");
+            _metaNetRow3 = this.FindControl<TextBlock>("MetaNetRow3");
+            _metaNetRow4 = this.FindControl<TextBlock>("MetaNetRow4");
+            _metaNetRow5 = this.FindControl<TextBlock>("MetaNetRow5");
+            _metaNetRow6 = this.FindControl<TextBlock>("MetaNetRow6");
+
+            _gpuView = this.FindControl<Grid>("GpuView");
+            _gpuBigHeader = this.FindControl<TextBlock>("GpuBigHeader");
+            _gpuNameText = this.FindControl<TextBlock>("GpuNameText");
+            _gpuEnginesGrid = this.FindControl<Grid>("GpuEnginesGrid");
+            _gpuDedMemHeaderLabel = this.FindControl<TextBlock>("GpuDedMemHeaderLabel");
+            _gpuDedMemScaleMax = this.FindControl<TextBlock>("GpuDedMemScaleMax");
+            _gpuDedMemBorder = this.FindControl<Border>("GpuDedMemBorder");
+            _gpuDedMemCanvas = this.FindControl<Canvas>("GpuDedMemCanvas");
+            _gpuSharedMemHeaderLabel = this.FindControl<TextBlock>("GpuSharedMemHeaderLabel");
+            _gpuSharedMemScaleMax = this.FindControl<TextBlock>("GpuSharedMemScaleMax");
+            _gpuSharedMemBorder = this.FindControl<Border>("GpuSharedMemBorder");
+            _gpuSharedMemCanvas = this.FindControl<Canvas>("GpuSharedMemCanvas");
+            _labelGpuUtil = this.FindControl<TextBlock>("LabelGpuUtil");
+            _labelGpuMem = this.FindControl<TextBlock>("LabelGpuMem");
+            _statGpuUtil = this.FindControl<TextBlock>("StatGpuUtil");
+            _statGpuMem = this.FindControl<TextBlock>("StatGpuMem");
+            _labelGpuDedicated = this.FindControl<TextBlock>("LabelGpuDedicated");
+            _labelGpuShared = this.FindControl<TextBlock>("LabelGpuShared");
+            _labelGpuTemp = this.FindControl<TextBlock>("LabelGpuTemp");
+            _statGpuDedicated = this.FindControl<TextBlock>("StatGpuDedicated");
+            _statGpuShared = this.FindControl<TextBlock>("StatGpuShared");
+            _statGpuTemp = this.FindControl<TextBlock>("StatGpuTemp");
+            _labelGpuDriverVer = this.FindControl<TextBlock>("LabelGpuDriverVer");
+            _labelGpuDriverDate = this.FindControl<TextBlock>("LabelGpuDriverDate");
+            _labelGpuDx = this.FindControl<TextBlock>("LabelGpuDx");
+            _labelGpuLocation = this.FindControl<TextBlock>("LabelGpuLocation");
+            _labelGpuHwReserved = this.FindControl<TextBlock>("LabelGpuHwReserved");
+            _metaGpuDriverVer = this.FindControl<TextBlock>("MetaGpuDriverVer");
+            _metaGpuDriverDate = this.FindControl<TextBlock>("MetaGpuDriverDate");
+            _metaGpuDx = this.FindControl<TextBlock>("MetaGpuDx");
+            _metaGpuLocation = this.FindControl<TextBlock>("MetaGpuLocation");
+            _metaGpuHwReserved = this.FindControl<TextBlock>("MetaGpuHwReserved");
+        }
+
+        private void BuildNetworkAdapterList()
+        {
+            _netAdapters.Clear();
+            List<NetworkInterface> nics = new List<NetworkInterface>();
+            try
+            {
+                nics = NetworkInterface.GetAllNetworkInterfaces()
+                    .Where(n => n.NetworkInterfaceType == NetworkInterfaceType.Wireless80211
+                             || n.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
+                    .ToList();
+            }
+            catch { }
+
+            NetworkInterface? wifiNic = nics.FirstOrDefault(n => n.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 && n.OperationalStatus == OperationalStatus.Up)
+                ?? nics.FirstOrDefault(n => n.NetworkInterfaceType == NetworkInterfaceType.Wireless80211);
+
+            var ethNics = nics.Where(n => n.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
+                .OrderByDescending(n => n.OperationalStatus == OperationalStatus.Up)
+                .Take(2).ToList();
+
+            AddTracker("wifi", wifiNic, true);
+            AddTracker("eth1", ethNics.Count > 0 ? ethNics[0] : null, false);
+            AddTracker("eth2", ethNics.Count > 1 ? ethNics[1] : null, false);
+
+            var wifi = _netAdapters[0];
+            if (_miniWifiHeading != null) _miniWifiHeading.Text = wifi.Present ? wifi.Name : "Wi-Fi";
+            if (_miniWifiText != null && !wifi.Present) _miniWifiText.Text = "Not present";
+
+            var e1 = _netAdapters[1];
+            if (_miniEth1Heading != null) _miniEth1Heading.Text = e1.Present ? e1.Name : "Ethernet";
+            if (_miniEth1Text != null) _miniEth1Text.Text = e1.Present ? "" : "Not present";
+
+            var e2 = _netAdapters[2];
+            if (_miniEth2Heading != null) _miniEth2Heading.Text = e2.Present ? e2.Name : "Ethernet 2";
+            if (_miniEth2Text != null) _miniEth2Text.Text = e2.Present ? "" : "Not present";
+        }
+
+        private void AddTracker(string key, NetworkInterface? nic, bool isWifi)
+        {
+            var t = new NetAdapterTracker { Key = key, IsWifi = isWifi };
+            if (nic != null)
+            {
+                t.Present = true;
+                t.NicId = nic.Id;
+                t.Name = string.IsNullOrWhiteSpace(nic.Name) ? (isWifi ? "Wi-Fi" : "Ethernet") : nic.Name;
+                t.Description = string.IsNullOrWhiteSpace(nic.Description) ? t.Name : nic.Description;
+                try { t.LinkSpeedBps = Math.Max(0, (double)nic.Speed); } catch { }
+            }
+            for (int i = 0; i < 60; i++) { t.SendHist.Add(0.0); t.RecvHist.Add(0.0); }
+            _netAdapters.Add(t);
+        }
+
+        private void InitGpuMetadata()
+        {
+            try
+            {
+                using var classKey = Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}");
+                if (classKey != null)
+                {
+                    foreach (string sub in classKey.GetSubKeyNames())
+                    {
+                        if (sub == "Properties") continue;
+                        try
+                        {
+                            using var gpuKey = classKey.OpenSubKey(sub);
+                            if (gpuKey == null) continue;
+                            string desc = gpuKey.GetValue("DriverDesc")?.ToString() ?? "";
+                            // Match our GPU (AMD Radeon 780M) or first display adapter with driver
+                            if (desc.IndexOf("Radeon", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                desc.IndexOf("AMD", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                (string.IsNullOrEmpty(_gpuFullName) && !string.IsNullOrEmpty(desc)))
+                            {
+                                _gpuFullName = desc.Trim();
+                                _gpuDriverVersion = gpuKey.GetValue("DriverVersion")?.ToString()?.Trim() ?? "";
+                                _gpuDriverDate = (gpuKey.GetValue("DriverDate")?.ToString()?.Trim() ?? "").Replace("-", "/");
+                                _gpuLocation = gpuKey.GetValue("LocationInformation")?.ToString()?.Trim() ?? "";
+                                if (desc.IndexOf("780M", StringComparison.OrdinalIgnoreCase) >= 0) break;
+                            }
+                        }
+                        catch { }
+                    }
+                }
+            }
+            catch { }
+            if (string.IsNullOrEmpty(_gpuFullName)) _gpuFullName = _gpuName;
+            // Dedicated/shared memory totals via DXGI (same family of APIs Task Manager uses)
+            try
+            {
+                if (TryGetDxgiAdapterMemory(out ulong dxgiDed, out ulong dxgiShared, out ulong dxgiHwRes))
+                {
+                    if (dxgiDed > 0) _gpuDedLimitBytes = dxgiDed;
+                    if (dxgiShared > 0) _gpuSharedLimitBytes = dxgiShared;
+                    // Task Manager's Dedicated total includes HW reserved; store it
+                    // separately for the "Hardware reserved memory" row.
+                    if (dxgiHwRes > 0)
+                    {
+                        _gpuHwReservedBytes = dxgiHwRes;
+                        _gpuDedLimitBytes += dxgiHwRes;
+                    }
+                }
+            }
+            catch { }
+            if (_metaGpuDriverVer != null) _metaGpuDriverVer.Text = string.IsNullOrEmpty(_gpuDriverVersion) ? "\u2014" : _gpuDriverVersion;
+            if (_metaGpuDriverDate != null) _metaGpuDriverDate.Text = string.IsNullOrEmpty(_gpuDriverDate) ? "\u2014" : _gpuDriverDate;
+            if (_metaGpuDx != null) _metaGpuDx.Text = DetectDirectXVersion();
+            if (_metaGpuLocation != null) _metaGpuLocation.Text = string.IsNullOrEmpty(_gpuLocation) ? "\u2014" : _gpuLocation;
+            if (_metaGpuHwReserved != null)
+                _metaGpuHwReserved.Text = _gpuHwReservedBytes > 0
+                    ? FormatBytesShort(_gpuHwReservedBytes)
+                    : "\u2014";
+        }
+
+
+        private void InitGpuCounters()
+        {
+            if (_hPdhQuery == IntPtr.Zero) return;
+            try
+            {
+                EnumerateGpuEngineInstances();
+                _hPdhGpuEngineWildcard = PdhAddWildcard(@"\GPU Engine(*)\Utilization Percentage");
+                _hPdhGpuDedUsage = PdhAddWildcard(@"\GPU Adapter Memory(*)\Dedicated Usage");
+                _hPdhGpuSharedUsage = PdhAddWildcard(@"\GPU Adapter Memory(*)\Shared Usage");
+                _hPdhGpuDedLimit = PdhAddWildcard(@"\GPU Adapter Memory(*)\Dedicated Limit");
+                _hPdhGpuSharedLimit = PdhAddWildcard(@"\GPU Adapter Memory(*)\Shared Limit");
+            }
+            catch { }
+        }
+
+        private IntPtr PdhAddWildcard(string wildcardPath)
+        {
+            try
+            {
+                if (_hPdhQuery != IntPtr.Zero &&
+                    PdhAddEnglishCounterW(_hPdhQuery, wildcardPath, IntPtr.Zero, out IntPtr h) == 0)
+                    return h;
+            }
+            catch { }
+            return IntPtr.Zero;
+        }
+
+        private static double PdhReadWildcardSum(IntPtr hCounter)
+        {
+            if (hCounter == IntPtr.Zero) return 0.0;
+            try
+            {
+                uint bufSize = 0;
+                int res = PdhGetFormattedCounterArrayW(hCounter, PDH_FMT_DOUBLE, ref bufSize, out _, IntPtr.Zero);
+                if (res != PDH_MORE_DATA || bufSize == 0) return 0.0;
+                IntPtr buf = Marshal.AllocHGlobal((int)bufSize);
+                try
+                {
+                    res = PdhGetFormattedCounterArrayW(hCounter, PDH_FMT_DOUBLE, ref bufSize, out uint itemCount, buf);
+                    if (res != 0) return 0.0;
+                    double sum = 0.0;
+                    int itemSize = Marshal.SizeOf<PDH_FMT_COUNTERVALUE_ITEM_DOUBLE>();
+                    for (int i = 0; i < itemCount; i++)
+                    {
+                        var item = Marshal.PtrToStructure<PDH_FMT_COUNTERVALUE_ITEM_DOUBLE>(IntPtr.Add(buf, i * itemSize));
+                        if (item.CStatus == 0) sum += Math.Max(0.0, item.doubleValue);
+                    }
+                    return sum;
+                }
+                finally { Marshal.FreeHGlobal(buf); }
+            }
+            catch { return 0.0; }
+        }
+
+        private void EnumerateGpuEngineInstances()
+        {
+            var log = new StringBuilder();
+            try
+            {
+                // Deep diagnostics for GPU Engine PDH provider quirks
+                try
+                {
+                    string wildPath = "\\GPU Engine(*)\\Utilization Percentage";
+                    int vRes = PdhValidatePathW(wildPath);
+                    log.Append("validate wildcard res=").Append(vRes).Append('\n');
+                    int addRes = PdhAddEnglishCounterW(_hPdhQuery, wildPath, IntPtr.Zero, out IntPtr wh);
+                    log.Append("add-english wildcard res=").Append(addRes).Append('\n');
+                    if (addRes == 0 && wh != IntPtr.Zero) { try { PdhRemoveCounter(wh); } catch { } }
+                    int addRes2 = PdhAddCounterW(_hPdhQuery, wildPath, IntPtr.Zero, out IntPtr wh2);
+                    log.Append("add-plain wildcard res=").Append(addRes2).Append('\n');
+                    if (addRes2 == 0 && wh2 != IntPtr.Zero) { try { PdhRemoveCounter(wh2); } catch { } }
+                }
+                catch (Exception ex) { log.Append("diag EX ").Append(ex.Message).Append('\n'); }
+
+                var names = new List<string>();
+                // Strategy 1: enumerate instances via PdhEnumObjectItems
+                try
+                {
+                    const uint PERF_DETAIL_WIZARD = 400;
+                    uint counterLen = 0, instanceLen = 0;
+                    int res = PdhEnumObjectItemsW(null, null, "GPU Engine", null, ref counterLen, null, ref instanceLen, PERF_DETAIL_WIZARD, 0);
+                    log.Append("enum-items probe res=").Append(res).Append(" instanceLen=").Append(instanceLen).Append('\n');
+                    if ((res == 0 || res == PDH_MORE_DATA) && instanceLen > 0)
+                    {
+                        var counters = new StringBuilder(Math.Max((int)counterLen, 1));
+                        var instances = new StringBuilder((int)instanceLen);
+                        res = PdhEnumObjectItemsW(null, null, "GPU Engine", counters, ref counterLen, instances, ref instanceLen, PERF_DETAIL_WIZARD, 0);
+                        log.Append("enum-items res=").Append(res).Append('\n');
+                        if (res == 0)
+                        {
+                            foreach (string n in instances.ToString().Split(new[] { '\0' }, StringSplitOptions.RemoveEmptyEntries))
+                                if (n.Length > 0) names.Add(n);
+                        }
+                    }
+                }
+                catch (Exception ex) { log.Append("enum-items EX ").Append(ex.Message).Append('\n'); }
+
+                // Strategy 2: expand the wildcard path and try canonical paths directly
+                var canonicalPaths = new List<string>();
+                try
+                {
+                    uint len = 0;
+                    int res = PdhExpandWildCardPathW(null, "\\GPU Engine(*)\\Utilization Percentage", null, ref len, 0);
+                    log.Append("expand probe res=").Append(res).Append(" len=").Append(len).Append('\n');
+                    if ((res == 0 || res == PDH_MORE_DATA) && len > 0)
+                    {
+                        var sb = new StringBuilder((int)len);
+                        res = PdhExpandWildCardPathW(null, "\\GPU Engine(*)\\Utilization Percentage", sb, ref len, 0);
+                        log.Append("expand res=").Append(res).Append('\n');
+                        if (res == 0)
+                        {
+                            foreach (string p in sb.ToString().Split(new[] { '\0' }, StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                if (p.Length == 0) continue;
+                                canonicalPaths.Add(p);
+                                log.Append("  canonical: ").Append(p).Append('\n');
+                                int s = p.IndexOf('(');
+                                int e = p.LastIndexOf(')');
+                                if (s > 0 && e > s)
+                                {
+                                    string iname = p.Substring(s + 1, e - s - 1);
+                                    if (!names.Contains(iname)) names.Add(iname);
+                                }
+                                else log.Append("  !! unparsable path").Append('\n');
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex) { log.Append("expand EX ").Append(ex.Message).Append('\n'); }
+
+                // Strategy 2b: try adding the canonical expanded paths directly
+                foreach (string cpath in canonicalPaths)
+                {
+                    if (_gpuEngineCounters.Count >= 128) break;
+                    string ckey = "canon:" + cpath;
+                    if (_gpuEngineCounters.ContainsKey(ckey)) continue;
+                    try
+                    {
+                        int cr = PdhAddCounterW(_hPdhQuery, cpath, IntPtr.Zero, out IntPtr ch);
+                        log.Append("  add-canonical res=").Append(cr).Append('\n');
+                        if (cr == 0 && ch != IntPtr.Zero)
+                        {
+                            _gpuEngineCounters[ckey] = ch;
+                            log.Append("  !! canonical add worked!").Append('\n');
+                        }
+                    }
+                    catch (Exception ex) { log.Append("  add-canonical EX: ").Append(ex.Message).Append('\n'); }
+                }
+
+                log.Append("instances=").Append(names.Count).Append('\n');
+                var seen = new HashSet<string>(StringComparer.Ordinal);
+                bool firstDiag = true;
+                foreach (string name in names)
+                {
+                    if (!seen.Add(name)) continue;
+                    log.Append("  ").Append(name).Append(GpuEngRegex.IsMatch(name) ? "" : "  [NO REGEX MATCH]").Append('\n');
+                    string instPath = "\\GPU Engine(" + name + ")\\Utilization Percentage";
+                    if (firstDiag)
+                    {
+                        firstDiag = false;
+                        try
+                        {
+                            int vRes = PdhValidatePathW(instPath);
+                            log.Append("    validate instance res=").Append(vRes).Append('\n');
+                            int pRes = PdhAddCounterW(_hPdhQuery, instPath, IntPtr.Zero, out IntPtr ph);
+                            log.Append("    add-plain instance res=").Append(pRes).Append('\n');
+                            if (pRes == 0 && ph != IntPtr.Zero)
+                            {
+                                _gpuEngineCounters[name] = ph;
+                                log.Append("    !! plain add worked, using it").Append('\n');
+                            }
+                        }
+                        catch (Exception ex) { log.Append("    diag EX: ").Append(ex.Message).Append('\n'); }
+                    }
+                    if (!_gpuEngineCounters.ContainsKey(name) && _gpuEngineCounters.Count < 128 && _hPdhQuery != IntPtr.Zero)
+                    {
+                        try
+                        {
+                            int addRes = PdhAddEnglishCounterW(_hPdhQuery, instPath, IntPtr.Zero, out IntPtr h);
+                            log.Append("    add res=").Append(addRes).Append('\n');
+                            if (addRes == 0 && h != IntPtr.Zero)
+                                _gpuEngineCounters[name] = h;
+                        }
+                        catch (Exception ex) { log.Append("    add EX: ").Append(ex.Message).Append('\n'); }
+                    }
+                }
+                var dead = new List<string>();
+                foreach (string k in _gpuEngineCounters.Keys) if (!seen.Contains(k)) dead.Add(k);
+                foreach (string k in dead)
+                {
+                    try { PdhRemoveCounter(_gpuEngineCounters[k]); } catch { }
+                    _gpuEngineCounters.Remove(k);
+                }
+                log.Append("tracked=").Append(_gpuEngineCounters.Count).Append('\n');
+            }
+            catch (Exception ex) { log.Append("EX ").Append(ex.Message).Append('\n'); }
+            WriteGpuDebugLog(log.ToString());
+        }
+
+        private static void WriteGpuDebugLog(string text)
+        {
+            try { File.AppendAllText("gpu-engines.log", "[" + DateTime.Now.ToString("HH:mm:ss") + "] " + text + "\n"); }
+            catch { }
+        }
+
+        private static int GpuEngineSortOrder(string engType) => engType switch
+        {
+            "3D" => 0,
+            "Copy" => 1,
+            "Compute" => 2,
+            "VideoEncode" => 3,
+            "VideoDecode" => 4,
+            "VideoProcessing" => 5,
+            _ => 9,
+        };
+
+        private static string GpuEngineBaseLabel(string engType) => engType switch
+        {
+            "3D" => "3D",
+            "Copy" => "Copy",
+            "Compute" => "Compute",
+            "VideoDecode" => "Video Decode",
+            "VideoEncode" => "Video Encode",
+            "VideoProcessing" => "Video Processing",
+            _ => engType,
+        };
+
+        private void RebuildGpuEngineCards()
+        {
+            if (_gpuEnginesGrid == null) return;
+            _gpuEnginesGrid.Children.Clear();
+            _gpuEnginesGrid.RowDefinitions.Clear();
+            _gpuEnginesGrid.ColumnDefinitions.Clear();
+
+            // 4 fixed slots like Task Manager (2x2 grid)
+            for (int c = 0; c < 2; c++)
+                _gpuEnginesGrid.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+            for (int r = 0; r < 2; r++)
+                _gpuEnginesGrid.RowDefinitions.Add(new RowDefinition(1, GridUnitType.Star));
+
+            var cardBg = new SolidColorBrush(_isDark ? Color.Parse("#191919") : Color.Parse("#FFFFFF"));
+            var cardBorder = new SolidColorBrush(_isDark ? Color.Parse("#2A5A84") : Color.Parse("#70A5CC"));
+            var textMid = new SolidColorBrush(_isDark ? Color.Parse("#A0A0A0") : Color.Parse("#555555"));
+
+            for (int slot = 0; slot < 4; slot++)
+            {
+                string engineKey = _gpuEngineSlots[slot];
+                _gpuEngines.TryGetValue(engineKey, out var eng);
+
+                var card = new Border
+                {
+                    BorderThickness = new Thickness(1),
+                    Margin = new Thickness(0, 0, 6, 6),
+                    Background = cardBg,
+                    BorderBrush = cardBorder,
+                };
+                var grid = new Grid();
+                grid.RowDefinitions.Add(new RowDefinition(0, GridUnitType.Auto));
+                grid.RowDefinitions.Add(new RowDefinition(1, GridUnitType.Star));
+
+                var header = new Grid { Margin = new Thickness(2, 0, 2, 0) };
+                header.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+                header.ColumnDefinitions.Add(new ColumnDefinition(0, GridUnitType.Auto));
+
+                // Dropdown button ("v") + engine name
+                var dropBtn = new Button
+                {
+                    Content = "v " + (eng?.Label ?? engineKey),
+                    FontSize = 11,
+                    Margin = new Thickness(2, 2, 0, 2),
+                    Foreground = textMid,
+                    Background = Avalonia.Media.Brushes.Transparent,
+                    BorderThickness = new Thickness(0),
+                    Padding = new Thickness(0),
+                    Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+                };
+                int slotIdx = slot; // capture for closure
+                dropBtn.Flyout = CreateEngineFlyout(slotIdx);
+
+                var pct = new TextBlock { Text = $"{eng?.LastValue ?? 0:F0}%", FontSize = 11, Margin = new Thickness(0, 2, 2, 2), Foreground = textMid };
+                Grid.SetColumn(pct, 1);
+                header.Children.Add(dropBtn);
+                header.Children.Add(pct);
+
+                var canvas = new Canvas { ClipToBounds = true };
+                Grid.SetRow(canvas, 1);
+                grid.Children.Add(header);
+                grid.Children.Add(canvas);
+                card.Child = grid;
+
+                Grid.SetRow(card, slot / 2);
+                Grid.SetColumn(card, slot % 2);
+                _gpuEnginesGrid.Children.Add(card);
+
+                if (eng != null)
+                {
+                    eng.Card = card;
+                    eng.Canvas = canvas;
+                    eng.PctText = pct;
+                    // NameText now points to the button's content via a wrapper
+                    eng.NameText = null; // not used for slot-based cards
+                }
+                // Store slot->UI mapping for graph updates
+                _gpuSlotCanvases[slot] = canvas;
+                _gpuSlotPcts[slot] = pct;
+                _gpuSlotButtons[slot] = dropBtn;
+            }
+        }
+
+        // Per-slot UI elements for graph updates
+        private readonly Canvas?[] _gpuSlotCanvases = new Canvas?[4];
+        private readonly TextBlock?[] _gpuSlotPcts = new TextBlock?[4];
+        private readonly Button?[] _gpuSlotButtons = new Button?[4];
+
+        private void UpdateSlotEngine(int slotIdx, string newKey)
+        {
+            // Update in-place: no rebuild, no flicker, history preserved
+            _gpuEngineSlots[slotIdx] = newKey;
+            _gpuEngines.TryGetValue(newKey, out var eng);
+            string label = eng?.Label ?? newKey;
+            if (_gpuSlotButtons[slotIdx] != null)
+                _gpuSlotButtons[slotIdx]!.Content = "v " + label;
+            // Redraw immediately so the new engine's history shows right away
+            RedrawGpuCharts();
+        }
+
+        private Flyout CreateEngineFlyout(int slotIdx)
+        {
+            // Task Manager-style dropdown: white popup list directly below the header
+            var listBg = new SolidColorBrush(_isDark ? Color.Parse("#2D2D2D") : Color.Parse("#FFFFFF"));
+            var listBorder = new SolidColorBrush(_isDark ? Color.Parse("#555555") : Color.Parse("#999999"));
+            var textColor = new SolidColorBrush(_isDark ? Color.Parse("#FFFFFF") : Color.Parse("#222222"));
+            var hoverBg = new SolidColorBrush(_isDark ? Color.Parse("#3D3D3D") : Color.Parse("#E5F3FF"));
+
+            var listBox = new ListBox
+            {
+                Background = listBg,
+                BorderBrush = listBorder,
+                BorderThickness = new Thickness(1),
+                MinWidth = 160,
+                MaxHeight = 300,
+            };
+
+            // List all known engines, sorted by sort order
+            var sorted = _gpuKnownEngines
+                .Where(k => _gpuEngines.ContainsKey(k))
+                .OrderBy(k => _gpuEngines[k].SortOrder)
+                .ToList();
+            // Always include the 4 defaults even if no data yet
+            foreach (var def in new[] { "3D", "Copy", "Compute_0", "Compute_1" })
+                if (!sorted.Contains(def)) sorted.Add(def);
+
+            string currentKey = _gpuEngineSlots[slotIdx];
+
+            foreach (string key in sorted)
+            {
+                string label = _gpuEngines.TryGetValue(key, out var e) ? e.Label : key;
+                var item = new ListBoxItem
+                {
+                    Content = label,
+                    Tag = key, // store engine key for SelectionChanged
+                    FontSize = 12,
+                    Foreground = textColor,
+                    Padding = new Thickness(8, 4, 8, 4),
+                    Background = Avalonia.Media.Brushes.Transparent,
+                };
+                // Highlight current selection
+                if (key == currentKey)
+                {
+                    item.Background = hoverBg;
+                    item.IsSelected = true;
+                }
+                listBox.Items.Add(item);
+            }
+
+            var flyout = new Flyout
+            {
+                Content = listBox,
+                Placement = PlacementMode.Bottom,
+                ShowMode = FlyoutShowMode.Standard,
+            };
+
+            // Use SelectionChanged - reliable with ListBox
+            bool handling = false;
+            listBox.SelectionChanged += (s, e) =>
+            {
+                if (handling) return;
+                handling = true;
+                try
+                {
+                    if (listBox.SelectedItem is ListBoxItem selected && selected.Tag is string k)
+                    {
+                        flyout.Hide();
+                        UpdateSlotEngine(slotIdx, k);
+                    }
+                }
+                finally { handling = false; }
+            };
+
+            return flyout;
+        }
+
+        private static bool TryGetDxgiAdapterMemory(out ulong dedicatedBytes, out ulong sharedBytes, out ulong hwReservedBytes)
+        {
+            dedicatedBytes = 0;
+            sharedBytes = 0;
+            hwReservedBytes = 0;
+            IntPtr factory = IntPtr.Zero;
+            IntPtr adapter = IntPtr.Zero;
+            try
+            {
+                var iid = new Guid("7b7166ec-21c7-44ae-b21a-c9ae321ae369"); // IID_IDXGIFactory
+                if (CreateDXGIFactory(ref iid, out factory) != 0 || factory == IntPtr.Zero)
+                    return false;
+                IntPtr fVtbl = Marshal.ReadIntPtr(factory);
+                var enumAdapters = Marshal.GetDelegateForFunctionPointer<DxgiEnumAdaptersDelegate>(Marshal.ReadIntPtr(fVtbl, 7 * IntPtr.Size));
+                if (enumAdapters(factory, 0, out adapter) != 0 || adapter == IntPtr.Zero)
+                    return false;
+                IntPtr aVtbl = Marshal.ReadIntPtr(adapter);
+                var getDesc = Marshal.GetDelegateForFunctionPointer<DxgiAdapterGetDescDelegate>(Marshal.ReadIntPtr(aVtbl, 8 * IntPtr.Size));
+                if (getDesc(adapter, out DXGI_ADAPTER_DESC desc) != 0)
+                    return false;
+                dedicatedBytes = desc.DedicatedVideoMemory.ToUInt64();
+                sharedBytes = desc.SharedSystemMemory.ToUInt64();
+                hwReservedBytes = desc.DedicatedSystemMemory.ToUInt64();
+                return dedicatedBytes > 0 || sharedBytes > 0;
+            }
+            catch { return false; }
+            finally
+            {
+                if (adapter != IntPtr.Zero) Marshal.Release(adapter);
+                if (factory != IntPtr.Zero) Marshal.Release(factory);
+            }
+        }
+
+        private static string DetectDirectXVersion()
+        {
+            try
+            {
+                var iid = new Guid("189819f1-1db6-4b57-be54-1821339b85f7"); // IID_ID3D12Device
+                var levels = new (uint fl, string label)[]
+                {
+                    (0xc200, "12 (FL 12.2)"),
+                    (0xc100, "12 (FL 12.1)"),
+                    (0xc000, "12 (FL 12.0)"),
+                    (0xb100, "11.1"),
+                    (0xb000, "11.0"),
+                };
+                foreach (var (fl, label) in levels)
+                {
+                    int hr = D3D12CreateDevice(IntPtr.Zero, fl, ref iid, out IntPtr dev);
+                    if (hr == 0 && dev != IntPtr.Zero)
+                    {
+                        try { Marshal.Release(dev); } catch { }
+                        return label;
+                    }
+                }
+            }
+            catch (DllNotFoundException) { }
+            catch { }
+            return "\u2014";
+        }
+
+        private bool TryGetGpuTemperature(out double celsius)
+        {
+            celsius = double.NaN;
+            try
+            {
+                if (!_adlInit)
+                {
+                    _adlInit = true;
+                    try
+                    {
+                        if (ADL_Main_Control_Create(_adlAlloc, 1) == 0)
+                        {
+                            _adlTempAdapter = FindAdlTempAdapter(IntPtr.Zero); // Overdrive5
+                            _adlOk = _adlTempAdapter >= 0;
+                            if (!_adlOk && ADL2_Main_Control_Create(_adlAlloc, 1, out IntPtr ctx) == 0 && ctx != IntPtr.Zero)
+                            {
+                                _adl2Context = ctx;
+                                _adl2TempAdapter = FindAdlTempAdapter(ctx); // Overdrive6
+                            }
+                        }
+                    }
+                    catch { }
+                }
+                var t = new ADLTemperature { iSize = Marshal.SizeOf<ADLTemperature>() };
+                if (_adlOk && ADL_Overdrive5_Temperature_Get(_adlTempAdapter, 0, ref t) == 0 && AdlTempSane(t.iTemperature))
+                {
+                    celsius = t.iTemperature / 1000.0;
+                    return true;
+                }
+                if (_adl2TempAdapter >= 0 && _adl2Context != IntPtr.Zero)
+                {
+                    t = new ADLTemperature { iSize = Marshal.SizeOf<ADLTemperature>() };
+                    if (ADL2_Overdrive6_Temperature_Get(_adl2Context, _adl2TempAdapter, ref t) == 0 && AdlTempSane(t.iTemperature))
+                    {
+                        celsius = t.iTemperature / 1000.0;
+                        return true;
+                    }
+                }
+            }
+            catch (DllNotFoundException) { }
+            catch { }
+            // Last resort: ACPI thermal zone (on an iGPU this is the same die)
+            try
+            {
+                if (TryGetThermalZoneTemp(out double tz))
+                {
+                    celsius = tz;
+                    return true;
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        private static bool AdlTempSane(int milliC) => milliC > 1000 && milliC < 120000;
+
+        private bool TryGetGpuActivity(out double percent)
+        {
+            percent = double.NaN;
+            try
+            {
+                // Modern API first: ADL2 OverdriveN (RDNA+). iGPUActivityPercent
+                // is at offset 24 of the 72-byte ADLODNPerformanceStatus struct.
+                if (TryGetAdl2Activity(out percent)) return true;
+                // Legacy fallback: Overdrive5 (pre-RDNA).
+                if (!_adlInit)
+                {
+                    double dummy;
+                    TryGetGpuTemperature(out dummy);
+                }
+                int adapter = _adlOk ? _adlTempAdapter : _adl2TempAdapter;
+                if (adapter < 0) return false;
+                var act = new ADLPMActivity { iSize = Marshal.SizeOf<ADLPMActivity>() };
+                if (ADL_Overdrive5_CurrentActivity_Get(adapter, ref act) == 0
+                    && act.iActivityPercent >= 0 && act.iActivityPercent <= 100)
+                {
+                    percent = act.iActivityPercent;
+                    return true;
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        private bool TryGetAdl2Activity(out double percent)
+        {
+            percent = double.NaN;
+            try
+            {
+                if (_adl2Context == IntPtr.Zero)
+                {
+                    try
+                    {
+                        if (ADL2_Main_Control_Create(_adlAlloc, 1, out IntPtr ctx) == 0 && ctx != IntPtr.Zero)
+                            _adl2Context = ctx;
+                    }
+                    catch { }
+                }
+                if (_adl2Context == IntPtr.Zero) return false;
+                int adapter = _adl2TempAdapter >= 0 ? _adl2TempAdapter : (_adlOk ? _adlTempAdapter : 0);
+                IntPtr buf = Marshal.AllocHGlobal(72);
+                try
+                {
+                    Marshal.WriteInt32(buf, 0, 72); // iSize
+                    if (ADL2_OverdriveN_PerformanceStatus_Get(_adl2Context, adapter, buf) == 0)
+                    {
+                        int activity = Marshal.ReadInt32(buf, 24); // iGPUActivityPercent
+                        if (activity >= 0 && activity <= 100)
+                        {
+                            percent = activity;
+                            return true;
+                        }
+                    }
+                }
+                finally { Marshal.FreeHGlobal(buf); }
+            }
+            catch { }
+            return false;
+        }
+
+        private static bool TryGetThermalZoneTemp(out double celsius)
+        {
+            celsius = double.NaN;
+            try
+            {
+                using var searcher = new ManagementObjectSearcher(@"root\WMI", "SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature");
+                using var results = searcher.Get();
+                double best = double.NaN;
+                foreach (ManagementObject mo in results)
+                {
+                    try
+                    {
+                        var v = mo["CurrentTemperature"];
+                        if (v == null) continue;
+                        double c = Convert.ToDouble(v) / 10.0 - 273.15;
+                        if (c > 5 && c < 110 && (double.IsNaN(best) || c > best)) best = c;
+                    }
+                    catch { }
+                }
+                if (!double.IsNaN(best)) { celsius = best; return true; }
+            }
+            catch { }
+            return false;
+        }
+
+        // Walks ADL adapters and returns the index whose temperature reads sane, or -1.
+        // adl2Context == IntPtr.Zero -> Overdrive5; otherwise Overdrive6 via ADL2.
+        private int FindAdlTempAdapter(IntPtr adl2Context)
+        {
+            try
+            {
+                int count = 0;
+                if (ADL_Adapter_NumberOfAdapters_Get(ref count) != 0 || count <= 0) return -1;
+                int infoSize = Marshal.SizeOf<ADLAdapterInfo>();
+                IntPtr buf = Marshal.AllocHGlobal(infoSize * count);
+                try
+                {
+                    if (ADL_Adapter_AdapterInfo_Get(buf, infoSize * count) != 0) return -1;
+                    for (int i = 0; i < count; i++)
+                    {
+                        var ai = Marshal.PtrToStructure<ADLAdapterInfo>(IntPtr.Add(buf, i * infoSize));
+                        if (ai.iPresent == 0) continue;
+                        if (_adlPciBus < 0) { _adlPciBus = ai.iBusNumber; _adlPciDevice = ai.iDeviceNumber; _adlPciFunction = ai.iFunctionNumber; }
+                        var t = new ADLTemperature { iSize = Marshal.SizeOf<ADLTemperature>() };
+                        int rc = adl2Context == IntPtr.Zero
+                            ? ADL_Overdrive5_Temperature_Get(ai.iAdapterIndex, 0, ref t)
+                            : ADL2_Overdrive6_Temperature_Get(adl2Context, ai.iAdapterIndex, ref t);
+                        if (rc == 0 && AdlTempSane(t.iTemperature)) return ai.iAdapterIndex;
+                    }
+                }
+                finally { Marshal.FreeHGlobal(buf); }
+            }
+            catch { }
+            return -1;
+        }
+
+        private void WireNetworkGpuTiles()
+        {
+            var hand = new Cursor(StandardCursorType.Hand);
+            if (_wifiTileBorder != null)
+            {
+                _wifiTileBorder.Cursor = hand;
+                _wifiTileBorder.PointerPressed += (s, e) => ShowNetworkPanel("wifi");
+            }
+            if (_eth1TileBorder != null)
+            {
+                _eth1TileBorder.Cursor = hand;
+                _eth1TileBorder.PointerPressed += (s, e) => ShowNetworkPanel("eth1");
+            }
+            if (_eth2TileBorder != null)
+            {
+                _eth2TileBorder.Cursor = hand;
+                _eth2TileBorder.PointerPressed += (s, e) => ShowNetworkPanel("eth2");
+            }
+            if (_gpuTileBorder != null)
+            {
+                _gpuTileBorder.Cursor = hand;
+                _gpuTileBorder.PointerPressed += (s, e) => ShowGpuPanel();
+            }
+        }
+
+        private void SetupNetworkGpuContextMenus()
+        {
+            var netMenu = new ContextMenu();
+            var netCopy = new MenuItem { Header = "Copy" };
+            netCopy.Click += (s, e) => CopyNetworkStatsToClipboard();
+            netMenu.Items.Add(netCopy);
+            if (_netGraphBorder != null) _netGraphBorder.ContextMenu = netMenu;
+
+            var gpuMenu = new ContextMenu();
+            var gpuCopy = new MenuItem { Header = "Copy" };
+            gpuCopy.Click += (s, e) => CopyGpuStatsToClipboard();
+            gpuMenu.Items.Add(gpuCopy);
+            if (_gpuDedMemBorder != null) _gpuDedMemBorder.ContextMenu = gpuMenu;
+            if (_gpuSharedMemBorder != null) _gpuSharedMemBorder.ContextMenu = gpuMenu;
+            if (_gpuEnginesGrid != null) _gpuEnginesGrid.ContextMenu = gpuMenu;
+        }
+
+        // ================= Panel switching =================
+
+        private void ShowNetworkPanel(string key)
+        {
+            if (!_isInitialized) return;
+            var t = _netAdapters.FirstOrDefault(a => a.Key == key);
+            if (t == null || !t.Present) return;
+            _activePanel = PerformancePanel.Network;
+            _activeNetKey = key;
+
+            if (_cpuView != null) _cpuView.IsVisible = false;
+            if (_memoryView != null) _memoryView.IsVisible = false;
+            if (_diskView != null) _diskView.IsVisible = false;
+            if (_gpuView != null) _gpuView.IsVisible = false;
+            if (_networkView != null) _networkView.IsVisible = true;
+            if (_menuChangeGraphRoot != null) _menuChangeGraphRoot.IsEnabled = false;
+
+            ClearMainTileHighlights();
+            HighlightNetGpuTiles(key, false);
+
+            if (_netBigHeader != null) _netBigHeader.Text = t.IsWifi ? "Wi-Fi" : (key == "eth2" ? "Ethernet 2" : "Ethernet");
+            if (_netAdapterText != null) _netAdapterText.Text = t.Description;
+            SetText(_metaNetAdapterName, t.Name);
+
+            string ipv4 = GetAdapterIpv4(t);
+            if (t.IsWifi)
+            {
+                SetText(_metaNetConnType, t.WifiPhy);
+                SetText(_labelNetRow3, "SSID:");
+                SetText(_labelNetRow4, "Signal strength:");
+                SetText(_labelNetRow5, "IPv4 address:");
+                SetText(_labelNetRow6, "Link speed (Receive/Transmit):");
+                SetText(_metaNetRow5, ipv4);
+                double mbps = t.LinkSpeedBps / 1_000_000.0;
+                SetText(_metaNetRow6, mbps > 0 ? $"{mbps:F1}/{mbps:F1} (Mbps)" : "\u2014");
+                RefreshWifiDetails(t);
+            }
+            else
+            {
+                SetText(_metaNetConnType, "Ethernet");
+                SetText(_labelNetRow3, "IPv4 address:");
+                SetText(_labelNetRow4, "IPv6 address:");
+                SetText(_labelNetRow5, "Speed:");
+                SetText(_labelNetRow6, "DNS servers:");
+                SetText(_metaNetRow3, ipv4);
+                SetText(_metaNetRow4, GetAdapterIpv6(t));
+                SetText(_metaNetRow5, FormatLinkSpeed(t.LinkSpeedBps));
+                SetText(_metaNetRow6, GetAdapterDns(t));
+            }
+
+            UpdateNetworkDetailStats(t);
+            Dispatcher.UIThread.Post(() => RedrawAllCharts(), DispatcherPriority.Render);
+        }
+
+        private void ShowGpuPanel()
+        {
+            if (!_isInitialized) return;
+            _activePanel = PerformancePanel.Gpu;
+
+            if (_cpuView != null) _cpuView.IsVisible = false;
+            if (_memoryView != null) _memoryView.IsVisible = false;
+            if (_diskView != null) _diskView.IsVisible = false;
+            if (_networkView != null) _networkView.IsVisible = false;
+            if (_gpuView != null) _gpuView.IsVisible = true;
+            if (_menuChangeGraphRoot != null) _menuChangeGraphRoot.IsEnabled = false;
+
+            ClearMainTileHighlights();
+            HighlightNetGpuTiles(null, true);
+
+            if (_gpuBigHeader != null) _gpuBigHeader.Text = "GPU";
+            if (_gpuNameText != null) _gpuNameText.Text = _gpuFullName;
+
+            SampleGpuStats();
+            Dispatcher.UIThread.Post(() => RedrawAllCharts(), DispatcherPriority.Render);
+        }
+
+        private void ClearMainTileHighlights()
+        {
+            // Clear CPU/Memory/Disk tiles when switching to Network/GPU
+            // (SetActivePanel handles these, but ShowNetworkPanel/ShowGpuPanel bypass it)
+            var trans = Brushes.Transparent;
+            if (_cpuTileBorder != null)
+            {
+                _cpuTileBorder.Background = trans;
+                _cpuTileBorder.BorderBrush = trans;
+            }
+            if (_memTileBorder != null)
+            {
+                _memTileBorder.Background = trans;
+                _memTileBorder.BorderBrush = trans;
+            }
+            if (_diskTileBorder != null)
+            {
+                _diskTileBorder.Background = trans;
+                _diskTileBorder.BorderBrush = trans;
+            }
+        }
+
+        private void RefreshNetGpuTileHighlights()
+        {
+            // Re-apply network/GPU tile highlights after theme change
+            // Called from main C# RefreshTileHighlights()
+            string? netKey = (_activePanel == PerformancePanel.Network) ? _activeNetKey : null;
+            bool gpuActive = (_activePanel == PerformancePanel.Gpu);
+            HighlightNetGpuTiles(netKey, gpuActive);
+        }
+
+        private void HighlightNetGpuTiles(string? activeNetKey, bool gpuActive)
+        {
+            var selBg = new SolidColorBrush(_isDark ? Color.Parse("#2B3844") : Color.Parse("#E5F1FB"));
+            var selBorder = new SolidColorBrush(_isDark ? Color.Parse("#4CC2FF") : Color.Parse("#70C0E7"));
+            var trans = Brushes.Transparent;
+            SetTileHighlight(_wifiTileBorder, activeNetKey == "wifi", selBg, selBorder, trans);
+            SetTileHighlight(_eth1TileBorder, activeNetKey == "eth1", selBg, selBorder, trans);
+            SetTileHighlight(_eth2TileBorder, activeNetKey == "eth2", selBg, selBorder, trans);
+            SetTileHighlight(_gpuTileBorder, gpuActive, selBg, selBorder, trans);
+        }
+
+        private static void SetTileHighlight(Border? b, bool selected, IBrush selBg, IBrush selBorder, IBrush trans)
+        {
+            if (b == null) return;
+            b.Background = selected ? selBg : trans;
+            b.BorderBrush = selected ? selBorder : trans;
+        }
+
+        // ================= Sampling =================
+
+        private void SampleNetworkAdapters()
+        {
+            try
+            {
+                foreach (var t in _netAdapters)
+                {
+                    if (!t.Present) continue;
+                    var nic = FindNic(t);
+                    if (nic == null) continue;
+                    long sent, recv;
+                    try
+                    {
+                        var st = nic.GetIPv4Statistics();
+                        sent = st.BytesSent;
+                        recv = st.BytesReceived;
+                    }
+                    catch { continue; }
+
+                    DateTime now = DateTime.UtcNow;
+                    if (t.HasPrev)
+                    {
+                        double sec = (now - t.PrevTime).TotalSeconds;
+                        if (sec >= 0.4)
+                        {
+                            double sendBps = Math.Max(0.0, (sent - t.PrevSent) * 8.0 / sec);
+                            double recvBps = Math.Max(0.0, (recv - t.PrevRecv) * 8.0 / sec);
+                            t.LastSendBps = sendBps;
+                            t.LastRecvBps = recvBps;
+                            t.SendHist.Add(sendBps / 8.0);
+                            t.RecvHist.Add(recvBps / 8.0);
+                            if (t.SendHist.Count > 60) t.SendHist.RemoveAt(0);
+                            if (t.RecvHist.Count > 60) t.RecvHist.RemoveAt(0);
+
+                            double load = t.LinkSpeedBps > 0
+                                ? Math.Clamp(((sendBps + recvBps) / t.LinkSpeedBps) * 100.0, 0.0, 100.0)
+                                : 0.0;
+
+                            if (t.Key == "wifi")
+                            {
+                                _wifiHistory.Add(load);
+                                if (_wifiHistory.Count > 60) _wifiHistory.RemoveAt(0);
+                                if (_miniWifiText != null) _miniWifiText.Text = $"S: {FormatBitRate(sendBps)} R: {FormatBitRate(recvBps)}";
+                            }
+                            else if (t.Key == "eth1")
+                            {
+                                _eth1History.Add(load);
+                                if (_eth1History.Count > 60) _eth1History.RemoveAt(0);
+                                if (_miniEth1Text != null) _miniEth1Text.Text = $"S: {FormatBitRate(sendBps)} R: {FormatBitRate(recvBps)}";
+                            }
+                            else if (t.Key == "eth2")
+                            {
+                                _eth2History.Add(load);
+                                if (_eth2History.Count > 60) _eth2History.RemoveAt(0);
+                                if (_miniEth2Text != null) _miniEth2Text.Text = $"S: {FormatBitRate(sendBps)} R: {FormatBitRate(recvBps)}";
+                            }
+
+                            if (_activePanel == PerformancePanel.Network && _activeNetKey == t.Key)
+                                UpdateNetworkDetailStats(t);
+                        }
+                    }
+                    t.PrevSent = sent;
+                    t.PrevRecv = recv;
+                    t.PrevTime = now;
+                    t.HasPrev = true;
+                }
+
+                var wifi = _netAdapters.FirstOrDefault(a => a.Key == "wifi");
+                if (wifi != null && wifi.Present
+                    && _activePanel == PerformancePanel.Network && _activeNetKey == "wifi")
+                    RefreshWifiDetails(wifi);
+            }
+            catch { }
+        }
+
+        // Fallback engine reader: wildcard counter + formatted array API.
+        // Used when the provider rejects per-instance counter paths.
+        private Dictionary<string, double> ReadGpuEngineWildcardArray(bool logIt)
+        {
+            var map = new Dictionary<string, double>();
+            var log = new StringBuilder();
+            try
+            {
+                if (_hPdhGpuEngineWildcard == IntPtr.Zero) return map;
+                uint bufSize = 0;
+                uint itemCount = 0;
+                int res = PdhGetFormattedCounterArrayW(_hPdhGpuEngineWildcard, PDH_FMT_DOUBLE, ref bufSize, out itemCount, IntPtr.Zero);
+                if (logIt) log.Append("array probe res=").Append(res).Append(" bufSize=").Append(bufSize).Append('\n');
+                if (res != PDH_MORE_DATA || bufSize == 0) { if (logIt) WriteGpuDebugLog(log.ToString()); return map; }
+                IntPtr buf = Marshal.AllocHGlobal((int)bufSize);
+                try
+                {
+                    res = PdhGetFormattedCounterArrayW(_hPdhGpuEngineWildcard, PDH_FMT_DOUBLE, ref bufSize, out itemCount, buf);
+                    if (logIt) log.Append("array res=").Append(res).Append(" itemCount=").Append(itemCount).Append('\n');
+                    if (res != 0) { if (logIt) WriteGpuDebugLog(log.ToString()); return map; }
+                    int itemSize = Marshal.SizeOf<PDH_FMT_COUNTERVALUE_ITEM_DOUBLE>();
+                    for (int i = 0; i < itemCount; i++)
+                    {
+                        var item = Marshal.PtrToStructure<PDH_FMT_COUNTERVALUE_ITEM_DOUBLE>(IntPtr.Add(buf, i * itemSize));
+                        if (item.CStatus != 0) continue;
+                        string name = Marshal.PtrToStringUni(item.szName) ?? "";
+                        if (name.Length == 0) continue;
+                        map[name] = Math.Max(0.0, item.doubleValue);
+                    }
+                    if (logIt) log.Append("array mapped=").Append(map.Count).Append('\n');
+                }
+                finally { Marshal.FreeHGlobal(buf); }
+            }
+            catch (Exception ex) { if (logIt) log.Append("array EX ").Append(ex.Message).Append('\n'); }
+            if (logIt) WriteGpuDebugLog(log.ToString());
+            return map;
+        }
+
+        private void SampleGpuStats()
+        {
+            // ---- Per-engine utilization (per-instance PDH counters, else wildcard array) ----
+            _gpuEnumTick++;
+            if (_gpuEnumTick % 30 == 0) EnumerateGpuEngineInstances();
+            // If the driver exposes no per-engine data at all, collapse the empty
+            // area after 60s so the panel looks intentional instead of broken.
+            if (_gpuEnumTick == 60 && _gpuEngines.Count == 0 && _gpuEnginesGrid != null)
+                _gpuEnginesGrid.IsVisible = false;
+
+            var aggregated = new Dictionary<string, (string engType, int engNum, double value)>();
+            // Wildcard-only: PDH expands (*) on every collect, picking up current
+            // processes automatically. Per-instance counters go stale when PIDs exit.
+            // Like Task Manager: 3D instances sum into one "3D"; other engines keep
+            // their per-type instance number (Compute 0, Compute 1, ...).
+            if (_hPdhGpuEngineWildcard != IntPtr.Zero)
+            {
+                bool logIt = _gpuEngines.Count == 0;
+                var typeInstanceIdx = new Dictionary<string, int>(StringComparer.Ordinal);
+                foreach (var kv in ReadGpuEngineWildcardArray(logIt))
+                {
+                    var m = GpuEngRegex.Match(kv.Key);
+                    if (!m.Success) continue;
+                    string engType = m.Groups[2].Value;
+                    if (engType == "3D" || engType == "Copy")
+                    {
+                        // Aggregate 3D and Copy (many instances -> one card)
+                        if (aggregated.TryGetValue(engType, out var cur))
+                            aggregated[engType] = (engType, 0, cur.value + kv.Value);
+                        else
+                            aggregated[engType] = (engType, 0, kv.Value);
+                    }
+                    else
+                    {
+                        if (!typeInstanceIdx.TryGetValue(engType, out int idx)) idx = 0;
+                        typeInstanceIdx[engType] = idx + 1;
+                        string key = engType + "_" + idx;
+                        aggregated[key] = (engType, idx, kv.Value);
+                    }
+                }
+            }
+
+            // If per-engine PDH data is unavailable (broken provider), fall back to
+            // a single total-utilization tracker from ADL so the panel isn't blank.
+            if (aggregated.Count == 0 && TryGetGpuActivity(out double totalAct))
+            {
+                aggregated["GPU_Total"] = ("GPU", 0, totalAct);
+            }
+
+            // Filter to Task Manager-relevant engine types only. Hide driver-internal
+            // engines (Timer, Security, High, etc.) that TM doesn't display.
+            var tmEngines = new Dictionary<string, (string engType, int engNum, double value)>();
+            foreach (var kv in aggregated)
+            {
+                string t = kv.Value.engType;
+                if (t == "3D" || t == "Copy" || t == "Compute" ||
+                    t == "VideoDecode" || t == "VideoEncode" || t == "VideoProcessing" ||
+                    t == "Video")
+                {
+                    tmEngines[kv.Key] = kv.Value;
+                }
+            }
+            // Limit to 4 engines max (TM default), prioritized by sort order
+            var orderedKeys = tmEngines.Keys.OrderBy(k => GpuEngineSortOrder(tmEngines[k].engType)).Take(4).ToList();
+            var limited = new Dictionary<string, (string engType, int engNum, double value)>();
+            foreach (var k in orderedKeys) limited[k] = tmEngines[k];
+
+            bool setChanged = limited.Count != _gpuEngines.Count;
+            if (!setChanged)
+            {
+                foreach (var k in limited.Keys)
+                {
+                    if (!_gpuEngines.ContainsKey(k)) { setChanged = true; break; }
+                }
+            }
+
+            double totalUtil = 0.0;
+            foreach (var kv in limited)
+            {
+                // Task Manager's definition: busiest engine = overall utilization
+                totalUtil = Math.Max(totalUtil, kv.Value.value);
+                _gpuKnownEngines.Add(kv.Key);
+                if (!_gpuEngines.TryGetValue(kv.Key, out var eng))
+                {
+                    string baseLabel = GpuEngineBaseLabel(kv.Value.engType);
+                    string label = (kv.Value.engType == "3D" || kv.Value.engType == "Copy")
+                        ? baseLabel
+                        : baseLabel + " " + kv.Value.engNum;
+                    eng = new GpuEngineTracker
+                    {
+                        Key = kv.Key,
+                        Label = label,
+                        SortOrder = GpuEngineSortOrder(kv.Value.engType) * 100 + kv.Value.engNum,
+                    };
+                    for (int i = 0; i < 60; i++) eng.History.Add(0.0);
+                    _gpuEngines[kv.Key] = eng;
+                }
+                eng.LastValue = Math.Clamp(kv.Value.value, 0.0, 100.0);
+                eng.History.Add(eng.LastValue);
+                if (eng.History.Count > 60) eng.History.RemoveAt(0);
+            }
+            // Keep idle engines visible at 0% (like Task Manager) instead of removing them.
+            // Only rebuild if the set of engines actually changed (new engine appeared).
+            foreach (var k in _gpuEngines.Keys.ToList())
+            {
+                if (!limited.ContainsKey(k))
+                {
+                    // Engine no longer in top 4 or filtered out: remove it
+                    _gpuEngines.Remove(k);
+                    setChanged = true;
+                }
+                else
+                {
+                    var eng = _gpuEngines[k];
+                    // If not in current sample, show 0 (idle)
+                    if (!limited.TryGetValue(k, out var cur) || cur.value == 0)
+                    {
+                        // Keep existing value from history; don't force to 0 here
+                        // (the value was already set above if present)
+                    }
+                }
+            }
+            if (setChanged) RebuildGpuEngineCards();
+            if (_gpuEngines.Count > 0 && _gpuEnginesGrid != null && !_gpuEnginesGrid.IsVisible)
+                _gpuEnginesGrid.IsVisible = true;
+
+            double util = Math.Clamp(totalUtil, 0.0, 100.0);
+            _gpuHistory.Add(util);
+            if (_gpuHistory.Count > 60) _gpuHistory.RemoveAt(0);
+
+            // ---- Memory ----
+            double dedBytes = Math.Max(0.0, PdhReadWildcardSum(_hPdhGpuDedUsage));
+            double sharedBytes = Math.Max(0.0, PdhReadWildcardSum(_hPdhGpuSharedUsage));
+            if (_gpuDedLimitBytes <= 0.0 && _hPdhGpuDedLimit != IntPtr.Zero)
+            {
+                double lim = PdhReadWildcardSum(_hPdhGpuDedLimit);
+                if (lim > 0.0) _gpuDedLimitBytes = lim;
+            }
+            if (_gpuSharedLimitBytes <= 0.0 && _hPdhGpuSharedLimit != IntPtr.Zero)
+            {
+                double lim = PdhReadWildcardSum(_hPdhGpuSharedLimit);
+                if (lim > 0.0) _gpuSharedLimitBytes = lim;
+            }
+            _gpuDedHistory.Add(dedBytes);
+            if (_gpuDedHistory.Count > 60) _gpuDedHistory.RemoveAt(0);
+            _gpuSharedHistory.Add(sharedBytes);
+            if (_gpuSharedHistory.Count > 60) _gpuSharedHistory.RemoveAt(0);
+
+            // ---- Temperature (best effort, AMD ADL) ----
+            if (TryGetGpuTemperature(out double tempC)) _gpuTempC = tempC;
+
+            if (_miniGpuText != null)
+                _miniGpuText.Text = !double.IsNaN(_gpuTempC)
+                    ? $"{_gpuName}\n{util:F0}% ({_gpuTempC:F0} \u00B0C)"
+                    : $"{_gpuName}\n{util:F0}%";
+
+            if (_activePanel == PerformancePanel.Gpu)
+            {
+                if (_statGpuUtil != null) _statGpuUtil.Text = $"{util:F0}%";
+                double memUsed = dedBytes + sharedBytes;
+                double memTotal = _gpuDedLimitBytes + _gpuSharedLimitBytes;
+                if (_statGpuMem != null)
+                    _statGpuMem.Text = memTotal > 0.0
+                        ? FormatGbPair(memUsed, memTotal)
+                        : $"{memUsed / (1024.0*1024.0*1024.0):F1} GB";
+                if (_statGpuDedicated != null)
+                    _statGpuDedicated.Text = _gpuDedLimitBytes > 0.0
+                        ? FormatGbPair(dedBytes, _gpuDedLimitBytes)
+                        : $"{dedBytes / (1024.0*1024.0*1024.0):F1} GB";
+                if (_statGpuShared != null)
+                    _statGpuShared.Text = _gpuSharedLimitBytes > 0.0
+                        ? FormatGbPair(sharedBytes, _gpuSharedLimitBytes)
+                        : $"{sharedBytes / (1024.0*1024.0*1024.0):F1} GB";
+                if (_statGpuTemp != null)
+                    _statGpuTemp.Text = !double.IsNaN(_gpuTempC) ? $"{_gpuTempC:F0} \u00B0C" : "\u2014";
+                if (_metaGpuLocation != null && _metaGpuLocation.Text == "\u2014" && _adlPciBus >= 0)
+                    _metaGpuLocation.Text = $"PCI bus {_adlPciBus}, device {_adlPciDevice}, function {_adlPciFunction}";
+            }
+        }
+
+
+        private void UpdateNetworkDetailStats(NetAdapterTracker t)
+        {
+            if (_statNetSend != null) _statNetSend.Text = FormatBitRate(t.LastSendBps);
+            if (_statNetReceive != null) _statNetReceive.Text = FormatBitRate(t.LastRecvBps);
+        }
+
+        // ================= WLAN details =================
+
+        private void RefreshWifiDetails(NetAdapterTracker t)
+        {
+            if (!(_activePanel == PerformancePanel.Network && _activeNetKey == t.Key && t.IsWifi)) return;
+            try
+            {
+                if (TryGetWifiConnection(out string ssid, out uint signal, out uint phyType))
+                {
+                    SetText(_metaNetRow3, string.IsNullOrEmpty(ssid) ? "\u2014" : ssid);
+                    SetText(_metaNetRow4, $"{signal}%");
+                    t.WifiPhy = MapPhyType(phyType);
+                    SetText(_metaNetConnType, t.WifiPhy);
+                }
+            }
+            catch { }
+        }
+
+        private bool TryGetWifiConnection(out string ssid, out uint signalQuality, out uint phyType)
+        {
+            ssid = "";
+            signalQuality = 0;
+            phyType = 0;
+            try
+            {
+                if (_wlanHandle == IntPtr.Zero)
+                {
+                    if (WlanOpenHandle(2, IntPtr.Zero, out _, out IntPtr h) != 0) return false;
+                    _wlanHandle = h;
+                }
+                if (WlanEnumInterfaces(_wlanHandle, IntPtr.Zero, out IntPtr listPtr) != 0 || listPtr == IntPtr.Zero)
+                    return false;
+                try
+                {
+                    uint count = (uint)Marshal.ReadInt32(listPtr, 0);
+                    int infoSize = Marshal.SizeOf<WLAN_INTERFACE_INFO>();
+                    const int baseOffset = 8; // dwNumberOfItems + dwIndex
+                    for (uint i = 0; i < count; i++)
+                    {
+                        IntPtr itemPtr = IntPtr.Add(listPtr, baseOffset + (int)i * infoSize);
+                        var info = Marshal.PtrToStructure<WLAN_INTERFACE_INFO>(itemPtr);
+                        if (info.isState != 1) continue; // wlan_interface_state_connected
+                        Guid g = info.InterfaceGuid;
+                        if (WlanQueryInterface(_wlanHandle, ref g, WLAN_INTF_OPCODE.wlan_intf_opcode_current_connection,
+                                IntPtr.Zero, out _, out IntPtr dataPtr, IntPtr.Zero) != 0 || dataPtr == IntPtr.Zero)
+                            continue;
+                        try
+                        {
+                            var conn = Marshal.PtrToStructure<WLAN_CONNECTION_ATTRIBUTES>(dataPtr);
+                            var dot11 = conn.wlanAssociationAttributes.dot11Ssid;
+                            int len = (int)Math.Min(dot11.uSSIDLength, 32u);
+                            if (len > 0 && dot11.ucSSID != null)
+                                ssid = Encoding.UTF8.GetString(dot11.ucSSID, 0, len);
+                            signalQuality = conn.wlanAssociationAttributes.wlanSignalQuality;
+                            phyType = conn.wlanAssociationAttributes.dot11PhyType;
+                            return true;
+                        }
+                        finally { WlanFreeMemory(dataPtr); }
+                    }
+                }
+                finally { WlanFreeMemory(listPtr); }
+            }
+            catch { }
+            return false;
+        }
+
+        private static string MapPhyType(uint phyType)
+        {
+            return phyType switch
+            {
+                4 => "802.11a",
+                5 => "802.11b",
+                6 => "802.11g",
+                7 => "802.11n",
+                8 => "802.11ac",
+                10 => "802.11ax",
+                _ => "802.11",
+            };
+        }
+
+        // ================= Adapter info helpers =================
+
+        private static NetworkInterface? FindNic(NetAdapterTracker t)
+        {
+            if (!t.Present) return null;
+            try { return NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(n => n.Id == t.NicId); }
+            catch { return null; }
+        }
+
+        private static string GetAdapterIpv4(NetAdapterTracker t)
+        {
+            try
+            {
+                var props = FindNic(t)?.GetIPProperties();
+                if (props != null)
+                {
+                    foreach (var ua in props.UnicastAddresses)
+                    {
+                        if (ua.Address.AddressFamily == AddressFamily.InterNetwork)
+                            return ua.Address.ToString();
+                    }
+                }
+            }
+            catch { }
+            return "\u2014";
+        }
+
+        private static string GetAdapterIpv6(NetAdapterTracker t)
+        {
+            try
+            {
+                var props = FindNic(t)?.GetIPProperties();
+                if (props != null)
+                {
+                    foreach (var ua in props.UnicastAddresses)
+                    {
+                        if (ua.Address.AddressFamily == AddressFamily.InterNetworkV6 && !ua.Address.IsIPv6LinkLocal)
+                            return ua.Address.ToString();
+                    }
+                }
+            }
+            catch { }
+            return "\u2014";
+        }
+
+        private static string GetAdapterDns(NetAdapterTracker t)
+        {
+            try
+            {
+                var props = FindNic(t)?.GetIPProperties();
+                if (props != null)
+                {
+                    foreach (var d in props.DnsAddresses)
+                    {
+                        if (d.AddressFamily == AddressFamily.InterNetwork)
+                            return d.ToString();
+                    }
+                    foreach (var d in props.DnsAddresses)
+                        return d.ToString();
+                }
+            }
+            catch { }
+            return "\u2014";
+        }
+
+        // ================= Drawing =================
+
+        private void RedrawNetworkCharts()
+        {
+            var t = _netAdapters.FirstOrDefault(a => a.Key == _activeNetKey);
+            if (t == null) return;
+
+            double peakBytes = 0.0;
+            foreach (var v in t.SendHist) peakBytes = Math.Max(peakBytes, v);
+            foreach (var v in t.RecvHist) peakBytes = Math.Max(peakBytes, v);
+            var (maxBytes, label) = GetNetScale(peakBytes * 8.0);
+            if (_netGraphScaleMax != null) _netGraphScaleMax.Text = label;
+            if (_netGraphScaleTime != null)
+                _netGraphScaleTime.Text = _updateIntervalSec == 4 ? "4 minutes" : "60 seconds";
+
+            var sendNorm = new List<double>();
+            var recvNorm = new List<double>();
+            foreach (var b in t.SendHist) sendNorm.Add(Math.Clamp(b / maxBytes * 100.0, 0.0, 100.0));
+            foreach (var b in t.RecvHist) recvNorm.Add(Math.Clamp(b / maxBytes * 100.0, 0.0, 100.0));
+
+            Color recvLine = _isDark ? Color.Parse("#E8A33D") : Color.Parse("#D08836");
+            Color recvFill = _isDark ? Color.FromArgb(0x30, 0xE8, 0xA3, 0x3D) : Color.FromArgb(0x28, 0xD0, 0x88, 0x36);
+            Color sendLine = _isDark ? Color.Parse("#C47A35") : Color.Parse("#8E5A23");
+            DrawDualChart(_netGraphCanvas, sendNorm, recvNorm, sendLine, recvLine, recvFill);
+        }
+
+        private void RedrawGpuCharts()
+        {
+            Color line = _isDark ? Color.Parse("#4CC2FF") : Color.Parse("#1070B8");
+            Color fill = _isDark ? Color.FromArgb(0x25, 0x4C, 0xC2, 0xFF) : Color.FromArgb(0x1F, 0x10, 0x70, 0xB8);
+
+            // Slot-based engine rendering (4 fixed slots like Task Manager)
+            for (int slot = 0; slot < 4; slot++)
+            {
+                string key = _gpuEngineSlots[slot];
+                _gpuEngines.TryGetValue(key, out var eng);
+                double val = eng?.LastValue ?? 0.0;
+                var hist = eng?.History;
+                if (_gpuSlotPcts[slot] != null) _gpuSlotPcts[slot]!.Text = $"{val:F0}%";
+                if (_gpuSlotCanvases[slot] != null)
+                {
+                    if (hist != null && hist.Count > 0)
+                        DrawChart(_gpuSlotCanvases[slot]!, hist, null, line, fill, isMini: false);
+                    else
+                        DrawChart(_gpuSlotCanvases[slot]!, new List<double>(), null, line, fill, isMini: false);
+                }
+            }
+
+            double dedPeak = 0.0;
+            foreach (var b in _gpuDedHistory) dedPeak = Math.Max(dedPeak, b);
+            double dedScale = _gpuDedLimitBytes > 0.0 ? _gpuDedLimitBytes : Math.Max(dedPeak, 1.0);
+            if (_gpuDedMemScaleMax != null) _gpuDedMemScaleMax.Text = FormatBytesShort(dedScale);
+            var dedNorm = new List<double>();
+            foreach (var b in _gpuDedHistory) dedNorm.Add(Math.Clamp(b / dedScale * 100.0, 0.0, 100.0));
+            DrawChart(_gpuDedMemCanvas, dedNorm, null, line, fill, isMini: false);
+
+            double sharedPeak = 0.0;
+            foreach (var b in _gpuSharedHistory) sharedPeak = Math.Max(sharedPeak, b);
+            double sharedScale = _gpuSharedLimitBytes > 0.0 ? _gpuSharedLimitBytes : Math.Max(sharedPeak, 1.0);
+            if (_gpuSharedMemScaleMax != null) _gpuSharedMemScaleMax.Text = FormatBytesShort(sharedScale);
+            var sharedNorm = new List<double>();
+            foreach (var b in _gpuSharedHistory) sharedNorm.Add(Math.Clamp(b / sharedScale * 100.0, 0.0, 100.0));
+            DrawChart(_gpuSharedMemCanvas, sharedNorm, null, line, fill, isMini: false);
+        }
+
+
+        private void DrawDualChart(Canvas? canvas, List<double> sendNorm, List<double> recvNorm,
+            Color sendLine, Color recvLine, Color recvFill)
+        {
+            if (canvas == null) return;
+            canvas.Children.Clear();
+            double w = canvas.Bounds.Width;
+            double h = canvas.Bounds.Height;
+            if (double.IsNaN(w) || w <= 4) w = 500;
+            if (double.IsNaN(h) || h <= 4) h = 220;
+
+            var gridBrush = new SolidColorBrush(_isDark ? Color.Parse("#3A2E1F") : Color.Parse("#F3EAD9"));
+            for (int i = 1; i < 10; i++)
+            {
+                double y = Math.Round(h * (i / 10.0)) + 0.5;
+                canvas.Children.Add(new Line { StartPoint = new Point(0, y), EndPoint = new Point(w, y), Stroke = gridBrush, StrokeThickness = 1 });
+            }
+            for (int i = 1; i < 10; i++)
+            {
+                double x = Math.Round(w * (i / 10.0)) + 0.5;
+                canvas.Children.Add(new Line { StartPoint = new Point(x, 0), EndPoint = new Point(x, h), Stroke = gridBrush, StrokeThickness = 1 });
+            }
+
+            int n = Math.Max(sendNorm.Count, recvNorm.Count);
+            if (n == 0) return;
+            double step = w / 59.0;
+            double startX = w - ((n - 1) * step);
+
+            if (recvNorm.Count > 0)
+            {
+                var recvFillPts = new Avalonia.Collections.AvaloniaList<Point>();
+                var recvLinePts = new Avalonia.Collections.AvaloniaList<Point>();
+                recvFillPts.Add(new Point(startX, h));
+                for (int i = 0; i < recvNorm.Count; i++)
+                {
+                    double x = startX + (i * step);
+                    double y = (h - 1.0) - (Math.Clamp(recvNorm[i], 0.0, 100.0) / 100.0 * (h - 2.0));
+                    recvLinePts.Add(new Point(x, y));
+                    recvFillPts.Add(new Point(x, y));
+                }
+                recvFillPts.Add(new Point(startX + ((recvNorm.Count - 1) * step), h));
+                canvas.Children.Add(new Polygon { Points = recvFillPts, Fill = new SolidColorBrush(recvFill) });
+                canvas.Children.Add(new Polyline { Points = recvLinePts, Stroke = new SolidColorBrush(recvLine), StrokeThickness = 1.2 });
+            }
+
+            if (sendNorm.Count > 0)
+            {
+                var sendPts = new Avalonia.Collections.AvaloniaList<Point>();
+                for (int i = 0; i < sendNorm.Count; i++)
+                {
+                    double x = startX + (i * step);
+                    double y = (h - 1.0) - (Math.Clamp(sendNorm[i], 0.0, 100.0) / 100.0 * (h - 2.0));
+                    sendPts.Add(new Point(x, y));
+                }
+                canvas.Children.Add(new Polyline { Points = sendPts, Stroke = new SolidColorBrush(sendLine), StrokeThickness = 1.0 });
+            }
+        }
+
+        private static (double maxBytes, string label) GetNetScale(double peakBps)
+        {
+            double[] thresholds = { 100e3, 1e6, 10e6, 100e6, 1e9, 10e9 };
+            string[] labels = { "100 Kbps", "1 Mbps", "10 Mbps", "100 Mbps", "1 Gbps", "10 Gbps" };
+            for (int i = 0; i < thresholds.Length; i++)
+            {
+                if (peakBps <= thresholds[i])
+                    return (thresholds[i] / 8.0, labels[i]);
+            }
+            double g = Math.Ceiling(peakBps / 1e9);
+            return (g * 1e9 / 8.0, $"{g:F0} Gbps");
+        }
+
+        private static string FormatBitRate(double bps)
+        {
+            if (bps < 1000.0) return $"{Math.Round(bps)} bps";
+            if (bps < 1_000_000.0) return $"{bps / 1000.0:F1} Kbps";
+            if (bps < 1_000_000_000.0) return $"{bps / 1_000_000.0:F1} Mbps";
+            return $"{bps / 1_000_000_000.0:F2} Gbps";
+        }
+
+        private static string FormatBytesShort(double bytes)
+        {
+            if (bytes < 1024.0) return $"{Math.Round(bytes)} B";
+            if (bytes < 1024.0 * 1024.0) return $"{bytes / 1024.0:F1} KB";
+            if (bytes < 1024.0 * 1024.0 * 1024.0) return $"{bytes / (1024.0 * 1024.0):F1} MB";
+            return $"{bytes / (1024.0 * 1024.0 * 1024.0):F1} GB";
+        }
+
+        // Task Manager style: "1.3/4.5 GB" (unit only at end, values in GB)
+        private static string FormatGbPair(double usedBytes, double totalBytes)
+        {
+            const double GB = 1024.0 * 1024.0 * 1024.0;
+            return $"{usedBytes / GB:F1}/{totalBytes / GB:F1} GB";
+        }
+
+        private static string FormatLinkSpeed(double bps)
+        {
+            if (bps >= 1_000_000_000.0) return $"{bps / 1_000_000_000.0:F1} Gbps";
+            if (bps >= 1_000_000.0) return $"{bps / 1_000_000.0:F0} Mbps";
+            if (bps >= 1_000.0) return $"{bps / 1_000.0:F0} Kbps";
+            return "\u2014";
+        }
+
+        // ================= Clipboard =================
+
+        private async void CopyNetworkStatsToClipboard()
+        {
+            try
+            {
+                var t = _netAdapters.FirstOrDefault(a => a.Key == _activeNetKey);
+                if (t == null) return;
+                string info = $"{_netBigHeader?.Text}\r\n\r\n{t.Description}\r\n\r\n" +
+                              $"Adapter name:\t{t.Name}\r\n" +
+                              $"Connection type:\t{_metaNetConnType?.Text}\r\n" +
+                              $"{_labelNetRow3?.Text}\t{_metaNetRow3?.Text}\r\n" +
+                              $"{_labelNetRow4?.Text}\t{_metaNetRow4?.Text}\r\n" +
+                              $"{_labelNetRow5?.Text}\t{_metaNetRow5?.Text}\r\n" +
+                              $"{_labelNetRow6?.Text}\t{_metaNetRow6?.Text}\r\n\r\n" +
+                              $"Send\t{_statNetSend?.Text}\r\n" +
+                              $"Receive\t{_statNetReceive?.Text}";
+
+                var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                if (clipboard != null) await clipboard.SetTextAsync(info);
+            }
+            catch { }
+        }
+
+        private async void CopyGpuStatsToClipboard()
+        {
+            try
+            {
+                string info = $"GPU\r\n\r\n{_gpuFullName}\r\n\r\n" +
+                              $"Dedicated GPU memory:\t{_statGpuDedicated?.Text}\r\n" +
+                              $"Shared GPU memory:\t{_statGpuShared?.Text}\r\n" +
+                              $"Driver version:\t{_metaGpuDriverVer?.Text}\r\n" +
+                              $"Driver date:\t{_metaGpuDriverDate?.Text}\r\n" +
+                              $"DirectX version:\t{_metaGpuDx?.Text}\r\n" +
+                              $"Physical location:\t{_metaGpuLocation?.Text}\r\n" +
+                              $"Hardware reserved memory:\t{_metaGpuHwReserved?.Text}\r\n\r\n" +
+                              $"Utilization\t{_statGpuUtil?.Text}\r\n" +
+                              $"GPU Memory\t{_statGpuMem?.Text}";
+
+                var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                if (clipboard != null) await clipboard.SetTextAsync(info);
+            }
+            catch { }
+        }
+
+
+        private void ApplyNetworkGpuTheme()
+        {
+            var textHigh = new SolidColorBrush(_isDark ? Color.Parse("#FFFFFF") : Color.Parse("#000000"));
+            var textMid = new SolidColorBrush(_isDark ? Color.Parse("#A0A0A0") : Color.Parse("#555555"));
+            var mainBg = new SolidColorBrush(_isDark ? Color.Parse("#191919") : Color.Parse("#FFFFFF"));
+            var netBorder = new SolidColorBrush(_isDark ? Color.Parse("#A86C2B") : Color.Parse("#8E5A23"));
+            var gpuBorder = new SolidColorBrush(_isDark ? Color.Parse("#2A5A84") : Color.Parse("#70A5CC"));
+
+            SetFg(_netBigHeader, textHigh);
+            foreach (var tb in new TextBlock?[]
+            {
+                _netAdapterText, _netGraphHeaderLabel, _netGraphScaleMax, _netGraphScaleTime, _netGraphScaleZero,
+                _labelNetSend, _labelNetReceive, _labelNetAdapterName, _labelNetConnType,
+                _labelNetRow3, _labelNetRow4, _labelNetRow5, _labelNetRow6
+            }) SetFg(tb, textMid);
+            foreach (var tb in new TextBlock?[]
+            {
+                _statNetSend, _statNetReceive, _metaNetAdapterName, _metaNetConnType,
+                _metaNetRow3, _metaNetRow4, _metaNetRow5, _metaNetRow6
+            }) SetFg(tb, textHigh);
+            if (_netGraphBorder != null)
+            {
+                _netGraphBorder.Background = mainBg;
+                _netGraphBorder.BorderBrush = netBorder;
+            }
+
+            SetFg(_gpuBigHeader, textHigh);
+            foreach (var tb in new TextBlock?[]
+            {
+                _gpuNameText, _gpuDedMemHeaderLabel, _gpuDedMemScaleMax,
+                _gpuSharedMemHeaderLabel, _gpuSharedMemScaleMax,
+                _labelGpuUtil, _labelGpuMem, _labelGpuDedicated, _labelGpuShared, _labelGpuTemp,
+                _labelGpuDriverVer, _labelGpuDriverDate, _labelGpuDx, _labelGpuLocation, _labelGpuHwReserved
+            }) SetFg(tb, textMid);
+            foreach (var tb in new TextBlock?[]
+            {
+                _statGpuUtil, _statGpuMem, _statGpuDedicated, _statGpuShared, _statGpuTemp,
+                _metaGpuDriverVer, _metaGpuDriverDate, _metaGpuDx, _metaGpuLocation, _metaGpuHwReserved
+            }) SetFg(tb, textHigh);
+            if (_gpuDedMemBorder != null)
+            {
+                _gpuDedMemBorder.Background = mainBg;
+                _gpuDedMemBorder.BorderBrush = gpuBorder;
+            }
+            if (_gpuSharedMemBorder != null)
+            {
+                _gpuSharedMemBorder.Background = mainBg;
+                _gpuSharedMemBorder.BorderBrush = gpuBorder;
+            }
+            foreach (var eng in _gpuEngines.Values)
+            {
+                if (eng.Card != null)
+                {
+                    eng.Card.Background = mainBg;
+                    eng.Card.BorderBrush = gpuBorder;
+                }
+            }
+            // Slot-based pct labels
+            for (int slot = 0; slot < 4; slot++)
+            {
+                if (_gpuSlotPcts[slot] != null) _gpuSlotPcts[slot]!.Foreground = textMid;
+            }
+
+        }
+
+        private static void SetFg(TextBlock? tb, IBrush brush)
+        {
+            if (tb != null) tb.Foreground = brush;
+        }
+
+        private static void SetText(TextBlock? tb, string s)
+        {
+            if (tb != null) tb.Text = s;
+        }
+    }
+}
+
+'@
 Set-Content -LiteralPath (Join-Path $Dir 'MainWindow.axaml.cs') -Value $mwCs.Replace('__APPNAME__', $Name) -Encoding UTF8
+Set-Content -LiteralPath (Join-Path $Dir 'MainWindow.NetworkGpu.cs') -Value $mwNetGpuCs.Replace('__APPNAME__', $Name) -Encoding UTF8
+Set-Content -LiteralPath (Join-Path $Dir 'MainWindow.Processes.cs') -Value $mwProcCs.Replace('__APPNAME__', $Name) -Encoding UTF8
 }
 
 function New-Project([string]$ExePath, [string]$Name, [string]$Dir) {
